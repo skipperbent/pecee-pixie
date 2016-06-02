@@ -1,7 +1,7 @@
 {
-  "name": "usmanhalalit/pixie",
-  "description": "A lightweight, expressive, framework agnostic query builder for PHP.",
-  "homepage": "https://github.com/usmanhalalit/pixie",
+  "name": "pecee/pixie",
+  "description": "A lightweight, expressive, framework agnostic query builder for PHP. This fork aims to fix and deploy features quicker than the original.",
+  "homepage": "https://github.com/skipperbent/pixie",
   "keywords": [
     "query builder",
     "sql",
@@ -21,6 +21,11 @@
     {
       "name": "Pavel Puchkin",
       "email": "i@neoascetic.me",
+      "role": "Developer"
+    },
+    {
+      "name": "Simon Sessingø",
+      "email": "simon.sessingoe@gmail.com",
       "role": "Developer"
     }
   ],
