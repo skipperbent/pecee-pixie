@@ -41,7 +41,18 @@ abstract class BaseAdapter
         $tables = '';
 
         if(isset($statements['tables'])) {
-            $tables = $this->arrayStr($statements['tables'], ', ');
+            $tables = array();
+
+            foreach($statements['tables'] as $table) {
+                $t = '`' . $table . '`';
+                if(isset($statements['prefixes'][strtolower($table)])) {
+                    $t .= ' AS ' . $statements['prefixes'][strtolower($table)];
+                }
+
+                $tables[] = $t;
+            }
+
+            $tables = join(',', $tables);
             $fromEnabled = true;
         }
         // Select

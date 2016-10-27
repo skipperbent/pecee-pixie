@@ -132,6 +132,11 @@ class QueryBuilderHandler
         return $this;
     }
 
+    public function addPrefix($table, $prefix) {
+        $this->addStatement('prefixes', [$table => strtolower($prefix)]);
+        return $this;
+    }
+
     /**
      * @param       $sql
      * @param array $bindings
@@ -612,7 +617,7 @@ class QueryBuilderHandler
         if(is_bool($value)) {
             $value = (int)$value;
         }
-        
+
         return $this->whereHandler($key, $operator, $value);
     }
 
