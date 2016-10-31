@@ -44,7 +44,7 @@ abstract class BaseAdapter
             $tables = array();
 
             foreach($statements['tables'] as $table) {
-                $t = '`' . $table . '`';
+                $t = $table;
                 if(isset($statements['prefixes'][strtolower($table)])) {
                     $t .= ' AS ' . $statements['prefixes'][strtolower($table)];
                 }
