@@ -44,7 +44,7 @@ abstract class BaseAdapter
             $tables = array();
 
             foreach($statements['tables'] as $table) {
-                $t = $table;
+                $t = ($table instanceof Raw) ? $table : '`'. $table .'`';
                 if(isset($statements['prefixes'][strtolower($table)])) {
                     $t .= ' AS ' . $statements['prefixes'][strtolower($table)];
                 }
@@ -423,15 +423,22 @@ abstract class BaseAdapter
                     $value = $this->wrapSanitizer($value);
                     $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $value . ' ';
                 } elseif ($statement['key'] instanceof Raw) {
-                    $criteria .= $statement['joiner'] . ' ' . $key . ' ';
-                    $bindings = array_merge($bindings, $statement['key']->getBindings());
+
+                    if($statement['operator'] !== null) {
+                        $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
+                        $bindings = array_merge($bindings, $statement['key']->getBindings());
+                        $bindings[] = $value;
+                    } else {
+                        $criteria .= $statement['joiner'] . ' ' . $key . ' ';
+                        $bindings = array_merge($bindings, $statement['key']->getBindings());
+                    }
+
                 } else {
                     // For wheres
 
                     $valuePlaceholder = '?';
                     $bindings[] = $value;
-                    $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' '
-                        . $valuePlaceholder . ' ';
+                    $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
                 }
             }
         }
