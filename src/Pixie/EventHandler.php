@@ -38,7 +38,7 @@ class EventHandler
         // Find event with *
         if(isset($this->events[$table])) {
             foreach($this->events[$table] as $name => $e) {
-                if (stripos($name, '*') > - 1) {
+                if (strpos($name, '*') > - 1) {
                     $name = substr($name, 0, strpos($name, '*'));
                     if (stripos($event, $name) > - 1) {
                         return $e;
@@ -102,10 +102,12 @@ class EventHandler
                 // Add to fired list
                 $this->firedEvents[] = $eventId;
                 $result = call_user_func_array($action, $handlerParams);
-                if (!is_null($result)) {
+                if ($result !== null) {
                     return $result;
-                };
+                }
             }
         }
+
+        return null;
     }
 }

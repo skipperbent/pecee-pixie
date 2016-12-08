@@ -20,7 +20,7 @@ class AliasFacade
     /**
      * @param $method
      * @param $args
-     *
+     * @throws Exception
      * @return mixed
      */
     public static function __callStatic($method, $args)
