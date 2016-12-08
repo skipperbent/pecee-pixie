@@ -5,5 +5,5 @@ class Pgsql extends BaseAdapter
     /**
      * @var string
      */
-    protected $sanitizer = '"';
+    const SANITIZER = '"';
 }

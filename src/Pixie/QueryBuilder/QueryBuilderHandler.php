@@ -28,14 +28,14 @@ class QueryBuilderHandler
     protected $pdo;
 
     /**
-     * @var null|PDOStatement
+     * @var null|\PDOStatement
      */
-    protected $pdoStatement = null;
+    protected $pdoStatement;
 
     /**
      * @var null|string
      */
-    protected $tablePrefix = null;
+    protected $tablePrefix;
 
     /**
      * @var \Pixie\QueryBuilder\Adapters\BaseAdapter
@@ -56,10 +56,8 @@ class QueryBuilderHandler
      */
     public function __construct(Connection $connection = null)
     {
-        if (is_null($connection)) {
-            if (!$connection = Connection::getStoredConnection()) {
-                throw new Exception('No database connection found.', 1);
-            }
+        if ($connection === null && ($connection = Connection::getStoredConnection()) === false) {
+            throw new Exception('No database connection found.', 1);
         }
 
         $this->connection = $connection;
@@ -74,7 +72,7 @@ class QueryBuilderHandler
 
         // Query builder adapter instance
         $this->adapterInstance = $this->container->build(
-            '\\Pixie\\QueryBuilder\\Adapters\\' . ucfirst($this->adapter),
+            '\Pixie\QueryBuilder\Adapters\\' . ucfirst($this->adapter),
             array($this->connection)
         );
 
@@ -107,12 +105,12 @@ class QueryBuilderHandler
 
     /**
      * @param null|\Pixie\Connection $connection
-     *
+     * @throws Exception
      * @return static
      */
     public function newQuery(Connection $connection = null)
     {
-        if (is_null($connection)) {
+        if ($connection === null) {
             $connection = $this->connection;
         }
 
@@ -160,18 +158,18 @@ class QueryBuilderHandler
 
     /**
      * Get all rows
-     *
+     * @throws Exception
      * @return \stdClass|null
      */
     public function get()
     {
         $eventResult = $this->fireEvents('before-select');
-        if (!is_null($eventResult)) {
+        if ($eventResult !== null) {
             return $eventResult;
-        };
+        }
 
         $executionTime = 0;
-        if (is_null($this->pdoStatement)) {
+        if ($this->pdoStatement === null) {
             $queryObject = $this->getQuery('select');
             list($this->pdoStatement, $executionTime) = $this->statement(
                 $queryObject->getSql(),
@@ -189,7 +187,7 @@ class QueryBuilderHandler
 
     /**
      * Get first row
-     *
+     * @throws Exception
      * @return \stdClass|null
      */
     public function first()
@@ -202,7 +200,7 @@ class QueryBuilderHandler
     /**
      * @param        $value
      * @param string $fieldName
-     *
+     * @throws Exception
      * @return null|\stdClass
      */
     public function findAll($fieldName, $value)
@@ -214,7 +212,7 @@ class QueryBuilderHandler
     /**
      * @param        $value
      * @param string $fieldName
-     *
+     * @throws Exception
      * @return null|\stdClass
      */
     public function find($value, $fieldName = 'id')
@@ -225,7 +223,7 @@ class QueryBuilderHandler
 
     /**
      * Get count of rows
-     *
+     * @throws Exception
      * @return int
      */
     public function count()
@@ -233,9 +231,7 @@ class QueryBuilderHandler
         // Get the current statements
         $originalStatements = $this->statements;
 
-        unset($this->statements['orderBys']);
-        unset($this->statements['limit']);
-        unset($this->statements['offset']);
+        unset($this->statements['orderBys'], $this->statements['limit'], $this->statements['offset']);
 
         $count = $this->aggregate('count');
         $this->statements = $originalStatements;
@@ -245,7 +241,7 @@ class QueryBuilderHandler
 
     /**
      * @param $type
-     *
+     * @throws Exception
      * @return int
      */
     protected function aggregate($type)
@@ -276,7 +272,7 @@ class QueryBuilderHandler
 
     /**
      * @param string $type
-     * @param array  $dataToBePassed
+     * @param array|bool  $dataToBePassed
      *
      * @return mixed
      * @throws Exception
@@ -291,7 +287,7 @@ class QueryBuilderHandler
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
 
         return $this->container->build(
-            '\\Pixie\\QueryBuilder\\QueryObject',
+            '\Pixie\QueryBuilder\QueryObject',
             array($queryArr['sql'], $queryArr['bindings'], $this->pdo)
         );
     }
@@ -299,7 +295,7 @@ class QueryBuilderHandler
     /**
      * @param QueryBuilderHandler $queryBuilder
      * @param null                $alias
-     *
+     * @throws Exception
      * @return Raw
      */
     public function subQuery(QueryBuilderHandler $queryBuilder, $alias = null)
@@ -314,13 +310,13 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return array|string
      */
     private function doInsert($data, $type)
     {
         $eventResult = $this->fireEvents('before-insert');
-        if (!is_null($eventResult)) {
+        if ($eventResult !== null) {
             return $eventResult;
         }
 
@@ -355,7 +351,7 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return array|string
      */
     public function insert($data)
@@ -365,7 +361,7 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return array|string
      */
     public function insertIgnore($data)
@@ -375,7 +371,7 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return array|string
      */
     public function replace($data)
@@ -385,13 +381,13 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return $this
      */
     public function update($data)
     {
         $eventResult = $this->fireEvents('before-update');
-        if (!is_null($eventResult)) {
+        if ($eventResult !== null) {
             return $eventResult;
         }
 
@@ -405,7 +401,7 @@ class QueryBuilderHandler
 
     /**
      * @param $data
-     *
+     * @throws Exception
      * @return array|string
      */
     public function updateOrInsert($data)
@@ -429,12 +425,12 @@ class QueryBuilderHandler
     }
 
     /**
-     *
+     * @throws Exception
      */
     public function delete()
     {
         $eventResult = $this->fireEvents('before-delete');
-        if (!is_null($eventResult)) {
+        if ($eventResult !== null) {
             return $eventResult;
         }
 
@@ -447,9 +443,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $tables Single table or multiple tables as an array or as
-     *                multiple parameters
-     *
+     * @param $tables array|string Single table or multiple tables as an array or as multiple parameters
+     * @throws Exception
      * @return static
      */
     public function table($tables)
@@ -802,8 +797,8 @@ class QueryBuilderHandler
 
         // Build a new JoinBuilder class, keep it by reference so any changes made
         // in the closure should reflect here
-        $joinBuilder = $this->container->build('\\Pixie\\QueryBuilder\\JoinBuilder', array($this->connection));
-        $joinBuilder = & $joinBuilder;
+        $joinBuilder = &$this->container->build('\Pixie\QueryBuilder\JoinBuilder', array($this->connection));
+
         // Call the closure with our new joinBuilder object
         $key($joinBuilder);
         $table = $this->addTablePrefix($table, false);
@@ -827,7 +822,7 @@ class QueryBuilderHandler
             $this->pdo->beginTransaction();
 
             // Get the Transaction class
-            $transaction = $this->container->build('\\Pixie\\QueryBuilder\\Transaction', array($this->connection));
+            $transaction = $this->container->build('\Pixie\QueryBuilder\Transaction', array($this->connection));
 
             // Call closure
             $callback($transaction);
@@ -896,7 +891,7 @@ class QueryBuilderHandler
      */
     public function raw($value, $bindings = array())
     {
-        return $this->container->build('\\Pixie\\QueryBuilder\\Raw', array($value, $bindings));
+        return $this->container->build('\Pixie\QueryBuilder\Raw', array($value, $bindings));
     }
 
     /**
@@ -949,11 +944,11 @@ class QueryBuilderHandler
      * @param      $values
      * @param bool $tableFieldMix If we have mixes of field and table names with a "."
      *
-     * @return array|mixed
+     * @return array|string
      */
     public function addTablePrefix($values, $tableFieldMix = true)
     {
-        if (is_null($this->tablePrefix)) {
+        if ($this->tablePrefix === null) {
             return $values;
         }
 
@@ -1000,14 +995,10 @@ class QueryBuilderHandler
      */
     protected function addStatement($key, $value)
     {
-        if (!is_array($value)) {
-            $value = array($value);
-        }
-
         if (!array_key_exists($key, $this->statements)) {
-            $this->statements[$key] = $value;
+            $this->statements[$key] = (array)$value;
         } else {
-            $this->statements[$key] = array_merge($this->statements[$key], $value);
+            $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
         }
     }
 
@@ -1033,11 +1024,11 @@ class QueryBuilderHandler
     {
         $table = $table ?: ':any';
 
-        if ($table != ':any') {
+        if ($table !== ':any') {
             $table = $this->addTablePrefix($table, false);
         }
 
-        return $this->connection->getEventHandler()->registerEvent($event, $table, $action);
+        $this->connection->getEventHandler()->registerEvent($event, $table, $action);
     }
 
     /**
@@ -1048,11 +1039,11 @@ class QueryBuilderHandler
      */
     public function removeEvent($event, $table = ':any')
     {
-        if ($table != ':any') {
+        if ($table !== ':any') {
             $table = $this->addTablePrefix($table, false);
         }
 
-        return $this->connection->getEventHandler()->removeEvent($event, $table);
+        $this->connection->getEventHandler()->removeEvent($event, $table);
     }
 
     /**

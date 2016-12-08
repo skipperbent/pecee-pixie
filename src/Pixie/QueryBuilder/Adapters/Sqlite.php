@@ -5,5 +5,5 @@ class Sqlite extends BaseAdapter
     /**
      * @var string
      */
-    protected $sanitizer = '"';
+    const SANITIZER = '"';
 }
