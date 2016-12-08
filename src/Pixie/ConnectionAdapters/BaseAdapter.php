@@ -1,5 +1,7 @@
 <?php namespace Pixie\ConnectionAdapters;
 
+use Viocon\Container;
+
 abstract class BaseAdapter
 {
     /**
@@ -10,7 +12,7 @@ abstract class BaseAdapter
     /**
      * @param \Viocon\Container $container
      */
-    public function __construct(\Viocon\Container $container)
+    public function __construct(Container $container)
     {
         $this->container = $container;
     }

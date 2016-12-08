@@ -84,13 +84,11 @@ class QueryObject
                 $values[$key] = implode(',', $this->pdo->quote($value));
             }
 
-            if (is_null($value)) {
+            if ($value === null) {
                 $values[$key] = 'NULL';
             }
         }
 
-        $query = preg_replace($keys, $values, $query, 1, $count);
-
-        return $query;
+        return preg_replace($keys, $values, $query, 1, $count);
     }
 }
