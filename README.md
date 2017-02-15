@@ -90,7 +90,7 @@ Pixie uses [Composer](http://getcomposer.org/doc/00-intro.md#installation-nix) t
 Learn to use composer and add this to require section (in your composer.json):
 
 ```
-    composer install pecee/pixie
+composer install pecee/pixie
 ```
 
 ## Full Usage API
@@ -168,7 +168,7 @@ $query = $qb->table('my_table')->where('name', '=', 'Sana');
 
 ### SQLite and PostgreSQL Config Sample
 ```PHP
-new \Pecee\Pixie\Connection('sqlite', array(
+$qb = new \Pecee\Pixie\Connection('sqlite', array(
                 'driver'   => 'sqlite',
 			    'database' => 'your-file.sqlite',
 			    'prefix'   => 'cb_',
@@ -176,7 +176,7 @@ new \Pecee\Pixie\Connection('sqlite', array(
 ```
 
 ```PHP
-new \Pecee\Pixie\Connection('pgsql', array(
+$qb = new \Pecee\Pixie\Connection('pgsql', array(
                     'driver'   => 'pgsql',
                     'host'     => 'localhost',
                     'database' => 'your-database',
@@ -203,8 +203,8 @@ $qb->table(array('mytable1', 'mytable2'));
 You can easily set the table prefix by using
 
 ```php
-$query->addPrefix('post', 'child');
-$query->where('id', '=', 2);
+$qb->addPrefix('post', 'child');
+$qb->where('id', '=', 2);
 ```
 
 ### Get Easily
