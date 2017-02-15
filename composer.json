@@ -43,7 +43,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Pecee\\": "src/Pecee/"
+      "Pecee\\Pixie\\": "src/Pecee/Pixie/"
     }
   }
 }
