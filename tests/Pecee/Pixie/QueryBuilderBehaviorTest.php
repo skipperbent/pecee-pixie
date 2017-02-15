@@ -1,4 +1,5 @@
-<?php namespace Pixie;
+<?php
+namespace Pecee\Pixie;
 
 use Mockery as m;
 

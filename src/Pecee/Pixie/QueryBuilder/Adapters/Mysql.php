@@ -1,4 +1,5 @@
-<?php namespace Pixie\QueryBuilder\Adapters;
+<?php
+namespace Pecee\Pixie\QueryBuilder\Adapters;
 
 class Mysql extends BaseAdapter
 {

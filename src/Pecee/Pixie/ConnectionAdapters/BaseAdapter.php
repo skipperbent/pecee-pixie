@@ -1,4 +1,5 @@
-<?php namespace Pixie\ConnectionAdapters;
+<?php
+namespace Pecee\Pixie\ConnectionAdapters;
 
 use Viocon\Container;
 
@@ -24,9 +25,10 @@ abstract class BaseAdapter
      */
     public function connect($config)
     {
-        if (!isset($config['options'])) {
-            $config['options'] = array();
+        if (isset($config['options']) === false) {
+            $config['options'] = [];
         }
+
         return $this->doConnect($config);
     }
 

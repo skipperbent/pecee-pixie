@@ -1,4 +1,5 @@
-<?php namespace Pixie\QueryBuilder;
+<?php
+namespace Pecee\Pixie\QueryBuilder;
 
 class Raw
 {
@@ -13,7 +14,12 @@ class Raw
      */
     protected $bindings;
 
-    public function __construct($value, $bindings = array())
+    /**
+     * Raw constructor.
+     * @param string $value
+     * @param array|string $bindings
+     */
+    public function __construct($value, $bindings = [])
     {
         $this->value = (string)$value;
         $this->bindings = (array)$bindings;

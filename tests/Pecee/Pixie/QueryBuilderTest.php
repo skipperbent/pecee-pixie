@@ -1,8 +1,9 @@
-<?php namespace Pixie;
+<?php
+namespace Pecee\Pixie;
 
 use PDO;
 use Mockery as m;
-use Pixie\QueryBuilder\QueryBuilderHandler;
+use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 class QueryBuilder extends TestCase
 {

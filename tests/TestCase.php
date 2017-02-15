@@ -1,4 +1,5 @@
-<?php namespace Pixie;
+<?php
+namespace Pecee\Pixie;
 
 use Mockery as m;
 use Viocon\Container;
@@ -16,7 +17,7 @@ class TestCase extends \PHPUnit_Framework_TestCase {
     {
         $this->container = new Container();
 
-        $this->mockPdoStatement = $this->getMock('\\PDOStatement');
+        $this->mockPdoStatement = $this->getMock(\PDOStatement::class);
 
         $mockPdoStatement = & $this->mockPdoStatement;
 
@@ -46,7 +47,7 @@ class TestCase extends \PHPUnit_Framework_TestCase {
                 return array($mockPdoStatement->sql, $mockPdoStatement->bindings);
             }));
 
-        $this->mockPdo = $this->getMock('\\Pixie\\MockPdo', array('prepare', 'setAttribute', 'quote', 'lastInsertId'));
+        $this->mockPdo = $this->getMock(MockPdo::class, array('prepare', 'setAttribute', 'quote', 'lastInsertId'));
 
         $this->mockPdo
             ->expects($this->any())
@@ -65,7 +66,7 @@ class TestCase extends \PHPUnit_Framework_TestCase {
 
         $eventHandler = new EventHandler();
 
-        $this->mockConnection = m::mock('\\Pixie\\Connection');
+        $this->mockConnection = m::mock(Connection::class);
         $this->mockConnection->shouldReceive('getPdoInstance')->andReturn($this->mockPdo);
         $this->mockConnection->shouldReceive('getAdapter')->andReturn('mysql');
         $this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(array('prefix' => 'cb_'));

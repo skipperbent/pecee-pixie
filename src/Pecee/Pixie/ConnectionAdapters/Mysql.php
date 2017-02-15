@@ -1,4 +1,5 @@
-<?php namespace Pixie\ConnectionAdapters;
+<?php
+namespace Pecee\Pixie\ConnectionAdapters;
 
 class Mysql extends BaseAdapter
 {
@@ -10,11 +11,11 @@ class Mysql extends BaseAdapter
     protected function doConnect($config)
     {
         $connectionString = "mysql:dbname={$config['database']}";
-        
+
         if (isset($config['host'])) {
             $connectionString .= ";host={$config['host']}";
         }
-        
+
         if (isset($config['port'])) {
             $connectionString .= ";port={$config['port']}";
         }
@@ -24,8 +25,8 @@ class Mysql extends BaseAdapter
         }
 
         $connection = $this->container->build(
-            '\PDO',
-            array($connectionString, $config['username'], $config['password'], $config['options'])
+            \PDO::class,
+            [$connectionString, $config['username'], $config['password'], $config['options']]
         );
 
         if (isset($config['charset'])) {

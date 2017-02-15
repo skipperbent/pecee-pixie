@@ -1,4 +1,5 @@
-<?php namespace Pixie\ConnectionAdapters;
+<?php
+namespace Pecee\Pixie\ConnectionAdapters;
 
 class Sqlite extends BaseAdapter
 {
@@ -10,9 +11,10 @@ class Sqlite extends BaseAdapter
     public function doConnect($config)
     {
         $connectionString = 'sqlite:' . $config['database'];
+
         return $this->container->build(
-            '\PDO',
-            array($connectionString, null, null, $config['options'])
+            \PDO::class,
+            [$connectionString, null, null, $config['options']]
         );
     }
 }

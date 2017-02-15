@@ -1,4 +1,5 @@
-<?php namespace Pixie\ConnectionAdapters;
+<?php
+namespace Pecee\Pixie\ConnectionAdapters;
 
 class Pgsql extends BaseAdapter
 {
@@ -16,8 +17,8 @@ class Pgsql extends BaseAdapter
         }
 
         $connection = $this->container->build(
-            '\PDO',
-            array($connectionString, $config['username'], $config['password'], $config['options'])
+            \PDO::class,
+            [$connectionString, $config['username'], $config['password'], $config['options']]
         );
 
         if (isset($config['charset'])) {

@@ -1,13 +1,14 @@
-<?php namespace Pixie\QueryBuilder;
+<?php
+namespace Pecee\Pixie\QueryBuilder;
 
 class JoinBuilder extends QueryBuilderHandler
 {
     /**
-     * @param $key
-     * @param $operator
-     * @param $value
+     * @param string $key
+     * @param string|mixed $operator
+     * @param string|mixed $value
      *
-     * @return $this
+     * @return static
      */
     public function on($key, $operator, $value)
     {
@@ -15,11 +16,11 @@ class JoinBuilder extends QueryBuilderHandler
     }
 
     /**
-     * @param $key
-     * @param $operator
-     * @param $value
+     * @param string $key
+     * @param string|mixed $operator
+     * @param string|mixed $value
      *
-     * @return $this
+     * @return static
      */
     public function orOn($key, $operator, $value)
     {
@@ -27,18 +28,19 @@ class JoinBuilder extends QueryBuilderHandler
     }
 
     /**
-     * @param        $key
-     * @param null   $operator
-     * @param null   $value
+     * @param string$key
+     * @param string|mixed|null $operator
+     * @param string|mixed|null $value
      * @param string $joiner
      *
-     * @return $this
+     * @return static
      */
     protected function joinHandler($key, $operator = null, $value = null, $joiner = 'AND')
     {
         $key = $this->addTablePrefix($key);
         $value = $this->addTablePrefix($value);
         $this->statements['criteria'][] = compact('key', 'operator', 'value', 'joiner');
+
         return $this;
     }
 }
