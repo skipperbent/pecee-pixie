@@ -1,6 +1,6 @@
 {
   "name": "pecee/pixie",
-  "description": "A lightweight, expressive, framework agnostic query builder for PHP. This fork aims to fix and deploy features quicker than the original.",
+  "description": "Lightweight, fast query-builder for PHP based on Laravel Eloquent but with less overhead.",
   "homepage": "https://github.com/skipperbent/pixie",
   "keywords": [
     "pecee",
