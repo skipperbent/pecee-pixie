@@ -28,7 +28,7 @@ class QueryBuilderTest extends TestCase
         );
     }
 
-    public function testPrefix()
+    public function testAlias()
     {
         $query = $this->builder->table(['table1' => 'foo1'])
             ->alias('table1', 'foo2')
