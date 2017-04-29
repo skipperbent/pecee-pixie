@@ -28,6 +28,16 @@ class QueryBuilderTest extends TestCase
         );
     }
 
+    public function testPrefix()
+    {
+        $query = $this->builder->table(['table1' => 'foo1'])
+            ->alias('table1', 'foo2')
+            ->join('table2', 'table2.person_id', '=', 'foo2.id');
+
+        $this->assertEquals('SELECT * FROM `cb_table1` AS foo2 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo2`.`id`',
+            $query->getQuery()->getRawSql());
+    }
+
     public function testSelectQuery()
     {
         $subQuery = $this->builder->table('person_details')->select('details')->where('person_id', '=', 3);

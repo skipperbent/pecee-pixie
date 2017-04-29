@@ -48,10 +48,12 @@ abstract class BaseAdapter
         if (isset($statements['tables'])) {
             $tables = [];
 
-            foreach ($statements['tables'] as $table) {
-                $t = ($table instanceof Raw) ? $table : '`' . $table . '`';
-                if (isset($statements['prefixes'][strtolower($table)])) {
-                    $t .= ' AS ' . $statements['prefixes'][strtolower($table)];
+            foreach ($statements['tables'] as $prefix => $table) {
+
+                if (is_numeric($prefix) === false) {
+                    $t =  $t = ($table instanceof Raw) ? $prefix : '`' . $prefix . '` AS ' . strtolower($table);
+                } else {
+                    $t = ($table instanceof Raw) ? $table : '`' . $table . '`';
                 }
 
                 $tables[] = $t;

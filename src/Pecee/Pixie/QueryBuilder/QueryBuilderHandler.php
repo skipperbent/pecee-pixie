@@ -132,10 +132,18 @@ class QueryBuilderHandler
         return $this;
     }
 
-    public function addPrefix($table, $prefix)
+    /**
+     * Add table alias
+     * Example: table AS alias
+     *
+     * @see QueryBuilderHandler::addAlias()
+     * @param string $table
+     * @param string $prefix
+     * @return QueryBuilderHandler
+     */
+    public function alias($table, $prefix)
     {
-        $this->addStatement('prefixes', [$table => strtolower($prefix)]);
-
+        $this->statements['tables'][$this->tablePrefix . $table] =  strtolower($prefix);
         return $this;
     }
 
@@ -164,7 +172,7 @@ class QueryBuilderHandler
     /**
      * Get all rows
      * @throws Exception
-     * @return \stdClass|null
+     * @return \stdClass|array|null
      */
     public function get()
     {
