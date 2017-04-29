@@ -132,11 +132,33 @@ class QueryBuilderHandler
         return $this;
     }
 
-    public function addPrefix($table, $prefix)
+    /**
+     * Add or change table alias
+     * Example: table AS alias
+     *
+     * @param string $table
+     * @param string $alias
+     * @return QueryBuilderHandler
+     */
+    public function alias($table, $alias)
     {
-        $this->addStatement('prefixes', [$table => strtolower($prefix)]);
-
+        $this->statements['tables'][$this->tablePrefix . $table] =  strtolower($alias);
         return $this;
+    }
+
+    /**
+     * Add or change table alias
+     * Example: table AS alias
+     *
+     * @deprecated This method will be removed in the near future, please use QueryBuilderHandler::alias instead.
+     * @see QueryBuilderHandler::alias
+     * @param string $table
+     * @param string $alias
+     * @return QueryBuilderHandler
+     */
+    public function prefix($table, $alias)
+    {
+        return $this->alias($table, $alias);
     }
 
     /**
@@ -164,7 +186,7 @@ class QueryBuilderHandler
     /**
      * Get all rows
      * @throws Exception
-     * @return \stdClass|null
+     * @return \stdClass|array|null
      */
     public function get()
     {

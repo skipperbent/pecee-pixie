@@ -99,10 +99,10 @@ composer install pecee/pixie
 
  - [Connection](#connection)
     - [Multiple Connection](#alias)
-    - [SQLite and PostgreSQL Config Sample](sqlite-and-postgresql-config-sample)
+    - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
  - [Query](#query)
  - [**Select**](#select)
-    - [Table prefix](table-prefix)
+    - [Table prefix](#table-alias)
     - [Get Easily](#get-easily)
     - [Multiple Selects](#multiple-selects)
     - [Select Distinct](#select-distinct)
@@ -198,13 +198,26 @@ However this is not required.
 $qb->table(array('mytable1', 'mytable2'));
 ```
 
-### Table prefix
+### Table alias
 
-You can easily set the table prefix by using
+You can easily set the table alias by using
 
 ```php
-$qb->addPrefix('post', 'child');
-$qb->where('id', '=', 2);
+$qb
+->table(['table1' => 'foo1'])
+->join('table2', 'table2.person_id', '=', 'foo1.id');
+```
+
+You can change the alias anytime by using
+
+```php
+$qb->alias($table, $alias);
+```
+
+Output:
+
+```
+SELECT * FROM `table1` AS foo1 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
 ### Get Easily
