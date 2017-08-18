@@ -190,11 +190,7 @@ class QueryBuilderHandler
      */
     public function get()
     {
-        $eventResult = $this->fireEvents('before-select');
-        if ($eventResult !== null) {
-            return $eventResult;
-        }
-
+        $queryObject = null;
         $executionTime = 0;
         if ($this->pdoStatement === null) {
             $queryObject = $this->getQuery('select');
@@ -205,10 +201,11 @@ class QueryBuilderHandler
         }
 
         $start = microtime(true);
+        $this->fireEvents('before-select', $queryObject);
         $result = call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
         $executionTime += microtime(true) - $start;
         $this->pdoStatement = null;
-        $this->fireEvents('after-select', $result, $executionTime);
+        $this->fireEvents('after-select', $queryObject, $result, $executionTime);
 
         return $result;
     }
@@ -347,36 +344,37 @@ class QueryBuilderHandler
      */
     private function doInsert($data, $type)
     {
-        $eventResult = $this->fireEvents('before-insert');
-        if ($eventResult !== null) {
-            return $eventResult;
-        }
+        $queryObject = null;
 
         // If first value is not an array
         // Its not a batch insert
         if (!is_array(current($data))) {
             $queryObject = $this->getQuery($type, $data);
 
+            $this->fireEvents('before-insert', $queryObject);
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-
             $return = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+            $this->fireEvents('after-insert', $queryObject, $return, $executionTime);
+
         } else {
             // Its a batch insert
             $return = [];
-            $executionTime = 0;
             foreach ($data as $subData) {
                 $queryObject = $this->getQuery($type, $subData);
 
-                list($result, $time) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-                $executionTime += $time;
+                $this->fireEvents('before-insert', $queryObject);
 
-                if ($result->rowCount() === 1) {
-                    $return[] = $this->pdo->lastInsertId();
-                }
+                list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+
+                $result = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+
+                $this->fireEvents('after-insert', $queryObject, $result, $executionTime);
+
+                $return[] = $result;
             }
         }
 
-        $this->fireEvents('after-insert', $return, $executionTime);
+
 
         return $return;
     }
@@ -418,12 +416,9 @@ class QueryBuilderHandler
      */
     public function update($data)
     {
-        $eventResult = $this->fireEvents('before-update');
-        if ($eventResult !== null) {
-            return $eventResult;
-        }
-
         $queryObject = $this->getQuery('update', $data);
+
+        $this->fireEvents('before-update', $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents('after-update', $queryObject, $executionTime);
@@ -461,12 +456,9 @@ class QueryBuilderHandler
      */
     public function delete()
     {
-        $eventResult = $this->fireEvents('before-delete');
-        if ($eventResult !== null) {
-            return $eventResult;
-        }
-
         $queryObject = $this->getQuery('delete');
+
+        $this->fireEvents('before-delete', $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents('after-delete', $queryObject, $executionTime);
