@@ -142,7 +142,7 @@ class QueryBuilderHandler
      */
     public function alias($table, $alias)
     {
-        $this->statements['tables'][$this->tablePrefix . $table] =  strtolower($alias);
+        $this->statements['aliases'][$this->tablePrefix . $table] = strtolower($alias);
         return $this;
     }
 
