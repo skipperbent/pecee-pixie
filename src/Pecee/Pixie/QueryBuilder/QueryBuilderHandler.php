@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder;
 
 use PDO;
@@ -143,6 +144,7 @@ class QueryBuilderHandler
     public function alias($table, $alias)
     {
         $this->statements['aliases'][$this->tablePrefix . $table] = strtolower($alias);
+
         return $this;
     }
 
@@ -220,7 +222,7 @@ class QueryBuilderHandler
         $this->limit(1);
         $result = $this->get();
 
-        return empty($result) ? null : $result[0];
+        return null === $result ? null : $result[0];
     }
 
     /**
@@ -290,7 +292,8 @@ class QueryBuilderHandler
         if (isset($row[0])) {
             if (is_array($row[0])) {
                 return (int)$row[0]['field'];
-            } elseif (is_object($row[0])) {
+            }
+            if (is_object($row[0])) {
                 return (int)$row[0]->field;
             }
         }
@@ -346,9 +349,8 @@ class QueryBuilderHandler
     {
         $queryObject = null;
 
-        // If first value is not an array
-        // Its not a batch insert
-        if (!is_array(current($data))) {
+        // If first value is not an array - it's not a batch insert
+        if (is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
             $this->fireEvents('before-insert', $queryObject);
@@ -363,18 +365,13 @@ class QueryBuilderHandler
                 $queryObject = $this->getQuery($type, $subData);
 
                 $this->fireEvents('before-insert', $queryObject);
-
                 list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-
                 $result = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-
                 $this->fireEvents('after-insert', $queryObject, $result, $executionTime);
 
                 $return[] = $result;
             }
         }
-
-
 
         return $return;
     }
@@ -435,9 +432,9 @@ class QueryBuilderHandler
     {
         if ($this->first()) {
             return $this->update($data);
-        } else {
-            return $this->insert($data);
         }
+
+        return $this->insert($data);
     }
 
     /**
@@ -556,7 +553,7 @@ class QueryBuilderHandler
             $fields = [$fields];
         }
 
-        foreach ($fields as $key => $value) {
+        foreach ((array)$fields as $key => $value) {
             $field = $key;
             $type = $value;
             if (is_int($key)) {
