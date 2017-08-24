@@ -50,7 +50,7 @@ $config = array(
             ),
         );
 
-$qb = new \Pecee\Pixie\Connection('mysql', $config);
+$qb = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 ```
 
 **Simple Query:**
@@ -158,7 +158,7 @@ $config = array(
             'prefix'    => 'cb_', // Table prefix, optional
         );
 
-$qb = new \Pecee\Pixie\Connection('mysql', $config);
+$qb = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 
 // Run query
 $query = $qb->table('my_table')->where('name', '=', 'Sana');
