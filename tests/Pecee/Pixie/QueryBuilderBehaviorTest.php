@@ -2,9 +2,13 @@
 namespace Pecee\Pixie;
 
 use Mockery as m;
+use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 class QueryBuilderTest extends TestCase
 {
+    /**
+     * @var QueryBuilderHandler
+     */
     private $builder;
 
     public function setUp()
@@ -30,11 +34,12 @@ class QueryBuilderTest extends TestCase
 
     public function testAlias()
     {
-        $query = $this->builder->table(['table1' => 'foo1'])
-            ->alias('table1', 'foo2')
+        $query = $this->builder
+            ->table(['table1'])
+            ->alias('table1', 't1')
             ->join('table2', 'table2.person_id', '=', 'foo2.id');
 
-        $this->assertEquals('SELECT * FROM `cb_table1` AS foo2 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo2`.`id`',
+        $this->assertEquals('SELECT * FROM `cb_table1` AS `t1` INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo2`.`id`',
             $query->getQuery()->getRawSql());
     }
 
@@ -165,31 +170,32 @@ class QueryBuilderTest extends TestCase
     public function testEventPropagation()
     {
         $builder = $this->builder;
-        $counter = 0;
 
-        foreach (array('before', 'after') as $prefix) {
-            foreach (array('insert', 'select', 'update', 'delete') as $action) {
-                $builder->registerEvent("$prefix-$action", ':any', function ($qb) use (&$counter) {
-                    return $counter++;
-                });
-            }
+        $events = [
+            'before-insert',
+            'after-insert',
+            'before-select',
+            'after-select',
+            'before-update',
+            'after-update',
+            'before-delete',
+            'after-delete',
+        ];
+
+        $triggeredEvents = [];
+
+        foreach ($events as $event) {
+            $builder->registerEvent($event, ':any', function ($qb) use (&$triggeredEvents, $event) {
+                $triggeredEvents[] = $event;
+            });
         }
 
-        $insert = $builder->table('foo')->insert(array('bar' => 'baz'));
-        $this->assertEquals(0, $insert);
-        $this->assertEquals(1, $counter, 'after-insert was not called');
+        $builder->table('foo')->insert(array('bar' => 'baz'));
+        $builder->from('foo')->select('bar')->get();
+        $builder->table('foo')->update(array('bar' => 'baz'));
+        $builder->from('foo')->delete();
 
-        $select = $builder->from('foo')->select('bar')->get();
-        $this->assertEquals(1, $select);
-        $this->assertEquals(2, $counter, 'after-select was not called');
-
-        $update = $builder->table('foo')->update(array('bar' => 'baz'));
-        $this->assertEquals(2, $update);
-        $this->assertEquals(3, $counter, 'after-update was not called');
-
-        $delete = $builder->from('foo')->delete();
-        $this->assertEquals(3, $delete);
-        $this->assertEquals(4, $counter, 'after-delete was not called');
+        $this->assertEquals($triggeredEvents, $events);
     }
 
     public function testInsertQuery()
