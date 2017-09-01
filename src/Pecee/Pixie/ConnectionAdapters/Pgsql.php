@@ -1,10 +1,15 @@
 <?php
 namespace Pecee\Pixie\ConnectionAdapters;
 
+/**
+ * Class Pgsql
+ *
+ * @package Pecee\Pixie\ConnectionAdapters
+ */
 class Pgsql extends BaseAdapter
 {
     /**
-     * @param $config
+     * @param array $config
      *
      * @return mixed
      */

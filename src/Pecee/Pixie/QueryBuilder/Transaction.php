@@ -1,6 +1,11 @@
 <?php
 namespace Pecee\Pixie\QueryBuilder;
 
+/**
+ * Class Transaction
+ *
+ * @package Pecee\Pixie\QueryBuilder
+ */
 class Transaction extends QueryBuilderHandler
 {
 

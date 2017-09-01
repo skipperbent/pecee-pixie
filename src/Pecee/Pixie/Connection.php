@@ -1,9 +1,15 @@
 <?php
+
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Viocon\Container;
 
+/**
+ * Class Connection
+ *
+ * @package Pecee\Pixie
+ */
 class Connection
 {
 
@@ -13,6 +19,7 @@ class Connection
     protected $container;
 
     /**
+     * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
      * @var string
      */
     protected $adapter;
@@ -38,9 +45,9 @@ class Connection
     protected $eventHandler;
 
     /**
-     * @param string $adapter
-     * @param array $adapterConfig
-     * @param Container $container
+     * @param string         $adapter
+     * @param array          $adapterConfig
+     * @param Container|null $container
      */
     public function __construct($adapter, array $adapterConfig, Container $container = null)
     {
@@ -103,7 +110,7 @@ class Connection
     }
 
     /**
-     * @param $adapter
+     * @param string $adapter
      *
      * @return static
      */

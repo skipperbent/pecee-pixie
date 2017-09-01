@@ -1,8 +1,14 @@
 <?php
+
 namespace Pecee\Pixie\ConnectionAdapters;
 
 use Viocon\Container;
 
+/**
+ * Class BaseAdapter
+ *
+ * @package Pecee\Pixie\ConnectionAdapters
+ */
 abstract class BaseAdapter
 {
     /**

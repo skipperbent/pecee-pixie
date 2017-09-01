@@ -1,10 +1,15 @@
 <?php
 namespace Pecee\Pixie\ConnectionAdapters;
 
+/**
+ * Class Sqlite
+ *
+ * @package Pecee\Pixie\ConnectionAdapters
+ */
 class Sqlite extends BaseAdapter
 {
     /**
-     * @param $config
+     * @param array $config
      *
      * @return mixed
      */

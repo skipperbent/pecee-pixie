@@ -1,6 +1,12 @@
 <?php
+
 namespace Pecee\Pixie\ConnectionAdapters;
 
+/**
+ * Class Mysql
+ *
+ * @package Pecee\Pixie\ConnectionAdapters
+ */
 class Mysql extends BaseAdapter
 {
     /**

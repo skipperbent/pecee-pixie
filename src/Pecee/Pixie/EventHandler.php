@@ -1,9 +1,15 @@
 <?php
+
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Pecee\Pixie\QueryBuilder\Raw;
 
+/**
+ * Class EventHandler
+ *
+ * @package Pecee\Pixie
+ */
 class EventHandler
 {
     /**
@@ -25,14 +31,14 @@ class EventHandler
     }
 
     /**
-     * @param $event
-     * @param $table
+     * @param string      $event
+     * @param string|null $table
      *
      * @return callable|null
      */
     public function getEvent($event, $table = null)
     {
-        $table ?: ':any';
+        $table = $table ?: ':any';
 
         if ($table instanceof Raw) {
             return null;
@@ -54,8 +60,8 @@ class EventHandler
     }
 
     /**
-     * @param          $event
-     * @param string $table
+     * @param string   $event
+     * @param string   $table
      * @param \Closure $action
      *
      * @return void
@@ -68,7 +74,7 @@ class EventHandler
     }
 
     /**
-     * @param $event
+     * @param string $event
      * @param string $table
      *
      * @return void
@@ -81,13 +87,18 @@ class EventHandler
 
     /**
      * @param QueryBuilderHandler $queryBuilder
-     * @param $event
+     * @param string              $event
+     *
      * @return mixed
      */
     public function fireEvents($queryBuilder, $event)
     {
+        /**
+         * @var $table string
+         */
+
         $statements = $queryBuilder->getStatements();
-        $tables = isset($statements['tables']) ? $statements['tables'] : [];
+        $tables     = isset($statements['tables']) ? $statements['tables'] : [];
 
         // Events added with :any will be fired in case of any table,
         // we are adding :any as a fake table at the beginning.
@@ -105,7 +116,7 @@ class EventHandler
                 unset($handlerParams[1]); // we do not need $event
                 // Add to fired list
                 $this->firedEvents[] = $eventId;
-                $result = call_user_func_array($action, $handlerParams);
+                $result              = call_user_func_array($action, $handlerParams);
                 if ($result !== null) {
                     return $result;
                 }

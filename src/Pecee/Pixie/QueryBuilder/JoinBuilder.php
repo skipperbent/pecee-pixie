@@ -1,10 +1,16 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder;
 
+/**
+ * Class JoinBuilder
+ *
+ * @package Pecee\Pixie\QueryBuilder
+ */
 class JoinBuilder extends QueryBuilderHandler
 {
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -16,7 +22,7 @@ class JoinBuilder extends QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -28,17 +34,17 @@ class JoinBuilder extends QueryBuilderHandler
     }
 
     /**
-     * @param string$key
+     * @param string            $key
      * @param string|mixed|null $operator
      * @param string|mixed|null $value
-     * @param string $joiner
+     * @param string            $joiner
      *
      * @return static
      */
     protected function joinHandler($key, $operator = null, $value = null, $joiner = 'AND')
     {
-        $key = $this->addTablePrefix($key);
-        $value = $this->addTablePrefix($value);
+        $key                            = $this->addTablePrefix($key);
+        $value                          = $this->addTablePrefix($value);
         $this->statements['criteria'][] = compact('key', 'operator', 'value', 'joiner');
 
         return $this;
