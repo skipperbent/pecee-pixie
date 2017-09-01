@@ -222,7 +222,7 @@ class QueryBuilderHandler
         $this->limit(1);
         $result = $this->get();
 
-        return null === $result ? null : $result[0];
+        return empty($result) ? null : $result[0];
     }
 
     /**
