@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\ConnectionAdapters;
 
 /**
@@ -12,9 +13,14 @@ class Pgsql extends BaseAdapter
      * @param array $config
      *
      * @return mixed
+     * @throws Exception
      */
     protected function doConnect($config)
     {
+        if (!extension_loaded('pdo_pgsql')) {
+            throw new Exception(sprintf('%s library not loaded', 'pdo_pgsql'));
+        }
+
         $connectionString = "pgsql:host={$config['host']};dbname={$config['database']}";
 
         if (isset($config['port'])) {
