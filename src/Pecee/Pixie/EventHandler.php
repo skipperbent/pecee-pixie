@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
@@ -60,10 +61,9 @@ class EventHandler
      *
      * @return void
      */
-    public function registerEvent($event, $table, \Closure $action)
+    public function registerEvent($event, $table = null, \Closure $action)
     {
-        $table = $table ?: ':any';
-
+        $table = is_string($table) ? $table : ':any';
         $this->events[$table][$event] = $action;
     }
 
@@ -75,7 +75,7 @@ class EventHandler
      */
     public function removeEvent($event, $table = null)
     {
-        $table = $table ?: 'any';
+        $table = is_string($table) ? $table : ':any';
         unset($this->events[$table][$event]);
     }
 

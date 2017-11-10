@@ -477,6 +477,7 @@ class QueryBuilderHandler
         }
 
         $instance = new static($this->connection);
+
         $tables = $this->addTablePrefix($tables, false);
         $instance->addStatement('tables', $tables);
 
