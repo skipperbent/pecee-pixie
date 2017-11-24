@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder\Adapters;
 
 use Pecee\Pixie\Connection;
@@ -69,6 +70,7 @@ abstract class BaseAdapter
 
         // Wheres
         list($whereCriteria, $whereBindings) = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+
         // Group bys
         $groupBys = '';
         if (isset($statements['groupBys']) && $groupBys = $this->arrayStr($statements['groupBys'], ', ')) {
@@ -471,7 +473,9 @@ abstract class BaseAdapter
         // Its a raw query, just cast as string, object has __toString()
         if ($value instanceof Raw) {
             return (string)$value;
-        } elseif ($value instanceof \Closure) {
+        }
+
+        if ($value instanceof \Closure) {
             return $value;
         }
 
