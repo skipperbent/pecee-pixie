@@ -6,6 +6,11 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Exception;
 
+/**
+ * Class QueryBuilderHandler
+ *
+ * @package Pecee\Pixie\QueryBuilder
+ */
 class QueryBuilderHandler
 {
 
@@ -50,6 +55,14 @@ class QueryBuilderHandler
      * @var array
      */
     protected $fetchParameters = [\PDO::FETCH_OBJ];
+    /**
+     * @var string
+     */
+    protected $adapter;
+    /**
+     * @var array
+     */
+    protected $adapterConfig;
 
     /**
      * @param \Pecee\Pixie\Connection|null $connection
@@ -62,10 +75,10 @@ class QueryBuilderHandler
             throw new Exception('No database connection found.', 1);
         }
 
-        $this->connection = $connection;
-        $this->container = $this->connection->getContainer();
-        $this->pdo = $this->connection->getPdoInstance();
-        $this->adapter = $this->connection->getAdapter();
+        $this->connection    = $connection;
+        $this->container     = $this->connection->getContainer();
+        $this->pdo           = $this->connection->getPdoInstance();
+        $this->adapter       = $this->connection->getAdapter();
         $this->adapterConfig = $this->connection->getAdapterConfig();
 
         if (isset($this->adapterConfig['prefix'])) {
@@ -84,10 +97,9 @@ class QueryBuilderHandler
     /**
      * Set the fetch mode
      *
-     * @param string $mode
      * @return static
      */
-    public function setFetchMode($mode)
+    public function setFetchMode()
     {
         $this->fetchParameters = func_get_args();
 
@@ -97,8 +109,9 @@ class QueryBuilderHandler
     /**
      * Fetch query results as object of specified type
      *
-     * @param $className
-     * @param array $constructorArgs
+     * @param string $className
+     * @param array  $constructorArgs
+     *
      * @return QueryBuilderHandler
      */
     public function asObject($className, array $constructorArgs = [])
@@ -108,6 +121,7 @@ class QueryBuilderHandler
 
     /**
      * @param \Pecee\Pixie\Connection|null $connection
+     *
      * @throws \Pecee\Pixie\Exception
      * @return static
      */
@@ -122,7 +136,7 @@ class QueryBuilderHandler
 
     /**
      * @param string $sql
-     * @param array $bindings
+     * @param array  $bindings
      *
      * @return static
      */
@@ -139,6 +153,7 @@ class QueryBuilderHandler
      *
      * @param string $table
      * @param string $alias
+     *
      * @return QueryBuilderHandler
      */
     public function alias($table, $alias)
@@ -153,9 +168,11 @@ class QueryBuilderHandler
      * Example: table AS alias
      *
      * @deprecated This method will be removed in the near future, please use QueryBuilderHandler::alias instead.
-     * @see QueryBuilderHandler::alias
+     * @see        QueryBuilderHandler::alias
+     *
      * @param string $table
      * @param string $alias
+     *
      * @return QueryBuilderHandler
      */
     public function prefix($table, $alias)
@@ -164,14 +181,17 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param       $sql
-     * @param array $bindings
+     * @param string $sql
+     * @param array  $bindings
      *
      * @return array PDOStatement and execution time as float
      */
     public function statement($sql, $bindings = [])
     {
-        $start = microtime(true);
+        /**
+         * @var $start float
+         */
+        $start        = microtime(true);
         $pdoStatement = $this->pdo->prepare($sql);
         foreach ($bindings as $key => $value) {
             $pdoStatement->bindValue(
@@ -187,12 +207,17 @@ class QueryBuilderHandler
 
     /**
      * Get all rows
+     *
      * @throws Exception
-     * @return \stdClass|array|null
+     * @return \stdClass[]
      */
     public function get()
     {
-        $queryObject = null;
+        /**
+         * @var $executionTime float
+         * @var $start         float
+         */
+        $queryObject   = null;
         $executionTime = 0;
         if ($this->pdoStatement === null) {
             $queryObject = $this->getQuery('select');
@@ -204,8 +229,8 @@ class QueryBuilderHandler
 
         $start = microtime(true);
         $this->fireEvents('before-select', $queryObject);
-        $result = call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
-        $executionTime += microtime(true) - $start;
+        $result             = call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
+        $executionTime      += microtime(true) - $start;
         $this->pdoStatement = null;
         $this->fireEvents('after-select', $queryObject, $result, $executionTime);
 
@@ -214,6 +239,7 @@ class QueryBuilderHandler
 
     /**
      * Get first row
+     *
      * @throws Exception
      * @return \stdClass|null
      */
@@ -226,10 +252,10 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param        $value
-     * @param string $fieldName
-     * @throws Exception
-     * @return null|\stdClass
+     * @param string           $fieldName
+     * @param string|int|float $value
+     *
+     * @return \stdClass[]
      */
     public function findAll($fieldName, $value)
     {
@@ -239,8 +265,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param        $value
-     * @param string $fieldName
+     * @param string|int|float $value
+     * @param string           $fieldName
+     *
      * @throws Exception
      * @return null|\stdClass
      */
@@ -253,6 +280,7 @@ class QueryBuilderHandler
 
     /**
      * Get count of rows
+     *
      * @throws Exception
      * @return int
      */
@@ -263,14 +291,15 @@ class QueryBuilderHandler
 
         unset($this->statements['orderBys'], $this->statements['limit'], $this->statements['offset']);
 
-        $count = $this->aggregate('count');
+        $count            = $this->aggregate('count');
         $this->statements = $originalStatements;
 
         return $count;
     }
 
     /**
-     * @param $type
+     * @param string $type
+     *
      * @throws Exception
      * @return int
      */
@@ -280,7 +309,7 @@ class QueryBuilderHandler
         $mainSelects = isset($this->statements['selects']) ? $this->statements['selects'] : null;
         // Replace select with a scalar value like `count`
         $this->statements['selects'] = [$this->raw($type . '(*) as field')];
-        $row = $this->get();
+        $row                         = $this->get();
 
         // Set the select as it was
         if ($mainSelects) {
@@ -302,7 +331,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $type
+     * @param string     $type
      * @param array|bool $dataToBePassed
      *
      * @return QueryObject
@@ -325,7 +354,8 @@ class QueryBuilderHandler
 
     /**
      * @param QueryBuilderHandler $queryBuilder
-     * @param null $alias
+     * @param string|null         $alias
+     *
      * @throws Exception
      * @return Raw
      */
@@ -340,8 +370,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param array $data
+     * @param array  $data
      * @param string $type
+     *
      * @throws Exception
      * @return array|string
      */
@@ -377,7 +408,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $data
+     * @param array $data
+     *
      * @throws Exception
      * @return array|string
      */
@@ -387,7 +419,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $data
+     * @param array $data
+     *
      * @throws Exception
      * @return array|string
      */
@@ -397,7 +430,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $data
+     * @param array $data
+     *
      * @throws Exception
      * @return array|string
      */
@@ -407,12 +441,17 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $data
+     * @param array $data
+     *
      * @throws Exception
-     * @return static
+     * @return \PDOStatement
      */
     public function update($data)
     {
+        /**
+         * @var $response      \PDOStatement
+         * @var $executionTime float
+         */
         $queryObject = $this->getQuery('update', $data);
 
         $this->fireEvents('before-update', $queryObject);
@@ -424,9 +463,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $data
-     * @throws Exception
-     * @return array|string
+     * @param array $data
+     *
+     * @return array|\PDOStatement|string
      */
     public function updateOrInsert($data)
     {
@@ -439,6 +478,7 @@ class QueryBuilderHandler
 
     /**
      * @param string $data
+     *
      * @return static
      */
     public function onDuplicateKeyUpdate($data)
@@ -449,10 +489,14 @@ class QueryBuilderHandler
     }
 
     /**
-     * @throws Exception
+     * @return \PDOStatement
      */
     public function delete()
     {
+        /**
+         * @var $response      \PDOStatement
+         * @var $executionTime float
+         */
         $queryObject = $this->getQuery('delete');
 
         $this->fireEvents('before-delete', $queryObject);
@@ -464,7 +508,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $tables array|string Single table or multiple tables as an array or as multiple parameters
+     * @param $tables string|string[] Single table or multiple tables as an array or as multiple parameters
+     *
      * @throws Exception
      * @return static
      */
@@ -477,14 +522,14 @@ class QueryBuilderHandler
         }
 
         $instance = new static($this->connection);
-        $tables = $this->addTablePrefix($tables, false);
+        $tables   = $this->addTablePrefix($tables, false);
         $instance->addStatement('tables', $tables);
 
         return $instance;
     }
 
     /**
-     * @param array|string $tables
+     * @param string|string[] $tables
      *
      * @return static
      */
@@ -501,12 +546,13 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param array|string $fields
+     * @param string|string[] $fields,...
+     *
      * @return static
      */
     public function select($fields)
     {
-        if (is_array($fields) === false) {
+        if (!is_array($fields)) {
             $fields = func_get_args();
         }
 
@@ -518,6 +564,7 @@ class QueryBuilderHandler
 
     /**
      * @param array|string $fields
+     *
      * @return static
      */
     public function selectDistinct($fields)
@@ -543,22 +590,22 @@ class QueryBuilderHandler
 
     /**
      * @param string|array $fields
-     * @param string $defaultDirection
+     * @param string       $defaultDirection
      *
      * @return static
      */
     public function orderBy($fields, $defaultDirection = 'ASC')
     {
-        if (is_array($fields) === false) {
+        if (!is_array($fields)) {
             $fields = [$fields];
         }
 
         foreach ((array)$fields as $key => $value) {
             $field = $key;
-            $type = $value;
+            $type  = $value;
             if (is_int($key)) {
                 $field = $value;
-                $type = $defaultDirection;
+                $type  = $defaultDirection;
             }
             if (!$field instanceof Raw) {
                 $field = $this->addTablePrefix($field);
@@ -571,6 +618,7 @@ class QueryBuilderHandler
 
     /**
      * @param int $limit
+     *
      * @return static
      */
     public function limit($limit)
@@ -582,6 +630,7 @@ class QueryBuilderHandler
 
     /**
      * @param int $offset
+     *
      * @return static $this
      */
     public function offset($offset)
@@ -592,23 +641,23 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
-     * @param string $joiner
+     * @param string       $joiner
      *
      * @return static
      */
     public function having($key, $operator, $value, $joiner = 'AND')
     {
-        $key = $this->addTablePrefix($key);
+        $key                           = $this->addTablePrefix($key);
         $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
 
         return $this;
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -620,7 +669,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -630,7 +679,7 @@ class QueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -642,7 +691,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -652,7 +701,7 @@ class QueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -660,7 +709,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -670,7 +719,7 @@ class QueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -678,7 +727,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -688,7 +737,7 @@ class QueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -696,8 +745,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param array $values
+     * @param string                 $key
+     * @param string[]|int[]|float[] $values
      *
      * @return static
      */
@@ -707,8 +756,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param array $values
+     * @param string                     $key
+     * @param string[]|integer[]|float[] $values
      *
      * @return static
      */
@@ -718,8 +767,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param array $values
+     * @param string                     $key
+     * @param string[]|integer[]|float[] $values
      *
      * @return static
      */
@@ -729,8 +778,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param array $values
+     * @param string                     $key
+     * @param string[]|integer[]|float[] $values
      *
      * @return static
      */
@@ -740,9 +789,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param string $valueFrom
-     * @param string $valueTo
+     * @param string               $key
+     * @param string|integer|float $valueFrom
+     * @param string|integer|float $valueTo
      *
      * @return static
      */
@@ -752,9 +801,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param string $valueFrom
-     * @param string $valueTo
+     * @param string               $key
+     * @param string|integer|float $valueFrom
+     * @param string|integer|float $valueTo
      *
      * @return static
      */
@@ -764,7 +813,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $key
+     * @param string $key
+     *
      * @return QueryBuilderHandler
      */
     public function whereNull($key)
@@ -773,7 +823,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $key
+     * @param string $key
+     *
      * @return QueryBuilderHandler
      */
     public function whereNotNull($key)
@@ -782,7 +833,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $key
+     * @param string $key
+     *
      * @return QueryBuilderHandler
      */
     public function orWhereNull($key)
@@ -791,7 +843,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param $key
+     * @param string $key
+     *
      * @return QueryBuilderHandler
      */
     public function orWhereNotNull($key)
@@ -799,6 +852,13 @@ class QueryBuilderHandler
         return $this->whereNullHandler($key, 'NOT', 'or');
     }
 
+    /**
+     * @param string $key
+     * @param string $prefix
+     * @param string $operator
+     *
+     * @return mixed
+     */
     protected function whereNullHandler($key, $prefix = '', $operator = '')
     {
         $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
@@ -807,11 +867,11 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $table
-     * @param string $key
+     * @param string      $table
+     * @param string      $key
      * @param string|null $operator
      * @param string|null $value
-     * @param string $type
+     * @param string      $type
      *
      * @return static
      */
@@ -841,6 +901,7 @@ class QueryBuilderHandler
      * Runs a transaction
      *
      * @param \Closure $callback
+     *
      * @return static
      */
     public function transaction(\Closure $callback)
@@ -872,8 +933,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $table
-     * @param string $key
+     * @param string      $table
+     * @param string      $key
      * @param string|null $operator
      * @param string|null $value
      *
@@ -885,8 +946,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $table
-     * @param string $key
+     * @param string      $table
+     * @param string      $key
      * @param string|null $operator
      * @param string|null $value
      *
@@ -898,8 +959,8 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $table
-     * @param string $key
+     * @param string       $table
+     * @param string       $key
      * @param string|mixed $operator
      * @param string|mixed $value
      *
@@ -914,7 +975,7 @@ class QueryBuilderHandler
      * Add a raw query
      *
      * @param string $value
-     * @param array $bindings
+     * @param array  $bindings
      *
      * @return Raw
      */
@@ -954,16 +1015,16 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $key
-     * @param string|mixed $operator
-     * @param string|mixed $value
-     * @param string $joiner
+     * @param string               $key
+     * @param string|mixed         $operator
+     * @param string|integer|float $value
+     * @param string               $joiner
      *
      * @return static
      */
     protected function whereHandler($key, $operator = null, $value = null, $joiner = 'AND')
     {
-        $key = $this->addTablePrefix($key);
+        $key                          = $this->addTablePrefix($key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
 
         return $this;
@@ -972,7 +1033,7 @@ class QueryBuilderHandler
     /**
      * Add table prefix (if given) on given string.
      *
-     * @param $values
+     * @param      $values
      * @param bool $tableFieldMix If we have mixes of field and table names with a "."
      *
      * @return array|string
@@ -1021,7 +1082,7 @@ class QueryBuilderHandler
 
     /**
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      */
     protected function addStatement($key, $value)
     {
@@ -1033,7 +1094,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $event
+     * @param string      $event
      * @param string|null $table
      *
      * @return \Closure|null
@@ -1044,9 +1105,9 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $event
+     * @param string      $event
      * @param string|null $table
-     * @param \Closure $action
+     * @param \Closure    $action
      *
      * @return void
      */
@@ -1056,7 +1117,7 @@ class QueryBuilderHandler
     }
 
     /**
-     * @param string $event
+     * @param string      $event
      * @param string|null $table
      *
      * @return void
@@ -1068,6 +1129,7 @@ class QueryBuilderHandler
 
     /**
      * @param      $event
+     *
      * @return mixed
      */
     public function fireEvents($event)

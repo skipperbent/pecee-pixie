@@ -1,15 +1,26 @@
 <?php
+
 namespace Pecee\Pixie\ConnectionAdapters;
 
+/**
+ * Class Mysql
+ *
+ * @package Pecee\Pixie\ConnectionAdapters
+ */
 class Mysql extends BaseAdapter
 {
     /**
-     * @param $config
+     * @param array $config
      *
      * @return mixed
+     * @throws Exception
      */
     protected function doConnect($config)
     {
+        if (!extension_loaded('pdo_mysql')) {
+            throw new Exception(sprintf('%s library not loaded', 'pdo_mysql'));
+        }
+
         $connectionString = "mysql:dbname={$config['database']}";
 
         if (isset($config['host'])) {

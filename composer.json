@@ -15,7 +15,7 @@
     "sqlite"
   ],
   "license": "MIT",
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "authors": [
     {
       "name": "Simon Sessingø",
@@ -35,7 +35,7 @@
   ],
   "require": {
     "php": ">=5.4.0",
-    "usmanhalalit/viocon": "1.0.*@dev"
+    "usmanhalalit/viocon": "1.0.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^4.8",
