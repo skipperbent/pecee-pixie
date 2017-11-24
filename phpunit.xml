@@ -12,7 +12,7 @@
          syntaxCheck="false">
     <testsuites>
         <testsuite name="Pixie Test Suite">
-            <directory>tests/Pixie/</directory>
+            <directory>tests/Pecee/Pixie/</directory>
         </testsuite>
     </testsuites>
 </phpunit>

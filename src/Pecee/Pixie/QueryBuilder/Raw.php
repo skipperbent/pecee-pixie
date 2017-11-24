@@ -1,6 +1,11 @@
 <?php
 namespace Pecee\Pixie\QueryBuilder;
 
+/**
+ * Class Raw
+ *
+ * @package Pecee\Pixie\QueryBuilder
+ */
 class Raw
 {
 
@@ -25,6 +30,9 @@ class Raw
         $this->bindings = (array)$bindings;
     }
 
+    /**
+     * @return array
+     */
     public function getBindings()
     {
         return $this->bindings;
