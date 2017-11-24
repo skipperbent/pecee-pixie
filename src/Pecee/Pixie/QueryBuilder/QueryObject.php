@@ -1,6 +1,12 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder;
 
+/**
+ * Class QueryObject
+ *
+ * @package Pecee\Pixie\QueryBuilder
+ */
 class QueryObject
 {
 
@@ -19,11 +25,18 @@ class QueryObject
      */
     protected $pdo;
 
+    /**
+     * QueryObject constructor.
+     *
+     * @param string $sql
+     * @param array  $bindings
+     * @param \PDO   $pdo
+     */
     public function __construct($sql, array $bindings, \PDO $pdo)
     {
-        $this->sql = (string)$sql;
+        $this->sql      = (string)$sql;
         $this->bindings = $bindings;
-        $this->pdo = $pdo;
+        $this->pdo      = $pdo;
     }
 
     /**
@@ -59,14 +72,14 @@ class QueryObject
      *
      * Reference: http://stackoverflow.com/a/1376838/656489
      *
-     * @param string $query The sql query with parameter placeholders
-     * @param array $params The array of substitution parameters
+     * @param string $query  The sql query with parameter placeholders
+     * @param array  $params The array of substitution parameters
      *
      * @return string The interpolated query
      */
     protected function interpolateQuery($query, $params)
     {
-        $keys = [];
+        $keys   = [];
         $values = $params;
 
         # build a regular expression for each parameter
