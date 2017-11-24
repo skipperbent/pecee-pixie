@@ -27,7 +27,9 @@ class QueryBuilderHandler
     /**
      * @var array
      */
-    protected $statements = [];
+    protected $statements = [
+        'groupBys' => array()
+    ];
 
     /**
      * @var \PDO
@@ -582,8 +584,15 @@ class QueryBuilderHandler
      */
     public function groupBy($field)
     {
-        $field = $this->addTablePrefix($field);
-        $this->addStatement('groupBys', $field);
+        if (!$field instanceof Raw) {
+            $field = $this->addTablePrefix($field);
+        }
+
+        if(is_array($field) === true) {
+            $this->statements['groupBys'] = array_merge($this->statements['groupBys'], $field);
+        } else {
+            $this->statements['groupBys'][] = $field;
+        }
 
         return $this;
     }
