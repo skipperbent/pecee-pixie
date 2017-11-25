@@ -40,14 +40,6 @@ class QueryObject
     }
 
     /**
-     * @return string
-     */
-    public function getSql()
-    {
-        return $this->sql;
-    }
-
-    /**
      * @return array
      */
     public function getBindings()
@@ -63,6 +55,14 @@ class QueryObject
     public function getRawSql()
     {
         return $this->interpolateQuery($this->sql, $this->bindings);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSql()
+    {
+        return $this->sql;
     }
 
     /**
@@ -95,7 +95,7 @@ class QueryObject
             }
 
             if (is_array($value)) {
-                $values[$key] = join(',', $this->pdo->quote($value));
+                $values[$key] = $this->pdo->quote(join(',', $value));
             }
 
             if ($value === null) {
