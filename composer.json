@@ -1,7 +1,7 @@
 {
   "name": "pecee/pixie",
   "description": "Lightweight, fast query-builder for PHP based on Laravel Eloquent but with less overhead.",
-  "homepage": "https://github.com/skipperbent/pixie",
+  "homepage": "https://github.com/skipperbent/pecee-pixie",
   "keywords": [
     "pecee",
     "querybuilder",

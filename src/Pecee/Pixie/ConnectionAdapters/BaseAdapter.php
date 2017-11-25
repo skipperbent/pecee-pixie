@@ -26,7 +26,6 @@ abstract class BaseAdapter
 
     /**
      * @param $config
-     *
      * @return \PDO
      */
     public function connect($config)
@@ -39,9 +38,8 @@ abstract class BaseAdapter
     }
 
     /**
-     * @param $config
-     *
+     * @param array $config
      * @return mixed
      */
-    abstract protected function doConnect($config);
+    abstract protected function doConnect(array $config);
 }
