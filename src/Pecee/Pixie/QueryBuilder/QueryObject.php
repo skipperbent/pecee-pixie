@@ -90,7 +90,7 @@ class QueryObject
             }
 
             if (is_array($value) === true) {
-                $values[$key] = implode(',', $this->pdo->quote($value));
+                $values[$key] = implode(',', (array)$this->pdo->quote($value));
                 continue;
             }
 

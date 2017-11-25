@@ -1,21 +1,30 @@
 # pecee/pixie: Advanced lightweight querybuilder
 
-A lightweight, expressive, framework agnostic query builder for PHP it can also be referred as a Database Abstraction Layer. Pixie supports MySQL, SQLite and PostgreSQL and it takes care of query sanitization, table prefixing and many other things with a unified API. At least PHP 5.3 is required.
+A lightweight, expressive, framework agnostic query builder for PHP it can also be referred as a Database Abstraction Layer. Pixie supports MySQL, SQLite and PostgreSQL and it takes care of query sanitization, table prefixing and many other things with a unified API. At least PHP 5.4 is required.
 
-The syntax is quite similar to Laravel's query builder.
+The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
-#### Ideas and issues
+This library is stable, maintained and are used by many sites, including:
 
-If you want a great new feature or experience any issues what-so-ever, please feel free to leave an issue and i'll look into it whenever possible.
+- [Holla.dk](https://holla.dk)
+- [Dscuz.com](https://dscuz.com)
+- [NinjaImg.com](https://ninjaimg.com)
+- [BookAndBegin.com](https://bookandbegin.com)
 
-##### Issues guidelines
+#### Feedback and development
+
+If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
+
+###### Issues guidelines
 
 - Please be as detailed as possible in the description when creating a new issue. This will help others to more easily understand- and solve your issue.
-For example: if you are expiriencing issues, you should provide the nessesary steps to reproduct the error within your description.
+For example: if you are experiencing issues, you should provide the necessary steps to reproduce the error within your description.
 
 - We love to hear out any ideas or feedback to the library.
 
-##### Contribution development guidelines
+[Create a new issue here](https://github.com/skipperbent/pecee-pixie/issues)
+
+###### Contribution development guidelines
 
 - Please try to follow the PSR-2 codestyle guidelines.
 
@@ -29,13 +38,15 @@ For example when pushing changes to version 3, the pull request should use the `
 - When adding new stuff, please remember to add new unit-tests for the functionality.
 
 #### Credits
+
 This project is based on the original [Pixie project by usmanhalalit](https://github.com/usmanhalalit/pixie) but has some extra features like:
 
 - Easier sub-queries.
 - Custom prefix/aliases for tables (prefix.`table`).
 - Support for not defining table.
 - Better handling of `Raw` objects in `where` statements.
-- Tons of bugfixes and performance optimisations.
+- Performance optimisations.
+- Tons of bug fixes.
 - Much more...
 
 **Including all the original features like:**
@@ -45,6 +56,8 @@ This project is based on the original [Pixie project by usmanhalalit](https://gi
 - Sub Queries
 - Nested Queries
 - Multiple Database Connections.
+
+Most importantly this project is used on many live-sites and maintained.
 
 #### Versions prior to 3.x
 
@@ -406,8 +419,7 @@ LIMIT 1
 You can also easily create a subjquery within the `where` statement:
 
 ```php
-$queryBuilder
-    ->where($queryBuilder->subQuery($subQuery), '!=', 'value');
+$queryBuilder->where($queryBuilder->subQuery($subQuery), '!=', 'value');
 ```
 
 ### Where
@@ -955,4 +967,28 @@ If you find any typo then please edit and send a pull request.
 
 &copy; 2016 Simon Sessingø - [Pecee.dk](http://pecee.dk/).
 
-Licensed under MIT license.
+## Licence
+
+Licensed under the MIT licence.
+
+### The MIT License (MIT)
+
+Copyright (c) 2016 Simon Sessingø / simple-php-router
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

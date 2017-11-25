@@ -209,7 +209,7 @@ class QueryBuilderHandler
      * @param array $bindings
      * @return array PDOStatement and execution time as float
      */
-    public function statement($sql, $bindings = [])
+    public function statement($sql, array $bindings = [])
     {
         $start = microtime(true);
 
@@ -240,7 +240,7 @@ class QueryBuilderHandler
         $executionTime = 0;
 
         if ($this->pdoStatement === null) {
-            $queryObject = $this->getQuery('select');
+            $queryObject = $this->getQuery();
             list($this->pdoStatement, $executionTime) = $this->statement(
                 $queryObject->getSql(),
                 $queryObject->getBindings()
@@ -354,11 +354,11 @@ class QueryBuilderHandler
      * Returns Query-object.
      *
      * @param string $type
-     * @param array|bool $dataToBePassed
+     * @param array|mixed|null $dataToBePassed
      * @return QueryObject
      * @throws Exception
      */
-    public function getQuery($type = 'select', $dataToBePassed = [])
+    public function getQuery($type = 'select', $dataToBePassed = null)
     {
         $allowedTypes = [
             'select',
@@ -819,7 +819,7 @@ class QueryBuilderHandler
      */
     public function whereIn($key, $values)
     {
-        return $this->whereHandler($key, 'IN', $values, 'AND');
+        return $this->whereHandler($key, 'IN', $values);
     }
 
     /**
@@ -831,7 +831,7 @@ class QueryBuilderHandler
      */
     public function whereNotIn($key, $values)
     {
-        return $this->whereHandler($key, 'NOT IN', $values, 'AND');
+        return $this->whereHandler($key, 'NOT IN', $values);
     }
 
     /**
@@ -868,7 +868,7 @@ class QueryBuilderHandler
      */
     public function whereBetween($key, $valueFrom, $valueTo)
     {
-        return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo], 'AND');
+        return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo]);
     }
 
     /**
@@ -1050,22 +1050,27 @@ class QueryBuilderHandler
      */
     public function innerJoin($table, $key, $operator = null, $value = null)
     {
-        return $this->join($table, $key, $operator, $value, 'inner');
+        return $this->join($table, $key, $operator, $value);
     }
 
     /**
      * Adds a raw string to the current query.
      * This query will be ignored from any parsing or formatting by the Query builder
-     * and should be used in conjuction with other statements in the query.
+     * and should be used in conjunction with other statements in the query.
      *
      * For example: $qb->where('result', '>', $qb->raw('COUNT(`score`)));
      *
      * @param string $value
-     * @param array $bindings
+     * @param array|null|mixed $bindings ...
      * @return Raw
      */
-    public function raw($value, $bindings = [])
+    public function raw($value, $bindings = null)
     {
+        if(is_array($bindings) === false) {
+            $bindings = func_get_args();
+            array_shift($bindings);
+        }
+
         return $this->container->build(Raw::class, [$value, $bindings]);
     }
 

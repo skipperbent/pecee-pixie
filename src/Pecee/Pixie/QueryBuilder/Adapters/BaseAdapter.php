@@ -183,7 +183,7 @@ abstract class BaseAdapter
         $sqlArray = [
             $type . ' INTO',
             $this->wrapSanitizer($table),
-            '(' . $this->arrayStr($keys, ',') . ')',
+            '(' . $this->arrayStr($keys) . ')',
             'VALUES',
             '(' . $this->arrayStr($values, ',', false) . ')',
         ];
