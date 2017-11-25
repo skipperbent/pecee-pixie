@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder;
 
 /**
@@ -16,7 +17,7 @@ class Transaction extends QueryBuilderHandler
     public function commit()
     {
         $this->pdo->commit();
-        throw new TransactionHaltException();
+        throw new TransactionHaltException('Commit');
     }
 
     /**
@@ -26,6 +27,6 @@ class Transaction extends QueryBuilderHandler
     public function rollback()
     {
         $this->pdo->rollBack();
-        throw new TransactionHaltException();
+        throw new TransactionHaltException('Rollback');
     }
 }

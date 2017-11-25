@@ -10,14 +10,13 @@ namespace Pecee\Pixie\ConnectionAdapters;
 class Sqlite extends BaseAdapter
 {
     /**
-     * @param $config
-     *
+     * @param array $config
      * @return mixed
      * @throws Exception
      */
-    public function doConnect($config)
+    public function doConnect(array $config)
     {
-        if (!extension_loaded('pdo_sqlite')) {
+        if (extension_loaded('pdo_sqlite') === false) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_sqlite'));
         }
 

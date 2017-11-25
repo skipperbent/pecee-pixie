@@ -1,7 +1,7 @@
 {
   "name": "pecee/pixie",
   "description": "Lightweight, fast query-builder for PHP based on Laravel Eloquent but with less overhead.",
-  "homepage": "https://github.com/skipperbent/pixie",
+  "homepage": "https://github.com/skipperbent/pecee-pixie",
   "keywords": [
     "pecee",
     "querybuilder",
@@ -34,7 +34,7 @@
     }
   ],
   "require": {
-    "php": ">=5.4.0",
+    "php": ">=5.5.0",
     "usmanhalalit/viocon": "1.0.1"
   },
   "require-dev": {

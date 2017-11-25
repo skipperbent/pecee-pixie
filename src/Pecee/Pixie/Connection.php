@@ -45,8 +45,8 @@ class Connection
     protected $eventHandler;
 
     /**
-     * @param string         $adapter
-     * @param array          $adapterConfig
+     * @param string $adapter
+     * @param array $adapterConfig
      * @param Container|null $container
      */
     public function __construct($adapter, array $adapterConfig, Container $container = null)
@@ -84,14 +84,13 @@ class Connection
         $this->setPdoInstance($pdo);
 
         // Preserve the first database connection with a static property
-        if (!static::$storedConnection) {
+        if (static::$storedConnection === null) {
             static::$storedConnection = $this;
         }
     }
 
     /**
      * @param \PDO $pdo
-     *
      * @return static
      */
     public function setPdoInstance(\PDO $pdo)
@@ -111,7 +110,6 @@ class Connection
 
     /**
      * @param string $adapter
-     *
      * @return static
      */
     public function setAdapter($adapter)
@@ -131,7 +129,6 @@ class Connection
 
     /**
      * @param array $adapterConfig
-     *
      * @return static
      */
     public function setAdapterConfig(array $adapterConfig)

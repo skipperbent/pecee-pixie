@@ -24,7 +24,7 @@ class Raw
      * @param string $value
      * @param array|string $bindings
      */
-    public function __construct($value, $bindings = [])
+    public function __construct($value, array $bindings = [])
     {
         $this->value = (string)$value;
         $this->bindings = (array)$bindings;

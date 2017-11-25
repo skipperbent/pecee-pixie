@@ -29,22 +29,14 @@ class QueryObject
      * QueryObject constructor.
      *
      * @param string $sql
-     * @param array  $bindings
-     * @param \PDO   $pdo
+     * @param array $bindings
+     * @param \PDO $pdo
      */
     public function __construct($sql, array $bindings, \PDO $pdo)
     {
-        $this->sql      = (string)$sql;
+        $this->sql = (string)$sql;
         $this->bindings = $bindings;
-        $this->pdo      = $pdo;
-    }
-
-    /**
-     * @return string
-     */
-    public function getSql()
-    {
-        return $this->sql;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -57,12 +49,19 @@ class QueryObject
 
     /**
      * Get the raw/bound sql
-     *
      * @return string
      */
     public function getRawSql()
     {
         return $this->interpolateQuery($this->sql, $this->bindings);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSql()
+    {
+        return $this->sql;
     }
 
     /**
@@ -72,34 +71,32 @@ class QueryObject
      *
      * Reference: http://stackoverflow.com/a/1376838/656489
      *
-     * @param string $query  The sql query with parameter placeholders
-     * @param array  $params The array of substitution parameters
-     *
+     * @param string $query The sql query with parameter placeholders
+     * @param array $params The array of substitution parameters
      * @return string The interpolated query
      */
     protected function interpolateQuery($query, $params)
     {
-        $keys   = [];
+        $keys = [];
         $values = $params;
 
-        # build a regular expression for each parameter
+        // build a regular expression for each parameter
         foreach ($params as $key => $value) {
-            if (is_string($key)) {
-                $keys[] = '/:' . $key . '/';
-            } else {
-                $keys[] = '/[?]/';
-            }
+            $keys[] = '/' . (is_string($key) ? ':' . $key : '[?]') . '/';
 
-            if (is_string($value)) {
+            if (is_string($value) === true) {
                 $values[$key] = $this->pdo->quote($value);
+                continue;
             }
 
-            if (is_array($value)) {
-                $values[$key] = join(',', $this->pdo->quote($value));
+            if (is_array($value) === true) {
+                $values[$key] = $this->pdo->quote(implode(',', $value));
+                continue;
             }
 
             if ($value === null) {
                 $values[$key] = 'NULL';
+                continue;
             }
         }
 
