@@ -80,7 +80,7 @@ class QueryObject
         $keys = [];
         $values = $params;
 
-        # build a regular expression for each parameter
+        // build a regular expression for each parameter
         foreach ($params as $key => $value) {
             $keys[] = '/' . (is_string($key) ? ':' . $key : '[?]') . '/';
 
@@ -90,7 +90,7 @@ class QueryObject
             }
 
             if (is_array($value) === true) {
-                $values[$key] = implode(',', (array)$this->pdo->quote($value));
+                $values[$key] = $this->pdo->quote(implode(',', $value));
                 continue;
             }
 

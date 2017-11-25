@@ -1,6 +1,7 @@
 # pecee/pixie: Advanced lightweight querybuilder
 
-A lightweight, expressive, framework agnostic query builder for PHP it can also be referred as a Database Abstraction Layer. Pixie supports MySQL, SQLite and PostgreSQL and it takes care of query sanitization, table prefixing and many other things with a unified API. At least PHP 5.4 is required.
+A lightweight, expressive, framework agnostic query builder for PHP it can also be referred as a Database Abstraction Layer.
+Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitization, table prefixing among many other things, with a unified API.
 
 The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
@@ -10,6 +11,9 @@ This library is stable, maintained and are used by many sites, including:
 - [Dscuz.com](https://dscuz.com)
 - [NinjaImg.com](https://ninjaimg.com)
 - [BookAndBegin.com](https://bookandbegin.com)
+
+**Requirements:**
+- PHP version 5.5 or higher is required.
 
 #### Feedback and development
 
