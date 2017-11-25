@@ -2,6 +2,7 @@ composer.phar
 .DS_Store
 test.php
 *~
+/devel/
 
 ### Composer template
 /vendor/
