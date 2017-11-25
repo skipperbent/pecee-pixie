@@ -288,10 +288,11 @@ class QueryBuilderTest extends TestCase
                 ->whereNull('key1')
                 ->orWhereNull('key2')
                 ->whereNotNull('key3')
-                ->orWhereNotNull('key4');
+                ->orWhereNotNull('key4')
+                ->orWhere('key5', '=', null);
 
         $this->assertEquals(
-            "SELECT * FROM `cb_my_table` WHERE `key1` IS  NULL OR `key2` IS  NULL AND `key3` IS NOT NULL OR `key4` IS NOT NULL",
+            "SELECT * FROM `cb_my_table` WHERE `key1` IS  NULL OR `key2` IS  NULL AND `key3` IS NOT NULL OR `key4` IS NOT NULL OR `key5` = NULL",
             $query->getQuery()->getRawSql()
         );
     }

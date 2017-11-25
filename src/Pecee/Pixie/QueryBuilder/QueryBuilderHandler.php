@@ -342,7 +342,7 @@ class QueryBuilderHandler
             if (is_array($row[0]) === true) {
                 return (int)$row[0]['field'];
             }
-            if (is_object($row[0])) {
+            if (is_object($row[0]) === true) {
                 return (int)$row[0]->field;
             }
         }
