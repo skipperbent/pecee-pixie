@@ -421,8 +421,10 @@ abstract class BaseAdapter
 
                 continue;
             }
-            if (is_array($value)) {
-                // where_in or between like query
+
+            if (is_array($value) === true) {
+
+                // Where in or between like query
                 $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'];
 
                 if ($statement['operator'] === 'BETWEEN') {
@@ -445,38 +447,39 @@ abstract class BaseAdapter
 
             if ($value instanceof Raw) {
                 $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} $value ";
-            } else {
-
-                // Usual where like criteria
-                if ($bindValues === false) {
-
-                    // Specially for joins - we are not binding values, lets sanitize then
-                    $value = $this->wrapSanitizer($value);
-                    $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $value . ' ';
-
-                    continue;
-                }
-
-                if ($statement['key'] instanceof Raw) {
-
-                    if ($statement['operator'] !== null) {
-                        $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
-                        $bindings[] = (array)$statement['key']->getBindings();
-                        $bindings[] = (array)$value;
-                    } else {
-                        $criteria .= $statement['joiner'] . ' ' . $key . ' ';
-                        $bindings[] = (array)$statement['key']->getBindings();
-                    }
-
-                    continue;
-
-                }
-
-                // WHERE
-                $valuePlaceholder = '?';
-                $bindings[] = (array)$value;
-                $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
+                continue;
             }
+
+
+            // Usual where like criteria
+            if ($bindValues === false) {
+
+                // Specially for joins - we are not binding values, lets sanitize then
+                $value = $this->wrapSanitizer($value);
+                $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $value . ' ';
+
+                continue;
+            }
+
+            if ($statement['key'] instanceof Raw) {
+
+                if ($statement['operator'] !== null) {
+                    $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
+                    $bindings[] = (array)$statement['key']->getBindings();
+                    $bindings[] = (array)$value;
+                } else {
+                    $criteria .= $statement['joiner'] . ' ' . $key . ' ';
+                    $bindings[] = (array)$statement['key']->getBindings();
+                }
+
+                continue;
+
+            }
+
+            // WHERE
+            $valuePlaceholder = '?';
+            $bindings[] = [$value];
+            $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
         }
 
         $bindings = array_merge(...$bindings);
