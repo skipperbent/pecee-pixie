@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder\Adapters;
 
 /**

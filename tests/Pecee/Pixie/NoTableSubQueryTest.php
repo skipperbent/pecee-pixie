@@ -26,7 +26,7 @@ class NoTableSubQueryTest extends TestCase
 
         $count = $this->builder->select($this->builder->subQuery($subQuery1, 'row1'), $this->builder->subQuery($subQuery2, 'row2'))->first();
 
-        $this->assertEquals('SELECT (SELECT COUNT(*) FROM `cb_mail`) as row1, (SELECT COUNT(*) FROM `cb_event_message`) as row2 LIMIT 1', $count);
+        $this->assertEquals('SELECT (SELECT COUNT(*) FROM `cb_mail`) AS `row1`, (SELECT COUNT(*) FROM `cb_event_message`) AS `row2` LIMIT 1', $count);
 
     }
 

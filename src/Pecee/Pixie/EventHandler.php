@@ -31,9 +31,8 @@ class EventHandler
     }
 
     /**
-     * @param string      $event
+     * @param string $event
      * @param string|null $table
-     *
      * @return callable|null
      */
     public function getEvent($event, $table = null)
@@ -45,8 +44,8 @@ class EventHandler
         }
 
         // Find event with *
-        if (isset($this->events[$table])) {
-            foreach ($this->events[$table] as $name => $e) {
+        if (isset($this->events[$table]) === true) {
+            foreach ((array)$this->events[$table] as $name => $e) {
                 if (strpos($name, '*') !== false) {
                     $name = substr($name, 0, strpos($name, '*'));
                     if (stripos($event, $name) !== false) {
@@ -60,10 +59,9 @@ class EventHandler
     }
 
     /**
-     * @param string   $event
-     * @param string   $table
+     * @param string $event
+     * @param string $table
      * @param \Closure $action
-     *
      * @return void
      */
     public function registerEvent($event, $table, \Closure $action)
@@ -76,7 +74,6 @@ class EventHandler
     /**
      * @param string $event
      * @param string $table
-     *
      * @return void
      */
     public function removeEvent($event, $table = null)
@@ -87,36 +84,33 @@ class EventHandler
 
     /**
      * @param QueryBuilderHandler $queryBuilder
-     * @param string              $event
-     *
-     * @return mixed
+     * @param string $event
+     * @return mixed|null
      */
     public function fireEvents($queryBuilder, $event)
     {
-        /**
-         * @var $table string
-         */
-
         $statements = $queryBuilder->getStatements();
-        $tables     = isset($statements['tables']) ? $statements['tables'] : [];
+        $tables = isset($statements['tables']) ? $statements['tables'] : [];
 
         // Events added with :any will be fired in case of any table,
         // we are adding :any as a fake table at the beginning.
         array_unshift($tables, ':any');
 
+        $handlerParams = func_get_args();
+        unset($handlerParams[1]);
+
         // Fire all events
         foreach ($tables as $table) {
             // Fire before events for :any table
-            if ($action = $this->getEvent($event, $table)) {
+            $action = $this->getEvent($event, $table);
+            if ($action !== null) {
+
                 // Make an event id, with event type and table
                 $eventId = $event . $table;
 
-                // Fire event
-                $handlerParams = func_get_args();
-                unset($handlerParams[1]); // we do not need $event
-                // Add to fired list
+                // Fire event and add to fired list
                 $this->firedEvents[] = $eventId;
-                $result              = call_user_func_array($action, $handlerParams);
+                $result = call_user_func_array($action, $handlerParams);
                 if ($result !== null) {
                     return $result;
                 }
