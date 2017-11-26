@@ -13,6 +13,54 @@ use Pecee\Pixie\Exception;
  */
 class QueryBuilderHandler
 {
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_BEFORE_DELETE = 'before-delete';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_BEFORE_INSERT = 'before-insert';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_BEFORE_UPDATE = 'before-update';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_BEFORE_SELECT = 'before-select';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_AFTER_DELETE = 'after-delete';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_AFTER_INSERT = 'after-insert';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_AFTER_UPDATE = 'after-update';
+    /**
+     * Event name
+     *
+     * @var string
+     */
+    const EVENT_AFTER_SELECT = 'after-select';
 
     /**
      * @var \Viocon\Container
@@ -261,10 +309,10 @@ class QueryBuilderHandler
         /* @var $response \PDOStatement */
         $queryObject = $this->getQuery('delete');
 
-        $this->fireEvents('before-delete', $queryObject);
+        $this->fireEvents(static::EVENT_BEFORE_DELETE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-        $this->fireEvents('after-delete', $queryObject, $executionTime);
+        $this->fireEvents(static::EVENT_AFTER_DELETE, $queryObject, $executionTime);
 
         return $response;
     }
@@ -284,14 +332,14 @@ class QueryBuilderHandler
         if (is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
-            $this->fireEvents('before-insert', $queryObject);
+            $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
             /**
              * @var $result        \PDOStatement
              * @var $executionTime float
              */
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
             $return = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents('after-insert', $queryObject, $return, $executionTime);
+            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $return, $executionTime);
 
             return $return;
         }
@@ -302,10 +350,10 @@ class QueryBuilderHandler
         foreach ($data as $subData) {
             $queryObject = $this->getQuery($type, $subData);
 
-            $this->fireEvents('before-insert', $queryObject);
+            $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
             $result = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents('after-insert', $queryObject, $result, $executionTime);
+            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $result, $executionTime);
 
             $return[] = $result;
         }
@@ -415,11 +463,11 @@ class QueryBuilderHandler
         }
 
         $start = microtime(true);
-        $this->fireEvents('before-select', $queryObject);
+        $this->fireEvents(static::EVENT_BEFORE_SELECT, $queryObject);
         $result             = call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
         $executionTime      += microtime(true) - $start;
         $this->pdoStatement = null;
-        $this->fireEvents('after-select', $queryObject, $result, $executionTime);
+        $this->fireEvents(static::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
 
         return $result;
     }
@@ -1191,10 +1239,10 @@ class QueryBuilderHandler
          */
         $queryObject = $this->getQuery('update', $data);
 
-        $this->fireEvents('before-update', $queryObject);
+        $this->fireEvents(static::EVENT_BEFORE_UPDATE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-        $this->fireEvents('after-update', $queryObject, $executionTime);
+        $this->fireEvents(static::EVENT_AFTER_UPDATE, $queryObject, $executionTime);
 
         return $response;
     }
