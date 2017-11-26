@@ -1111,14 +1111,23 @@ class QueryBuilderHandler
      */
     public function table($tables)
     {
+        $tTables = [];
         if (is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = func_get_args();
         }
 
         $instance = new static($this->connection);
-        $tables   = $this->addTablePrefix($tables, false);
-        $instance->addStatement('tables', $tables);
+        foreach ($tables as $key => $value) {
+            if (is_string($key)) {
+                $instance->alias($key, $value);
+                $tTables[] = $key;
+            } else {
+                $tTables[] = $value;
+            }
+        }
+        $tables = $this->addTablePrefix($tTables, false);
+        $instance->addStatement('tables', $tTables);
 
         return $instance;
     }
