@@ -1,10 +1,15 @@
 <?php
+
 namespace Pecee\Pixie;
 
 use PDO;
-use Mockery as m;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
+/**
+ * Class QueryBuilder
+ *
+ * @package Pecee\Pixie
+ */
 class QueryBuilder extends TestCase
 {
     /**
@@ -12,6 +17,9 @@ class QueryBuilder extends TestCase
      */
     protected $builder;
 
+    /**
+     * Setup
+     */
     public function setUp()
     {
         parent::setUp();
@@ -19,18 +27,10 @@ class QueryBuilder extends TestCase
         $this->builder = new QueryBuilderHandler($this->mockConnection);
     }
 
-    public function testRawQuery()
+    public function testFalseBoolWhere()
     {
-        $query = 'select * from cb_my_table where id = ? and name = ?';
-        $bindings = array(5, 'usman');
-        $queryArr = $this->builder->query($query, $bindings)->get();
-        $this->assertEquals(
-            array(
-                $query,
-                array(array(5, PDO::PARAM_INT), array('usman', PDO::PARAM_STR)),
-            ),
-            $queryArr
-        );
+        $result = $this->builder->table('test')->where('id', '=', false);
+        $this->assertEquals('SELECT * FROM `cb_test` WHERE `id` = 0', $result->getQuery()->getRawSql());
     }
 
     public function testInsertQueryReturnsIdForInsert()
@@ -38,17 +38,20 @@ class QueryBuilder extends TestCase
         $this->mockPdoStatement
             ->expects($this->once())
             ->method('rowCount')
-            ->will($this->returnValue(1));
+            ->will($this->returnValue(1))
+        ;
 
         $this->mockPdo
             ->expects($this->once())
             ->method('lastInsertId')
-            ->will($this->returnValue(11));
+            ->will($this->returnValue(11))
+        ;
 
-        $id = $this->builder->table('test')->insert(array(
-            'id' => 5,
-            'name' => 'usman'
-        ));
+        $id = $this->builder->table('test')->insert([
+            'id'   => 5,
+            'name' => 'usman',
+        ])
+        ;
 
         $this->assertEquals(11, $id);
     }
@@ -58,17 +61,20 @@ class QueryBuilder extends TestCase
         $this->mockPdoStatement
             ->expects($this->once())
             ->method('rowCount')
-            ->will($this->returnValue(1));
+            ->will($this->returnValue(1))
+        ;
 
         $this->mockPdo
             ->expects($this->once())
             ->method('lastInsertId')
-            ->will($this->returnValue(11));
+            ->will($this->returnValue(11))
+        ;
 
-        $id = $this->builder->table('test')->insertIgnore(array(
-            'id' => 5,
-            'name' => 'usman'
-        ));
+        $id = $this->builder->table('test')->insertIgnore([
+            'id'   => 5,
+            'name' => 'usman',
+        ])
+        ;
 
         $this->assertEquals(11, $id);
     }
@@ -78,19 +84,30 @@ class QueryBuilder extends TestCase
         $this->mockPdoStatement
             ->expects($this->once())
             ->method('rowCount')
-            ->will($this->returnValue(0));
+            ->will($this->returnValue(0))
+        ;
 
-        $id = $this->builder->table('test')->insertIgnore(array(
-            'id' => 5,
-            'name' => 'usman'
-        ));
+        $id = $this->builder->table('test')->insertIgnore([
+            'id'   => 5,
+            'name' => 'usman',
+        ])
+        ;
 
         $this->assertEquals(null, $id);
     }
 
-    public function testFalseBoolWhere() {
-        $result = $this->builder->table('test')->where('id', '=', false);
-        $this->assertEquals('SELECT * FROM `cb_test` WHERE `id` = 0', $result->getQuery()->getRawSql());
+    public function testRawQuery()
+    {
+        $query    = 'select * from cb_my_table where id = ? and name = ?';
+        $bindings = [5, 'usman'];
+        $queryArr = $this->builder->query($query, $bindings)->get();
+        $this->assertEquals(
+            [
+                $query,
+                [[5, PDO::PARAM_INT], ['usman', PDO::PARAM_STR]],
+            ],
+            $queryArr
+        );
     }
 
 }
