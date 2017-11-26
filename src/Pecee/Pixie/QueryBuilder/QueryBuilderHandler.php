@@ -209,7 +209,7 @@ class QueryBuilderHandler
      * @param string $table
      * @param string $alias
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function alias(string $table, string $alias)
     {
@@ -224,7 +224,7 @@ class QueryBuilderHandler
      * @param string $className
      * @param array  $constructorArgs
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function asObject(string $className, array $constructorArgs = []): QueryBuilderHandler
     {
@@ -393,10 +393,16 @@ class QueryBuilderHandler
      * Get all rows
      *
      * @throws Exception
-     * @return \stdClass[]
+     * @return object[]
      */
-    public function get()
+    public function get(): array
     {
+        /**
+         * @var $queryObject   \Pecee\Pixie\QueryBuilder\QueryObject
+         * @var $executionTime float
+         * @var $start         float
+         * @var $result        array
+         */
         $queryObject   = null;
         $executionTime = 0;
 
@@ -423,7 +429,7 @@ class QueryBuilderHandler
      *
      * @return Connection
      */
-    public function getConnection()
+    public function getConnection(): Connection
     {
         return $this->connection;
     }
@@ -489,7 +495,7 @@ class QueryBuilderHandler
      *
      * @param string|Raw|\Closure|array $field
      *
-     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @return static
      */
     public function groupBy($field)
     {
@@ -514,7 +520,7 @@ class QueryBuilderHandler
      * @param string|mixed        $value
      * @param string              $joiner
      *
-     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @return static
      */
     public function having($key, $operator, $value, $joiner = 'AND')
     {
@@ -568,13 +574,29 @@ class QueryBuilderHandler
     /**
      * Adds new JOIN statement to the current query.
      *
-     * @param string|Raw|\Closure $table
-     * @param string|Raw|\Closure $key
-     * @param string|null         $operator
-     * @param string|Raw|\Closure $value
-     * @param string              $type
+     * @param string|Raw|\Closure|array $table
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure       $value
+     * @param string                    $type
      *
      * @return static
+     * ```
+     * Examples:
+     * - basic usage
+     * ->join('table2', 'table2.person_id', '=', 'table1.id');
+     *
+     * - as alias 'bar'
+     * ->join(['table2','bar'], 'bar.person_id', '=', 'table1.id');
+     *
+     * - complex usage
+     * ->join('another_table', function($table)
+     * {
+     *  $table->on('another_table.person_id', '=', 'my_table.id');
+     *  $table->on('another_table.person_id2', '=', 'my_table.id2');
+     *  $table->orOn('another_table.age', '>', $queryBuilder->raw(1));
+     * })
+     * ```
      */
     public function join($table, $key, $operator = null, $value = null, $type = 'inner')
     {
@@ -604,10 +626,10 @@ class QueryBuilderHandler
     /**
      * Adds new LEFT JOIN statement to the current query.
      *
-     * @param string|Raw|\Closure      $table
-     * @param string|Raw|\Closure      $key
-     * @param string|null              $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|Raw|\Closure|array $table
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure|null  $value
      *
      * @return static
      */
@@ -774,7 +796,7 @@ class QueryBuilderHandler
      *
      * @param string|Raw|\Closure $key
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function orWhereNotNull($key)
     {
@@ -786,7 +808,7 @@ class QueryBuilderHandler
      *
      * @param string|Raw|\Closure $key
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function orWhereNull($key)
     {
@@ -867,7 +889,7 @@ class QueryBuilderHandler
      * @param string $table
      * @param string $alias
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function prefix($table, $alias)
     {
@@ -954,10 +976,10 @@ class QueryBuilderHandler
     /**
      * Adds new right join statement to the current query.
      *
-     * @param string|Raw|\Closure      $table
-     * @param string|Raw|\Closure      $key
-     * @param string|null              $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|Raw|\Closure|array $table
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure|null  $value
      *
      * @return static
      */
@@ -1282,7 +1304,7 @@ class QueryBuilderHandler
      *
      * @param string|Raw|\Closure $key
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function whereNotNull($key)
     {
@@ -1294,7 +1316,7 @@ class QueryBuilderHandler
      *
      * @param string|Raw|\Closure $key
      *
-     * @return QueryBuilderHandler
+     * @return static
      */
     public function whereNull($key)
     {

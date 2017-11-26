@@ -29,29 +29,30 @@ class QueryObject
      * QueryObject constructor.
      *
      * @param string $sql
-     * @param array $bindings
-     * @param \PDO $pdo
+     * @param array  $bindings
+     * @param \PDO   $pdo
      */
-    public function __construct($sql, array $bindings, \PDO $pdo)
+    public function __construct(string $sql, array $bindings, \PDO $pdo)
     {
-        $this->sql = (string)$sql;
+        $this->sql      = $sql;
         $this->bindings = $bindings;
-        $this->pdo = $pdo;
+        $this->pdo      = $pdo;
     }
 
     /**
      * @return array
      */
-    public function getBindings()
+    public function getBindings(): array
     {
         return $this->bindings;
     }
 
     /**
      * Get the raw/bound sql
+     *
      * @return string
      */
-    public function getRawSql()
+    public function getRawSql(): string
     {
         return $this->interpolateQuery($this->sql, $this->bindings);
     }
@@ -59,7 +60,7 @@ class QueryObject
     /**
      * @return string
      */
-    public function getSql()
+    public function getSql(): string
     {
         return $this->sql;
     }
@@ -71,13 +72,14 @@ class QueryObject
      *
      * Reference: http://stackoverflow.com/a/1376838/656489
      *
-     * @param string $query The sql query with parameter placeholders
-     * @param array $params The array of substitution parameters
+     * @param string $query  The sql query with parameter placeholders
+     * @param array  $params The array of substitution parameters
+     *
      * @return string The interpolated query
      */
     protected function interpolateQuery($query, $params)
     {
-        $keys = [];
+        $keys   = [];
         $values = $params;
 
         // build a regular expression for each parameter
