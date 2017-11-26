@@ -1219,10 +1219,10 @@ class QueryBuilderHandler
             return $this;
 
         } catch (\Exception $e) {
-            // something happened, rollback changes
+            // something happened, rollback changes and throw Exception
             $queryTransaction->rollBack($inTransaction);
 
-            return $this;
+            throw $e;
         }
     }
 
