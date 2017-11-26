@@ -50,7 +50,7 @@ abstract class BaseAdapter
     public function select(array $statements)
     {
         if (array_key_exists('selects', $statements) === false) {
-            $statements['selects'][] = '*';
+            $statements['selects'] = ['*'];
         }
 
         // From
