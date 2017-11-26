@@ -457,12 +457,16 @@ abstract class BaseAdapter
             $tables = [];
 
             foreach ((array)$statements['tables'] as $table) {
-                $prefix = $statements['aliases'][$table] ?? null;
-
-                if ($prefix !== null) {
-                    $t = ($table instanceof Raw) ? $table : sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+                if ($table instanceof Raw) {
+                    $t = $table;
                 } else {
-                    $t = ($table instanceof Raw) ? $table : sprintf('`%s`', $table);
+                    $prefix = $statements['aliases'][$table] ?? null;
+
+                    if ($prefix !== null) {
+                        $t = sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+                    } else {
+                        $t = sprintf('`%s`', $table);
+                    }
                 }
 
                 $tables[] = $t;
