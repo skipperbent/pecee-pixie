@@ -12,6 +12,7 @@ class Transaction extends QueryBuilderHandler
 
     /**
      * Commit the database changes
+     *
      * @throws TransactionHaltException
      */
     public function commit()
@@ -22,6 +23,7 @@ class Transaction extends QueryBuilderHandler
 
     /**
      * Rollback the database changes
+     *
      * @throws TransactionHaltException
      */
     public function rollback()
