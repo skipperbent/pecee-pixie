@@ -734,7 +734,7 @@ class QueryBuilderHandler
     /**
      * Add on duplicate key statement.
      *
-     * @param string $data
+     * @param string|array $data
      *
      * @return static
      */
@@ -1184,7 +1184,7 @@ class QueryBuilderHandler
                 $tTables[] = $value;
             }
         }
-        $tables = $this->addTablePrefix($tTables, false);
+        $tTables = $this->addTablePrefix($tTables, false);
         $instance->addStatement('tables', $tTables);
 
         return $instance;
@@ -1306,13 +1306,13 @@ class QueryBuilderHandler
      * Handles where statements
      *
      * @param string|Raw|\Closure      $key
-     * @param string|Raw|\Closure|null $operator
+     * @param string|null              $operator
      * @param string|Raw|\Closure|null $value
      * @param string                   $joiner
      *
      * @return static
      */
-    protected function whereHandler($key, $operator = null, $value = null, $joiner = 'AND')
+    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND')
     {
         $key                          = $this->addTablePrefix($key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
@@ -1369,11 +1369,11 @@ class QueryBuilderHandler
     /**
      * Adds WHERE NOT NULL statement to the current query.
      *
-     * @param string|Raw|\Closure $key
+     * @param string $key
      *
      * @return static
      */
-    public function whereNotNull($key)
+    public function whereNotNull(string $key)
     {
         return $this->whereNullHandler($key, 'NOT');
     }
@@ -1393,13 +1393,13 @@ class QueryBuilderHandler
     /**
      * Handles WHERE NULL statements.
      *
-     * @param string|Raw|\Closure $key
-     * @param string              $prefix
-     * @param string              $operator
+     * @param string $key
+     * @param string $prefix
+     * @param string $operator
      *
      * @return mixed
      */
-    protected function whereNullHandler($key, $prefix = '', $operator = '')
+    protected function whereNullHandler(string $key, $prefix = '', $operator = '')
     {
         $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
 
