@@ -1108,6 +1108,16 @@ class QueryBuilderHandler
      *
      * @throws Exception
      * @return static
+     * ```
+     * Examples:
+     *  - basic usage
+     * ->table('table_one')
+     * ->table(['table_one'])
+     *
+     *  - with aliasing
+     * ->table(['table_one' => 'one'])
+     * ->table($qb->raw('table_one as one'))
+     * ```
      */
     public function table($tables)
     {
