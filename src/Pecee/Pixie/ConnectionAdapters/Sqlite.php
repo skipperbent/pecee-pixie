@@ -11,7 +11,8 @@ class Sqlite extends BaseAdapter
 {
     /**
      * @param array $config
-     * @return mixed
+     *
+     * @return \PDO
      * @throws Exception
      */
     public function doConnect(array $config)

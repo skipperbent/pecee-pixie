@@ -13,7 +13,7 @@ This library is stable, maintained and are used by many sites, including:
 - [BookAndBegin.com](https://bookandbegin.com)
 
 **Requirements:**
-- PHP version 5.5 or higher is required.
+- PHP 5.6 or higher is required.
 
 #### Feedback and development
 
