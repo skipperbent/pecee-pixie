@@ -184,25 +184,6 @@ class QueryBuilderHandler
     }
 
     /**
-     * Parses correct data-type for PDO parameter.
-     *
-     * @param mixed $value
-     * @return int PDO-parameter type
-     */
-    protected function parseDataType($value)
-    {
-        if (is_int($value) === true) {
-            return PDO::PARAM_INT;
-        }
-
-        if (is_bool($value) === true) {
-            return PDO::PARAM_BOOL;
-        }
-
-        return PDO::PARAM_STR;
-    }
-
-    /**
      * Execute statement
      *
      * @param string $sql
@@ -219,13 +200,16 @@ class QueryBuilderHandler
             $pdoStatement->bindValue(
                 is_int($key) ? $key + 1 : $key,
                 $value,
-                $this->parseDataType($value)
+                ((is_int($value) === true || is_bool($value) === true) ? PDO::PARAM_INT : PDO::PARAM_STR)
             );
         }
 
         $pdoStatement->execute();
 
-        return [$pdoStatement, microtime(true) - $start];
+        return [
+            $pdoStatement,
+            microtime(true) - $start
+        ];
     }
 
     /**
