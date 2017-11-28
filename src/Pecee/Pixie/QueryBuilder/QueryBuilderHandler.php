@@ -196,6 +196,12 @@ class QueryBuilderHandler
 
         $pdoStatement = $this->pdo->prepare($sql);
 
+        /**
+         * NOTE:
+         * PHP 5.6 & 7 bug: https://bugs.php.net/bug.php?id=38546
+         * \PDO::PARAM_BOOL is not supported, use \PDO::PARAM_INT instead
+         */
+
         foreach ($bindings as $key => $value) {
             $pdoStatement->bindValue(
                 is_int($key) ? $key + 1 : $key,
@@ -208,7 +214,7 @@ class QueryBuilderHandler
 
         return [
             $pdoStatement,
-            microtime(true) - $start
+            microtime(true) - $start,
         ];
     }
 
@@ -1050,7 +1056,7 @@ class QueryBuilderHandler
      */
     public function raw($value, $bindings = null)
     {
-        if(is_array($bindings) === false) {
+        if (is_array($bindings) === false) {
             $bindings = func_get_args();
             array_shift($bindings);
         }
