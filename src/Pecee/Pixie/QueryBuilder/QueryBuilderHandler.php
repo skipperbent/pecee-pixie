@@ -192,14 +192,18 @@ class QueryBuilderHandler
     protected function parseDataType($value)
     {
         if (is_int($value) === true) {
-            return PDO::PARAM_INT;
+            return \PDO::PARAM_INT;
         }
 
         if (is_bool($value) === true) {
-            return PDO::PARAM_BOOL;
+            /**
+             * PHP 5.6 & 7 bug: https://bugs.php.net/bug.php?id=38546
+             * \PDO::PARAM_BOOL is not supported, use \PDO::PARAM_INT instead
+             */
+            return \PDO::PARAM_INT;
         }
 
-        return PDO::PARAM_STR;
+        return \PDO::PARAM_STR;
     }
 
     /**
