@@ -9,26 +9,63 @@ namespace Pecee\Pixie\QueryBuilder;
  */
 class Transaction extends QueryBuilderHandler
 {
-
     /**
-     * Commit the database changes
+     * Check if we are in transaction
      *
-     * @throws TransactionHaltException
+     * @return bool
      */
-    public function commit()
+    public function inTransaction(): bool
     {
-        $this->pdo->commit();
-        throw new TransactionHaltException('Commit');
+        return $this->pdo()->inTransaction();
     }
 
     /**
-     * Rollback the database changes
+     * Begin transaction
      *
-     * @throws TransactionHaltException
+     * @param bool $inTransaction
+     *
+     * @return $this
      */
-    public function rollback()
+    public function begin(bool $inTransaction = false)
     {
-        $this->pdo->rollBack();
-        throw new TransactionHaltException('Rollback');
+        if (false === $inTransaction) {
+            $this->pdo()->beginTransaction();
+        }
+
+        return $this;
     }
+
+    /**
+     * Commit transaction
+     *
+     * @param bool $inTransaction
+     *
+     * @return $this
+     */
+    public function commit(bool $inTransaction = false)
+    {
+        if (false === $inTransaction) {
+            $this->pdo()->commit();
+        }
+
+        return $this;
+    }
+
+    /**
+     * RollBack transaction
+     *
+     * @param bool $inTransaction
+     *
+     * @return $this
+     */
+    public function rollBack(bool $inTransaction = false)
+    {
+        if (false === $inTransaction) {
+            $this->pdo()->rollBack();
+        }
+
+        return $this;
+    }
+
+
 }
