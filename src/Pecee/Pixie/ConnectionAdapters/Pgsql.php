@@ -11,6 +11,7 @@ class Pgsql extends BaseAdapter
 {
     /**
      * @param array $config
+     *
      * @return mixed
      * @throws Exception
      */
@@ -26,6 +27,9 @@ class Pgsql extends BaseAdapter
             $connectionString .= ";port={$config['port']}";
         }
 
+        /**
+         * @var \PDO $connection
+         */
         $connection = $this->container->build(
             \PDO::class,
             [$connectionString, $config['username'], $config['password'], $config['options']]

@@ -11,6 +11,7 @@ class Mysql extends BaseAdapter
 {
     /**
      * @param array $config
+     *
      * @return mixed
      * @throws Exception
      */
@@ -34,6 +35,9 @@ class Mysql extends BaseAdapter
             $connectionString .= ";unix_socket={$config['unix_socket']}";
         }
 
+        /**
+         * @var \PDO $connection
+         */
         $connection = $this->container->build(
             \PDO::class,
             [$connectionString, $config['username'], $config['password'], $config['options']]
