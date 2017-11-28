@@ -50,7 +50,7 @@ abstract class BaseAdapter
      *
      * @return string
      */
-    protected function arrayStr(array $pieces, $glue = ',', $wrapSanitizer = true)
+    protected function arrayStr(array $pieces, $glue = ',', $wrapSanitizer = true): string
     {
         $str = '';
         foreach ($pieces as $key => $piece) {
@@ -58,7 +58,7 @@ abstract class BaseAdapter
                 $piece = $this->wrapSanitizer($piece);
             }
 
-            if (is_int($key) === false) {
+            if (\is_int($key) === false) {
                 $piece = ($wrapSanitizer ? $this->wrapSanitizer($key) : $key) . ' AS ' . $piece;
             }
 
@@ -115,7 +115,7 @@ abstract class BaseAdapter
                 continue;
             }
 
-            if (is_array($value) === true) {
+            if (\is_array($value) === true) {
 
                 // Where in or between like query
                 $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'];
@@ -158,11 +158,11 @@ abstract class BaseAdapter
 
                 if ($statement['operator'] !== null) {
                     $criteria   .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
-                    $bindings[] = (array)$statement['key']->getBindings();
+                    $bindings[] = $statement['key']->getBindings();
                     $bindings[] = (array)$value;
                 } else {
                     $criteria   .= $statement['joiner'] . ' ' . $key . ' ';
-                    $bindings[] = (array)$statement['key']->getBindings();
+                    $bindings[] = $statement['key']->getBindings();
                 }
 
                 continue;
@@ -175,10 +175,10 @@ abstract class BaseAdapter
             $criteria         .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
         }
 
-        $bindings = array_merge(...$bindings);
+        $bindings = \array_merge(...$bindings);
 
         // Clear all white spaces, and, or from beginning and white spaces from ending
-        $criteria = preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
+        $criteria = \preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
         return [$criteria, $bindings];
     }
@@ -223,12 +223,12 @@ abstract class BaseAdapter
     {
         $sql = '';
 
-        if (array_key_exists('joins', $statements) === false || count($statements['joins']) === 0) {
+        if (\array_key_exists('joins', $statements) === false || \count($statements['joins']) === 0) {
             return $sql;
         }
 
         foreach ((array)$statements['joins'] as $joinArr) {
-            if (is_array($joinArr['table']) === true) {
+            if (\is_array($joinArr['table']) === true) {
                 list($mainTable, $aliasTable) = $joinArr['table'];
                 $table = $this->wrapSanitizer($mainTable) . ' AS ' . $this->wrapSanitizer($aliasTable);
             } else {
@@ -349,7 +349,7 @@ abstract class BaseAdapter
 
         if (isset($statements['onduplicate']) === true) {
 
-            if (count($statements['onduplicate']) < 1) {
+            if (\count($statements['onduplicate']) < 1) {
                 throw new Exception('No data given.', 4);
             }
 
@@ -490,7 +490,7 @@ abstract class BaseAdapter
 
         // ORDER BY
         $orderBys = '';
-        if (isset($statements['orderBys']) && is_array($statements['orderBys'])) {
+        if (isset($statements['orderBys']) && \is_array($statements['orderBys'])) {
             foreach ($statements['orderBys'] as $orderBy) {
                 $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
             }
@@ -545,7 +545,7 @@ abstract class BaseAdapter
      */
     public function update(array $statements, array $data)
     {
-        if (count($data) < 1) {
+        if (\count($data) < 1) {
             throw new Exception('No data given.', 4);
         }
 

@@ -43,7 +43,7 @@ class Raw
     /**
      * @return array
      */
-    public function getBindings()
+    public function getBindings(): array
     {
         return $this->bindings;
     }

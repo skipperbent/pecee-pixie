@@ -80,7 +80,7 @@ class QueryBuilderHandler
     ];
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     protected $pdo;
 
@@ -125,7 +125,7 @@ class QueryBuilderHandler
     {
         $this->connection = $connection ?? Connection::getStoredConnection();
 
-        if (is_null($this->connection)) {
+        if ($this->connection === null) {
             throw new Exception('No database connection found.', 1);
         }
 
@@ -144,7 +144,7 @@ class QueryBuilderHandler
             [$this->connection]
         );
 
-        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     /**
@@ -180,7 +180,7 @@ class QueryBuilderHandler
         // If supplied value is not an array then make it one
 
         $single = false;
-        if (is_array($values) === false) {
+        if (\is_array($values) === false) {
             $values = [$values];
 
             // We had single value, so should return a single value
@@ -199,7 +199,7 @@ class QueryBuilderHandler
             // If key is not integer, it is likely a alias mapping, so we need to change prefix target
             $target = &$value;
 
-            if (is_int($key) === false) {
+            if (\is_int($key) === false) {
                 $target = &$key;
             }
 
@@ -222,10 +222,10 @@ class QueryBuilderHandler
      * @throws Exception
      * @return int
      */
-    protected function aggregate(string $type)
+    protected function aggregate(string $type): int
     {
         // Get the current selects
-        $mainSelects = isset($this->statements['selects']) ? $this->statements['selects'] : null;
+        $mainSelects = $this->statements['selects'] ?? null;
 
         // Replace select with a scalar value like `count`
         $this->statements['selects'] = [$this->raw($type . '(*) AS `field`')];
@@ -239,10 +239,10 @@ class QueryBuilderHandler
         }
 
         if (isset($row[0]) === true) {
-            if (is_array($row[0]) === true) {
+            if (\is_array($row[0]) === true) {
                 return (int)$row[0]['field'];
             }
-            if (is_object($row[0]) === true) {
+            if (\is_object($row[0]) === true) {
                 return (int)$row[0]->field;
             }
         }
@@ -276,7 +276,7 @@ class QueryBuilderHandler
      */
     public function asObject(string $className, array $constructorArgs = []): QueryBuilderHandler
     {
-        return $this->setFetchMode(\PDO::FETCH_CLASS, $className, $constructorArgs);
+        return $this->setFetchMode(PDO::FETCH_CLASS, $className, $constructorArgs);
     }
 
     /**
@@ -329,7 +329,7 @@ class QueryBuilderHandler
     private function doInsert(array $data, string $type)
     {
         // If first value is not an array - it's not a batch insert
-        if (is_array(current($data)) === false) {
+        if (\is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
             $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
@@ -399,10 +399,10 @@ class QueryBuilderHandler
      */
     public function fireEvents($name, $parameters = null)
     {
-        $params = func_get_args();
+        $params = \func_get_args();
         array_unshift($params, $this);
 
-        return call_user_func_array([$this->connection->getEventHandler(), 'fireEvents'], $params);
+        return \call_user_func_array([$this->connection->getEventHandler(), 'fireEvents'], $params);
     }
 
     /**
@@ -415,7 +415,7 @@ class QueryBuilderHandler
     {
         $result = $this->limit(1)->get();
 
-        return ($result !== null && count($result) > 0) ? $result[0] : null;
+        return ($result !== null && \count($result) > 0) ? $result[0] : null;
     }
 
     /**
@@ -427,8 +427,8 @@ class QueryBuilderHandler
      */
     public function from($tables)
     {
-        if (is_array($tables) === false) {
-            $tables = func_get_args();
+        if (\is_array($tables) === false) {
+            $tables = \func_get_args();
         }
 
         $tables = $this->addTablePrefix($tables, false);
@@ -464,7 +464,7 @@ class QueryBuilderHandler
 
         $start = microtime(true);
         $this->fireEvents(static::EVENT_BEFORE_SELECT, $queryObject);
-        $result             = call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
+        $result             = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
         $executionTime      += microtime(true) - $start;
         $this->pdoStatement = null;
         $this->fireEvents(static::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
@@ -516,7 +516,7 @@ class QueryBuilderHandler
             'criteriaonly',
         ];
 
-        if (in_array(strtolower($type), $allowedTypes, true) === false) {
+        if (\in_array(strtolower($type), $allowedTypes, true) === false) {
             throw new Exception($type . ' is not a known type.', 2);
         }
 
@@ -551,7 +551,7 @@ class QueryBuilderHandler
             $field = $this->addTablePrefix($field);
         }
 
-        if (is_array($field) === true) {
+        if (\is_array($field) === true) {
             $this->statements['groupBys'] = array_merge($this->statements['groupBys'], $field);
         } else {
             $this->statements['groupBys'][] = $field;
@@ -771,7 +771,7 @@ class QueryBuilderHandler
     public function orWhere($key, $operator = null, $value = null)
     {
         // If two params are given then assume operator is =
-        if (func_num_args() === 2) {
+        if (\func_num_args() === 2) {
             $value    = $operator;
             $operator = '=';
         }
@@ -818,7 +818,7 @@ class QueryBuilderHandler
     public function orWhereNot($key, $operator = null, $value = null)
     {
         // If two params are given then assume operator is =
-        if (func_num_args() === 2) {
+        if (\func_num_args() === 2) {
             $value    = $operator;
             $operator = '=';
         }
@@ -873,7 +873,7 @@ class QueryBuilderHandler
      */
     public function orderBy($fields, $defaultDirection = 'ASC')
     {
-        if (is_array($fields) === false) {
+        if (\is_array($fields) === false) {
             $fields = [$fields];
         }
 
@@ -881,7 +881,7 @@ class QueryBuilderHandler
             $field = $key;
             $type  = $value;
 
-            if (is_int($key) === true) {
+            if (\is_int($key) === true) {
                 $field = $value;
                 $type  = $defaultDirection;
             }
@@ -894,26 +894,6 @@ class QueryBuilderHandler
         }
 
         return $this;
-    }
-
-    /**
-     * Parses correct data-type for PDO parameter.
-     *
-     * @param mixed $value
-     *
-     * @return int PDO-parameter type
-     */
-    protected function parseDataType($value)
-    {
-        if (is_int($value) === true) {
-            return PDO::PARAM_INT;
-        }
-
-        if (is_bool($value) === true) {
-            return PDO::PARAM_BOOL;
-        }
-
-        return PDO::PARAM_STR;
     }
 
     /**
@@ -971,10 +951,10 @@ class QueryBuilderHandler
      *
      * @return Raw
      */
-    public function raw($value, $bindings = null)
+    public function raw($value, $bindings = null): Raw
     {
-        if (is_array($bindings) === false) {
-            $bindings = func_get_args();
+        if (\is_array($bindings) === false) {
+            $bindings = \func_get_args();
             array_shift($bindings);
         }
 
@@ -1049,8 +1029,8 @@ class QueryBuilderHandler
      */
     public function select($fields)
     {
-        if (is_array($fields) === false) {
-            $fields = func_get_args();
+        if (\is_array($fields) === false) {
+            $fields = \func_get_args();
         }
 
         $fields = $this->addTablePrefix($fields);
@@ -1097,7 +1077,7 @@ class QueryBuilderHandler
      */
     public function setFetchMode($parameters = null)
     {
-        $this->fetchParameters = func_get_args();
+        $this->fetchParameters = \func_get_args();
 
         return $this;
     }
@@ -1110,7 +1090,7 @@ class QueryBuilderHandler
      *
      * @return array PDOStatement and execution time as float
      */
-    public function statement(string $sql, array $bindings = [])
+    public function statement(string $sql, array $bindings = []): array
     {
         $start = microtime(true);
 
@@ -1118,9 +1098,9 @@ class QueryBuilderHandler
 
         foreach ($bindings as $key => $value) {
             $pdoStatement->bindValue(
-                is_int($key) ? $key + 1 : $key,
+                \is_int($key) ? $key + 1 : $key,
                 $value,
-                $this->parseDataType($value)
+                (\is_int($value) || \is_bool($value)) ? PDO::PARAM_INT : PDO::PARAM_STR
             );
         }
 
@@ -1139,7 +1119,7 @@ class QueryBuilderHandler
      * @throws Exception
      * @return Raw
      */
-    public function subQuery(QueryBuilderHandler $queryBuilder, $alias = null)
+    public function subQuery(QueryBuilderHandler $queryBuilder, $alias = null): Raw
     {
         $sql = '(' . $queryBuilder->getQuery()->getRawSql() . ')';
         if ($alias !== null) {
@@ -1170,14 +1150,14 @@ class QueryBuilderHandler
     public function table($tables)
     {
         $tTables = [];
-        if (is_array($tables) === false) {
+        if (\is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
-            $tables = func_get_args();
+            $tables = \func_get_args();
         }
 
         $instance = new static($this->connection);
         foreach ($tables as $key => $value) {
-            if (is_string($key)) {
+            if (\is_string($key)) {
                 $instance->alias($key, $value);
                 $tTables[] = $key;
             } else {
@@ -1194,7 +1174,7 @@ class QueryBuilderHandler
      * Performs the transaction
      *
      * @param \Closure $callback
-     *
+     * @throws \Exception
      * @return static
      */
     public function transaction(\Closure $callback)
@@ -1203,6 +1183,7 @@ class QueryBuilderHandler
          * Get the Transaction class
          *
          * @var \Pecee\Pixie\QueryBuilder\Transaction $queryTransaction
+         * @throws \Exception
          */
         $queryTransaction = $this->container->build(Transaction::class, [$this->connection]);
         $inTransaction    = $queryTransaction->inTransaction();
@@ -1278,12 +1259,12 @@ class QueryBuilderHandler
     public function where($key, $operator = null, $value = null)
     {
         // If two params are given then assume operator is =
-        if (func_num_args() === 2) {
+        if (\func_num_args() === 2) {
             $value    = $operator;
             $operator = '=';
         }
 
-        if (is_bool($value) === true) {
+        if (\is_bool($value) === true) {
             $value = (int)$value;
         }
 
@@ -1347,7 +1328,7 @@ class QueryBuilderHandler
     public function whereNot($key, $operator = null, $value = null)
     {
         // If two params are given then assume operator is =
-        if (func_num_args() === 2) {
+        if (\func_num_args() === 2) {
             $value    = $operator;
             $operator = '=';
         }

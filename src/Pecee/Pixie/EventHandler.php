@@ -35,13 +35,13 @@ class EventHandler
     public function fireEvents(QueryBuilderHandler $queryBuilder, string $event)
     {
         $statements = $queryBuilder->getStatements();
-        $tables     = isset($statements['tables']) ? $statements['tables'] : [];
+        $tables     = $statements['tables'] ?? [];
 
         // Events added with :any will be fired in case of any table,
         // we are adding :any as a fake table at the beginning.
         array_unshift($tables, static::TABLE_ANY);
 
-        $handlerParams = func_get_args();
+        $handlerParams = \func_get_args();
         unset($handlerParams[1]);
 
         // Fire all events
@@ -55,7 +55,7 @@ class EventHandler
 
                 // Fire event and add to fired list
                 $this->firedEvents[] = $eventId;
-                $result              = call_user_func_array($action, $handlerParams);
+                $result              = \call_user_func_array($action, $handlerParams);
                 if ($result !== null) {
                     return $result;
                 }
@@ -91,7 +91,7 @@ class EventHandler
             }
         }
 
-        return isset($this->events[$table][$event]) ? $this->events[$table][$event] : null;
+        return $this->events[$table][$event] ?? null;
     }
 
     /**

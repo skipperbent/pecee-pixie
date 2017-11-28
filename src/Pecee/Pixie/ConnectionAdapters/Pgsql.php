@@ -17,7 +17,7 @@ class Pgsql extends BaseAdapter
      */
     protected function doConnect(array $config)
     {
-        if (extension_loaded('pdo_pgsql') === false) {
+        if (\extension_loaded('pdo_pgsql') === false) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_pgsql'));
         }
 
