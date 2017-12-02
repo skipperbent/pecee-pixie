@@ -303,6 +303,21 @@ $result = $queryBuilder
 
 ### Select
 
+#### Select from query
+
+You can easily select items from another query by using
+
+```php
+$subQuery = $queryBuilder->table('person');
+$builder = $queryBuilder->table($queryBuilder->subQuery($subQuery))->where('id', '=', 2);
+```
+
+Will produce the following output:
+
+```sql
+SELECT * FROM (SELECT * FROM `person`) WHERE `id` = 2
+```
+
 #### Select single field
 
 ```php

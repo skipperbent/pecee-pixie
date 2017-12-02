@@ -254,14 +254,20 @@ class QueryBuilderHandler
      * Add or change table alias
      * Example: table AS alias
      *
-     * @param string $table
      * @param string $alias
+     * @param string $table
      *
      * @return static
      */
-    public function alias(string $table, string $alias)
+    public function alias(string $alias, string $table = null)
     {
-        $this->statements['aliases'][$this->tablePrefix . $table] = strtolower($alias);
+        if($table === null && isset($this->statements['tables'][0]) === true) {
+            $table = $this->statements['tables'][0];
+        } else {
+            $table = $this->tablePrefix . $table;
+        }
+
+        $this->statements['aliases'][$table] = strtolower($alias);
 
         return $this;
     }
@@ -810,7 +816,7 @@ class QueryBuilderHandler
      * Adds OR WHERE NOT statement to the current query.
      *
      * @param string|Raw|\Closure            $key
-     * @param string|array|Raw|\Closure|null $operator
+     * @param string|null                    $operator
      * @param mixed|Raw|\Closure|null        $value
      *
      * @return static
@@ -904,24 +910,6 @@ class QueryBuilderHandler
     public function pdo()
     {
         return $this->pdo;
-    }
-
-    /**
-     * Add or change table alias
-     *
-     * Example: table AS alias
-     *
-     * @deprecated This method will be removed in the near future, please use QueryBuilderHandler::alias instead.
-     * @see        QueryBuilderHandler::alias
-     *
-     * @param string $table
-     * @param string $alias
-     *
-     * @return static
-     */
-    public function prefix($table, $alias)
-    {
-        return $this->alias($table, $alias);
     }
 
     /**
@@ -1133,9 +1121,9 @@ class QueryBuilderHandler
      * Sets the table that the query is using
      *
      * @param string|array $tables Single table or multiple tables as an array or as multiple parameters
-     *
      * @throws Exception
      * @return static
+     *
      * ```
      * Examples:
      *  - basic usage
@@ -1156,9 +1144,10 @@ class QueryBuilderHandler
         }
 
         $instance = new static($this->connection);
+
         foreach ($tables as $key => $value) {
             if (\is_string($key)) {
-                $instance->alias($key, $value);
+                $instance->alias($value, $key);
                 $tTables[] = $key;
             } else {
                 $tTables[] = $value;
@@ -1251,7 +1240,7 @@ class QueryBuilderHandler
      * Adds WHERE statement to the current query.
      *
      * @param string|Raw|\Closure      $key
-     * @param string|Raw|\Closure|null $operator
+     * @param string|null              $operator
      * @param mixed|Raw|\Closure|null  $value
      *
      * @return static
@@ -1352,11 +1341,11 @@ class QueryBuilderHandler
     /**
      * Adds WHERE NOT NULL statement to the current query.
      *
-     * @param string $key
+     * @param string|Raw|\Closure $key
      *
      * @return static
      */
-    public function whereNotNull(string $key)
+    public function whereNotNull($key)
     {
         return $this->whereNullHandler($key, 'NOT');
     }
@@ -1376,16 +1365,16 @@ class QueryBuilderHandler
     /**
      * Handles WHERE NULL statements.
      *
-     * @param string $key
+     * @param string|Raw|\Closure $key
      * @param string $prefix
      * @param string $operator
      *
      * @return mixed
      */
-    protected function whereNullHandler(string $key, $prefix = '', $operator = '')
+    protected function whereNullHandler($key, $prefix = '', $operator = '')
     {
         $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
-
-        return $this->{$operator . 'Where'}($this->raw("{$key} IS {$prefix} NULL"));
+        $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
+        return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
     }
 }

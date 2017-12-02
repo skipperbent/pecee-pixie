@@ -30,7 +30,7 @@ class QueryBuilderTest extends TestCase
     {
         $query = $this->builder
             ->table(['table1'])
-            ->alias('table1', 't1')
+            ->alias('t1')
             ->join('table2', 'table2.person_id', '=', 'foo2.id')
         ;
 
@@ -301,7 +301,7 @@ class QueryBuilderTest extends TestCase
         ;
 
         $this->assertEquals(
-            "SELECT * FROM `cb_my_table` WHERE `key1` IS  NULL OR `key2` IS  NULL AND `key3` IS NOT NULL OR `key4` IS NOT NULL OR `key5` = NULL",
+            "SELECT * FROM `cb_my_table` WHERE `key1` IS NULL OR `key2` IS NULL AND `key3` IS NOT NULL OR `key4` IS NOT NULL OR `key5` = NULL",
             $query->getQuery()->getRawSql()
         );
     }
@@ -339,4 +339,31 @@ class QueryBuilderTest extends TestCase
         $this->assertEquals("UPDATE `cb_my_table` SET `key`='Sana',`value`='Amrin' WHERE `value` = 'Sana'"
             , $builder->getQuery('update', $data)->getRawSql());
     }
+
+    public function testFromSubQuery() {
+
+        $subQuery = $this->builder->table('person');
+        $builder = $this->builder->table($this->builder->subQuery($subQuery))->where('id', '=', 2);
+
+        $this->assertEquals('SELECT * FROM (SELECT * FROM `cb_person`) WHERE `id` = 2', $builder->getQuery()->getRawSql());
+
+    }
+
+    public function testTableAlias() {
+
+        $builder = $this->builder->table('persons')->alias('staff');
+
+        $this->assertEquals('SELECT * FROM `cb_persons` AS `staff`', $builder->getQuery()->getRawSql());
+
+    }
+
+    public function testWhereNotNullSubQuery() {
+        $subQuery = $this->builder->table('persons')->alias('staff');
+
+        $query = $this->builder->whereNull($this->builder->subQuery($subQuery));
+
+        $this->assertEquals('SELECT * WHERE (SELECT * FROM `cb_persons` AS `staff`) IS NULL', $query->getQuery()->getRawSql());
+
+    }
+
 }
