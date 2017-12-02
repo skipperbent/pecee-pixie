@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder;
 
 /**
@@ -21,21 +22,14 @@ class Raw
 
     /**
      * Raw constructor.
-     * @param string $value
+     *
+     * @param string       $value
      * @param array|string $bindings
      */
-    public function __construct($value, array $bindings = [])
+    public function __construct(string $value, array $bindings = [])
     {
-        $this->value = (string)$value;
-        $this->bindings = (array)$bindings;
-    }
-
-    /**
-     * @return array
-     */
-    public function getBindings()
-    {
-        return $this->bindings;
+        $this->value    = $value;
+        $this->bindings = $bindings;
     }
 
     /**
@@ -44,5 +38,13 @@ class Raw
     public function __toString()
     {
         return (string)$this->value;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBindings(): array
+    {
+        return $this->bindings;
     }
 }

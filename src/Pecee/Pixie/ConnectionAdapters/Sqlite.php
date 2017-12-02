@@ -11,12 +11,13 @@ class Sqlite extends BaseAdapter
 {
     /**
      * @param array $config
-     * @return mixed
+     *
+     * @return \PDO
      * @throws Exception
      */
     public function doConnect(array $config)
     {
-        if (extension_loaded('pdo_sqlite') === false) {
+        if (\extension_loaded('pdo_sqlite') === false) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_sqlite'));
         }
 

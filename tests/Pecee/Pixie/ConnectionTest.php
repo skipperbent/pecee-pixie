@@ -4,9 +4,20 @@ use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
+/**
+ * Class ConnectionTest
+ *
+ * @package Pecee\Pixie
+ */
 class ConnectionTest extends TestCase
 {
+    /**
+     * @var \Mockery\Mock
+     */
     private $mysqlConnectionMock;
+    /**
+     * @var \Pecee\Pixie\Connection
+     */
     private $connection;
 
     public function setUp()
