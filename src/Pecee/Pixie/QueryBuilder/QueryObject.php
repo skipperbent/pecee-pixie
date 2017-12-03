@@ -77,7 +77,7 @@ class QueryObject
      *
      * @return string The interpolated query
      */
-    protected function interpolateQuery($query, $params)
+    protected function interpolateQuery($query, $params): string
     {
         $keys   = [];
         $values = $params;
