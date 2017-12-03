@@ -261,7 +261,7 @@ class QueryBuilderHandler
      */
     public function alias(string $alias, string $table = null)
     {
-        if($table === null && isset($this->statements['tables'][0]) === true) {
+        if ($table === null && isset($this->statements['tables'][0]) === true) {
             $table = $this->statements['tables'][0];
         } else {
             $table = $this->tablePrefix . $table;
@@ -447,7 +447,7 @@ class QueryBuilderHandler
      * Get all rows
      *
      * @throws Exception
-     * @return object[]
+     * @return array
      */
     public function get(): array
     {
@@ -815,9 +815,9 @@ class QueryBuilderHandler
     /**
      * Adds OR WHERE NOT statement to the current query.
      *
-     * @param string|Raw|\Closure            $key
-     * @param string|null                    $operator
-     * @param mixed|Raw|\Closure|null        $value
+     * @param string|Raw|\Closure     $key
+     * @param string|null             $operator
+     * @param mixed|Raw|\Closure|null $value
      *
      * @return static
      */
@@ -1121,6 +1121,7 @@ class QueryBuilderHandler
      * Sets the table that the query is using
      *
      * @param string|array $tables Single table or multiple tables as an array or as multiple parameters
+     *
      * @throws Exception
      * @return static
      *
@@ -1163,6 +1164,7 @@ class QueryBuilderHandler
      * Performs the transaction
      *
      * @param \Closure $callback
+     *
      * @throws \Exception
      * @return static
      */
@@ -1239,9 +1241,9 @@ class QueryBuilderHandler
     /**
      * Adds WHERE statement to the current query.
      *
-     * @param string|Raw|\Closure      $key
-     * @param string|null              $operator
-     * @param mixed|Raw|\Closure|null  $value
+     * @param string|Raw|\Closure     $key
+     * @param string|null             $operator
+     * @param mixed|Raw|\Closure|null $value
      *
      * @return static
      */
@@ -1366,15 +1368,16 @@ class QueryBuilderHandler
      * Handles WHERE NULL statements.
      *
      * @param string|Raw|\Closure $key
-     * @param string $prefix
-     * @param string $operator
+     * @param string              $prefix
+     * @param string              $operator
      *
      * @return mixed
      */
     protected function whereNullHandler($key, $prefix = '', $operator = '')
     {
-        $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
+        $key    = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
+
         return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
     }
 }
