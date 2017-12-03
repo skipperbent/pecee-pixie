@@ -2,6 +2,7 @@
 
 namespace Pecee\Pixie\ConnectionAdapters;
 
+use PDO;
 use Viocon\Container;
 
 /**
@@ -28,7 +29,7 @@ abstract class BaseAdapter
      * @param $config
      * @return \PDO
      */
-    public function connect(array $config)
+    public function connect(array $config): PDO
     {
         if (isset($config['options']) === false) {
             $config['options'] = [];

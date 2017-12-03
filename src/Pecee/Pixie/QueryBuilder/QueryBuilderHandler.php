@@ -388,9 +388,9 @@ class QueryBuilderHandler
      * @param string|int|float $value
      *
      * @throws Exception
-     * @return \stdClass[]
+     * @return array
      */
-    public function findAll(string $fieldName, $value)
+    public function findAll(string $fieldName, $value): array
     {
         return $this->where($fieldName, '=', $value)->get();
     }
@@ -907,7 +907,7 @@ class QueryBuilderHandler
      *
      * @return PDO
      */
-    public function pdo()
+    public function pdo(): PDO
     {
         return $this->pdo;
     }
@@ -1206,7 +1206,7 @@ class QueryBuilderHandler
      * @throws Exception
      * @return \PDOStatement
      */
-    public function update($data)
+    public function update($data): \PDOStatement
     {
         /**
          * @var $response \PDOStatement

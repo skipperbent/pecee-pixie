@@ -77,7 +77,7 @@ abstract class BaseAdapter
      * @throws Exception
      * @return array
      */
-    protected function buildCriteria(array $statements, $bindValues = true)
+    protected function buildCriteria(array $statements, $bindValues = true): array
     {
         $criteria = '';
         $bindings = [[]];
@@ -194,7 +194,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    protected function buildCriteriaWithType(array $statements, $key, $type, $bindValues = true)
+    protected function buildCriteriaWithType(array $statements, $key, $type, $bindValues = true): array
     {
         $criteria = '';
         $bindings = [];
@@ -219,7 +219,7 @@ abstract class BaseAdapter
      * @return string
      * @throws Exception
      */
-    protected function buildJoin(array $statements)
+    protected function buildJoin(array $statements): string
     {
         $sql = '';
 
@@ -260,7 +260,7 @@ abstract class BaseAdapter
      *
      * @return string
      */
-    protected function concatenateQuery(array $pieces)
+    protected function concatenateQuery(array $pieces): string
     {
         $str = '';
         foreach ($pieces as $piece) {
@@ -279,7 +279,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function criteriaOnly(array $statements, $bindValues = true)
+    public function criteriaOnly(array $statements, $bindValues = true): array
     {
         $sql = $bindings = [];
         if (isset($statements['criteria']) === false) {
@@ -299,7 +299,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function delete(array $statements)
+    public function delete(array $statements): array
     {
         $table = end($statements['tables']);
 
@@ -323,7 +323,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    private function doInsert(array $statements, array $data, $type)
+    private function doInsert(array $statements, array $data, $type): array
     {
         $table = end($statements['tables']);
 
@@ -371,7 +371,7 @@ abstract class BaseAdapter
      *
      * @return array
      */
-    private function getUpdateStatement(array $data)
+    private function getUpdateStatement(array $data): array
     {
         $bindings  = [];
         $statement = '';
@@ -402,7 +402,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function insert(array $statements, array $data)
+    public function insert(array $statements, array $data): array
     {
         return $this->doInsert($statements, $data, 'INSERT');
     }
@@ -416,7 +416,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function insertIgnore(array $statements, array $data)
+    public function insertIgnore(array $statements, array $data): array
     {
         return $this->doInsert($statements, $data, 'INSERT IGNORE');
     }
@@ -430,7 +430,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function replace(array $statements, array $data)
+    public function replace(array $statements, array $data): array
     {
         return $this->doInsert($statements, $data, 'REPLACE');
     }
@@ -443,7 +443,7 @@ abstract class BaseAdapter
      * @throws Exception
      * @return array
      */
-    public function select(array $statements)
+    public function select(array $statements): array
     {
         if (array_key_exists('selects', $statements) === false) {
             $statements['selects'] = ['*'];
@@ -543,7 +543,7 @@ abstract class BaseAdapter
      * @return array
      * @throws Exception
      */
-    public function update(array $statements, array $data)
+    public function update(array $statements, array $data): array
     {
         if (\count($data) < 1) {
             throw new Exception('No data given.', 4);
@@ -582,7 +582,7 @@ abstract class BaseAdapter
      *
      * @return string
      */
-    public function wrapSanitizer($value)
+    public function wrapSanitizer($value): string
     {
         // Its a raw query, just cast as string, object has __toString()
         if ($value instanceof Raw) {
