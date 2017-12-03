@@ -17,7 +17,7 @@ class Sqlite extends BaseAdapter
      */
     public function doConnect(array $config)
     {
-        if (extension_loaded('pdo_sqlite') === false) {
+        if (\extension_loaded('pdo_sqlite') === false) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_sqlite'));
         }
 

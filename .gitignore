@@ -3,6 +3,7 @@ composer.phar
 *~
 /devel/
 /coverage.clover
+.idea/
 
 ### Composer template
 /vendor/
