@@ -11,7 +11,7 @@ use Pecee\Pixie\Exception;
  *
  * @package Pecee\Pixie\QueryBuilder
  */
-class QueryBuilderHandler
+class QueryBuilderHandler implements IQueryBuilderHandler
 {
     /**
      * Event name
@@ -152,6 +152,7 @@ class QueryBuilderHandler
      *
      * @param string $key
      * @param mixed  $value
+     * @return void
      */
     protected function addStatement(string $key, $value)
     {
@@ -259,7 +260,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function alias(string $alias, string $table = null)
+    public function alias(string $alias, string $table = null): IQueryBuilderHandler
     {
         if ($table === null && isset($this->statements['tables'][0]) === true) {
             $table = $this->statements['tables'][0];
@@ -344,27 +345,38 @@ class QueryBuilderHandler
              * @var $executionTime float
              */
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-            $return = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $return, $executionTime);
+            $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
 
-            return $return;
+            return $insertId;
         }
 
         // Perform batch insert
+        $insertIds = [];
 
-        $return = [];
         foreach ($data as $subData) {
-            $queryObject = $this->getQuery($type, $subData);
 
-            $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
-            list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-            $result = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $result, $executionTime);
+            $this->transaction(function (Transaction $qb) use(&$insertIds, $type, $subData) {
 
-            $return[] = $result;
+                $queryObject = $qb->getQuery($type, $subData);
+
+                $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
+
+                /**
+                 * @var $result        \PDOStatement
+                 * @var $executionTime float
+                 */
+                list($result, $executionTime) = $qb->statement($queryObject->getSql(), $queryObject->getBindings());
+                $insertId = $result->rowCount() === 1 ? $qb->pdo->lastInsertId() : null;
+                $insertIds[] = $insertId;
+
+                $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $result, $executionTime);
+
+            });
+
         }
 
-        return $return;
+        return $insertIds;
     }
 
     /**
@@ -374,7 +386,7 @@ class QueryBuilderHandler
      * @param string           $fieldName
      *
      * @throws Exception
-     * @return null|\stdClass
+     * @return \stdClass|string|null
      */
     public function find($value, $fieldName = 'id')
     {
@@ -415,7 +427,7 @@ class QueryBuilderHandler
      * Returns the first row
      *
      * @throws Exception
-     * @return \stdClass|null
+     * @return \stdClass|string|null
      */
     public function first()
     {
@@ -431,7 +443,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function from($tables)
+    public function from($tables): IQueryBuilderHandler
     {
         if (\is_array($tables) === false) {
             $tables = \func_get_args();
@@ -551,7 +563,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function groupBy($field)
+    public function groupBy($field): IQueryBuilderHandler
     {
         if (($field instanceof Raw) === false) {
             $field = $this->addTablePrefix($field);
@@ -576,7 +588,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function having($key, $operator, $value, $joiner = 'AND')
+    public function having($key, $operator, $value, $joiner = 'AND'): IQueryBuilderHandler
     {
         $key                           = $this->addTablePrefix($key);
         $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
@@ -594,7 +606,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function innerJoin($table, $key, $operator = null, $value = null)
+    public function innerJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value);
     }
@@ -652,7 +664,7 @@ class QueryBuilderHandler
      * })
      * ```
      */
-    public function join($table, $key, $operator = null, $value = null, $type = 'inner')
+    public function join($table, $key, $operator = null, $value = null, $type = 'inner'): IQueryBuilderHandler
     {
         if (($key instanceof \Closure) === false) {
             $key = function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
@@ -687,7 +699,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function leftJoin($table, $key, $operator = null, $value = null)
+    public function leftJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value, 'left');
     }
@@ -699,7 +711,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function limit($limit)
+    public function limit($limit): IQueryBuilderHandler
     {
         $this->statements['limit'] = $limit;
 
@@ -714,7 +726,7 @@ class QueryBuilderHandler
      * @throws \Pecee\Pixie\Exception
      * @return static
      */
-    public function newQuery(Connection $connection = null)
+    public function newQuery(Connection $connection = null): IQueryBuilderHandler
     {
         if ($connection === null) {
             $connection = $this->connection;
@@ -730,7 +742,7 @@ class QueryBuilderHandler
      *
      * @return static $this
      */
-    public function offset($offset)
+    public function offset($offset): IQueryBuilderHandler
     {
         $this->statements['offset'] = $offset;
 
@@ -744,7 +756,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function onDuplicateKeyUpdate($data)
+    public function onDuplicateKeyUpdate($data): IQueryBuilderHandler
     {
         $this->addStatement('onduplicate', $data);
 
@@ -760,7 +772,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orHaving($key, $operator, $value)
+    public function orHaving($key, $operator, $value): IQueryBuilderHandler
     {
         return $this->having($key, $operator, $value, 'OR');
     }
@@ -774,7 +786,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhere($key, $operator = null, $value = null)
+    public function orWhere($key, $operator = null, $value = null): IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -794,7 +806,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereBetween($key, $valueFrom, $valueTo)
+    public function orWhereBetween($key, $valueFrom, $valueTo): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo], 'OR');
     }
@@ -807,7 +819,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereIn($key, $values)
+    public function orWhereIn($key, $values): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'IN', $values, 'OR');
     }
@@ -821,7 +833,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNot($key, $operator = null, $value = null)
+    public function orWhereNot($key, $operator = null, $value = null): IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -840,7 +852,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNotIn($key, $values)
+    public function orWhereNotIn($key, $values): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'NOT IN', $values, 'OR');
     }
@@ -852,7 +864,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNotNull($key)
+    public function orWhereNotNull($key): IQueryBuilderHandler
     {
         return $this->whereNullHandler($key, 'NOT', 'or');
     }
@@ -864,7 +876,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNull($key)
+    public function orWhereNull($key): IQueryBuilderHandler
     {
         return $this->whereNullHandler($key, '', 'or');
     }
@@ -877,7 +889,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function orderBy($fields, $defaultDirection = 'ASC')
+    public function orderBy($fields, $defaultDirection = 'ASC'): IQueryBuilderHandler
     {
         if (\is_array($fields) === false) {
             $fields = [$fields];
@@ -920,7 +932,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function query($sql, array $bindings = [])
+    public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
         list($this->pdoStatement) = $this->statement($sql, $bindings);
 
@@ -999,7 +1011,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function rightJoin($table, $key, $operator = null, $value = null)
+    public function rightJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value, 'right');
     }
@@ -1015,7 +1027,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function select($fields)
+    public function select($fields): IQueryBuilderHandler
     {
         if (\is_array($fields) === false) {
             $fields = \func_get_args();
@@ -1165,7 +1177,7 @@ class QueryBuilderHandler
      *
      * @param \Closure $callback
      *
-     * @throws \Exception
+     * @throws Exception
      * @return static
      */
     public function transaction(\Closure $callback)
@@ -1194,7 +1206,7 @@ class QueryBuilderHandler
             // something happened, rollback changes and throw Exception
             $queryTransaction->rollBack($inTransaction);
 
-            throw $e;
+            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
 
@@ -1247,7 +1259,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function where($key, $operator = null, $value = null)
+    public function where($key, $operator = null, $value = null): IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -1271,7 +1283,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereBetween($key, $valueFrom, $valueTo)
+    public function whereBetween($key, $valueFrom, $valueTo): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo]);
     }
@@ -1286,7 +1298,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND')
+    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
     {
         $key                          = $this->addTablePrefix($key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
@@ -1302,7 +1314,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereIn($key, $values)
+    public function whereIn($key, $values): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'IN', $values);
     }
@@ -1316,7 +1328,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereNot($key, $operator = null, $value = null)
+    public function whereNot($key, $operator = null, $value = null): IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -1335,7 +1347,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereNotIn($key, $values)
+    public function whereNotIn($key, $values): IQueryBuilderHandler
     {
         return $this->whereHandler($key, 'NOT IN', $values);
     }
@@ -1347,7 +1359,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereNotNull($key)
+    public function whereNotNull($key): IQueryBuilderHandler
     {
         return $this->whereNullHandler($key, 'NOT');
     }
@@ -1359,7 +1371,7 @@ class QueryBuilderHandler
      *
      * @return static
      */
-    public function whereNull($key)
+    public function whereNull($key): IQueryBuilderHandler
     {
         return $this->whereNullHandler($key);
     }
@@ -1371,9 +1383,9 @@ class QueryBuilderHandler
      * @param string              $prefix
      * @param string              $operator
      *
-     * @return mixed
+     * @return static
      */
-    protected function whereNullHandler($key, $prefix = '', $operator = '')
+    protected function whereNullHandler($key, $prefix = '', $operator = ''): IQueryBuilderHandler
     {
         $key    = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;

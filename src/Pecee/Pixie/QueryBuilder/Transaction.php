@@ -26,7 +26,7 @@ class Transaction extends QueryBuilderHandler
      *
      * @return $this
      */
-    public function begin(bool $inTransaction = false)
+    public function begin(bool $inTransaction = false): IQueryBuilderHandler
     {
         if (false === $inTransaction) {
             $this->pdo()->beginTransaction();
@@ -42,7 +42,7 @@ class Transaction extends QueryBuilderHandler
      *
      * @return $this
      */
-    public function commit(bool $inTransaction = false)
+    public function commit(bool $inTransaction = false): IQueryBuilderHandler
     {
         if (false === $inTransaction) {
             $this->pdo()->commit();
@@ -58,7 +58,7 @@ class Transaction extends QueryBuilderHandler
      *
      * @return $this
      */
-    public function rollBack(bool $inTransaction = false)
+    public function rollBack(bool $inTransaction = false): IQueryBuilderHandler
     {
         if (false === $inTransaction) {
             $this->pdo()->rollBack();
