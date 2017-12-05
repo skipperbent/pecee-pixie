@@ -146,7 +146,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // PDO will parse parameter datatypes automaticially
+        // PDO will parse parameter datatypes automatically
         $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
     }
 
@@ -338,9 +338,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     private function doInsert(array $data, string $type)
     {
-        // Helper function
-        $doInsert = function ($data) use ($type) {
+        // Insert single item
 
+        if (\is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
             $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
@@ -354,19 +354,27 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
 
             return $insertId;
-        };
-
-        // If first value is not an array - it's not a batch insert
-        if (\is_array(current($data)) === false) {
-            return $doInsert($data);
         }
 
-        // Perform batch insert
         $insertIds = [];
 
+        // If the current batch insert is not in a transaction, we create one...
+
+        if ($this->pdo->inTransaction() === false) {
+
+            $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type) {
+                foreach ($data as $subData) {
+                    $insertIds[] = $transaction->doInsert($subData, $type);
+                }
+            });
+
+            return $insertIds;
+        }
+
         // Otherwise insert one by one...
+
         foreach ($data as $subData) {
-            $insertIds[] = $doInsert($subData);
+            $insertIds[] = $this->doInsert($subData, $type);
         }
 
         return $insertIds;
@@ -533,9 +541,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
 
-        return $this->container->build(
-            QueryObject::class,
-            [$queryArr['sql'], $queryArr['bindings'], $this->pdo]
+        return $this->container->build(QueryObject::class, [
+                $queryArr['sql'],
+                $queryArr['bindings'],
+                $this->pdo
+            ]
         );
     }
 
@@ -1178,6 +1188,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $this->pdo->beginTransaction();
 
             $queryTransaction = $this->container->build(Transaction::class, [$this->connection]);
+            $queryTransaction->statements = $this->statements;
 
             // Call closure
             // NOTE: this callback will return TransactionHaltException if user has already committed the transaction
@@ -1188,12 +1199,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         } catch (TransactionHaltException $e) {
 
-            // Commit or rollback behavior has been triggered in the closure, so exit
+            // Commit or rollback behavior has been triggered in the closure
             return $this;
 
         } catch (\Exception $e) {
 
-            // something happened, rollback changes and throw Exception
+            // Something went wrong. Rollback and throw Exception
             $this->pdo->rollBack();
 
             throw new Exception($e->getMessage());

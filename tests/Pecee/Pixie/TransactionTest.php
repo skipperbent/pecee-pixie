@@ -75,4 +75,37 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
 
     }
 
+    public function testTransactionMultipleInsert()
+    {
+        $this->builder->statement('TRUNCATE `people`');
+
+        $ids = $this->builder->table('people')->insert([
+            [
+                'name' => 'Simon',
+                'age' => 12,
+                'awesome' => true,
+                'nickname' => 'ponylover94',
+            ],
+            [
+                'name' => 'Peter',
+                'age' => 40,
+                'awesome' => false,
+                'nickname' => null,
+            ],
+            [
+                'name' => 'Bobby',
+                'age' => 20,
+                'awesome' => true,
+                'nickname' => 'peter',
+            ],
+        ]);
+
+        $this->assertEquals(1, $ids[0]);
+        $this->assertEquals(2, $ids[1]);
+        $this->assertEquals(3, $ids[2]);
+
+        $this->assertEquals($this->builder->table('people')->count(), 3);
+
+    }
+
 }
