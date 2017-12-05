@@ -12,6 +12,13 @@ class Transaction extends QueryBuilderHandler
 
     protected $transactionStatement;
 
+    public function transaction(\Closure $callback): IQueryBuilderHandler
+    {
+        $callback($this);
+
+        return $this;
+    }
+
     /**
      * Commit transaction
      *
