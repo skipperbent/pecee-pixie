@@ -52,8 +52,7 @@ class Connection
         $this
             ->setAdapter($adapter)
             ->setAdapterConfig($adapterConfig)
-            ->connect()
-        ;
+            ->connect();
 
         // Create event dependency
         $this->eventHandler = $this->container->build(EventHandler::class);
@@ -70,7 +69,7 @@ class Connection
     /**
      * Create the connection adapter
      */
-    protected function connect()
+    public function connect()
     {
         // Build a database connection if we don't have one connected
 

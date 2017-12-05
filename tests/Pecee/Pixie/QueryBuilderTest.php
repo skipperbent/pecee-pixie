@@ -98,16 +98,24 @@ class QueryBuilder extends TestCase
 
     public function testRawQuery()
     {
-        $query    = 'select * from cb_my_table where id = ? and name = ?';
-        $bindings = [5, 'usman'];
+        $query    = 'select * from cb_my_table where id = ? and name = ? and hipster = null';
+        $bindings = [5, 'usman', null];
         $queryArr = $this->builder->query($query, $bindings)->get();
         $this->assertEquals(
             [
                 $query,
-                [[5, PDO::PARAM_INT], ['usman', PDO::PARAM_STR]],
+                [5, 'usman', null],
             ],
             $queryArr
         );
+    }
+
+    public function testNullableWhere()
+    {
+        $query = $this->builder->table('person')->where('name', [1,null,3]);
+
+        $this->assertEquals($query->getQuery()->getRawSql(), 'SELECT * FROM `cb_person` WHERE `name` = (1, NULL, 3)');
+
     }
 
 }

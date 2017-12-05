@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
+use Pecee\Pixie\QueryBuilder\Transaction;
 
 /**
  * Class QueryBuilderTest

@@ -37,16 +37,16 @@ abstract class BaseAdapter
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
-        $this->container  = $this->connection->getContainer();
+        $this->container = $this->connection->getContainer();
     }
 
     /**
      * Array concatenating method, like implode.
      * But it does wrap sanitizer and trims last glue
      *
-     * @param array  $pieces
+     * @param array $pieces
      * @param string $glue
-     * @param bool   $wrapSanitizer
+     * @param bool $wrapSanitizer
      *
      * @return string
      */
@@ -72,7 +72,7 @@ abstract class BaseAdapter
      * Build generic criteria string and bindings from statements, like "a = b and c = ?"
      *
      * @param array $statements
-     * @param bool  $bindValues
+     * @param bool $bindValues
      *
      * @throws Exception
      * @return array
@@ -84,7 +84,7 @@ abstract class BaseAdapter
 
         foreach ($statements as $statement) {
 
-            $key   = $this->wrapSanitizer($statement['key']);
+            $key = $this->wrapSanitizer($statement['key']);
             $value = $statement['value'];
 
             if ($value === null && $key instanceof \Closure) {
@@ -121,17 +121,17 @@ abstract class BaseAdapter
                 $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'];
 
                 if ($statement['operator'] === 'BETWEEN') {
-                    $bindings[] = (array)$statement['value'];
-                    $criteria   .= ' ? AND ? ';
+                    $bindings[] = [$statement['value']];
+                    $criteria .= ' ? AND ? ';
                 } else {
                     $valuePlaceholder = '';
                     foreach ((array)$statement['value'] as $subValue) {
                         $valuePlaceholder .= '?, ';
-                        $bindings[]       = (array)$subValue;
+                        $bindings[] = [$subValue];
                     }
 
                     $valuePlaceholder = trim($valuePlaceholder, ', ');
-                    $criteria         .= ' (' . $valuePlaceholder . ') ';
+                    $criteria .= ' (' . $valuePlaceholder . ') ';
                 }
 
                 continue;
@@ -148,7 +148,7 @@ abstract class BaseAdapter
             if ($bindValues === false) {
 
                 // Specially for joins - we are not binding values, lets sanitize then
-                $value    = $this->wrapSanitizer($value);
+                $value = $this->wrapSanitizer($value);
                 $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $value . ' ';
 
                 continue;
@@ -157,11 +157,11 @@ abstract class BaseAdapter
             if ($statement['key'] instanceof Raw) {
 
                 if ($statement['operator'] !== null) {
-                    $criteria   .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
+                    $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
                     $bindings[] = $statement['key']->getBindings();
-                    $bindings[] = (array)$value;
+                    $bindings[] = [$value];
                 } else {
-                    $criteria   .= $statement['joiner'] . ' ' . $key . ' ';
+                    $criteria .= $statement['joiner'] . ' ' . $key . ' ';
                     $bindings[] = $statement['key']->getBindings();
                 }
 
@@ -171,25 +171,23 @@ abstract class BaseAdapter
 
             // WHERE
             $valuePlaceholder = '?';
-            $bindings[]       = [$value];
-            $criteria         .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
+            $bindings[] = [$value];
+            $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
         }
-
-        $bindings = \array_merge(...$bindings);
 
         // Clear all white spaces, and, or from beginning and white spaces from ending
         $criteria = \preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
-        return [$criteria, $bindings];
+        return [$criteria, array_merge(...$bindings)];
     }
 
     /**
      * Build criteria string and binding with various types added, like WHERE and Having
      *
-     * @param array  $statements
+     * @param array $statements
      * @param string $key
      * @param string $type
-     * @param bool   $bindValues
+     * @param bool $bindValues
      *
      * @return array
      * @throws Exception
@@ -274,7 +272,7 @@ abstract class BaseAdapter
      * Build just criteria part of the query
      *
      * @param array $statements
-     * @param bool  $bindValues
+     * @param bool $bindValues
      *
      * @return array
      * @throws Exception
@@ -307,7 +305,7 @@ abstract class BaseAdapter
         list($whereCriteria, $whereBindings) = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         $sqlArray = ['DELETE FROM', $this->wrapSanitizer($table), $whereCriteria];
-        $sql      = $this->concatenateQuery($sqlArray);
+        $sql = $this->concatenateQuery($sqlArray);
         $bindings = $whereBindings;
 
         return compact('sql', 'bindings');
@@ -316,8 +314,8 @@ abstract class BaseAdapter
     /**
      * Build a generic insert/ignore/replace query
      *
-     * @param array  $statements
-     * @param array  $data
+     * @param array $statements
+     * @param array $data
      * @param string $type
      *
      * @return array
@@ -334,7 +332,7 @@ abstract class BaseAdapter
             if ($value instanceof Raw) {
                 $values[] = (string)$value;
             } else {
-                $values[]   = '?';
+                $values[] = '?';
                 $bindings[] = $value;
             }
         }
@@ -355,7 +353,7 @@ abstract class BaseAdapter
 
             list($updateStatement, $updateBindings) = $this->getUpdateStatement($statements['onduplicate']);
             $sqlArray[] = 'ON DUPLICATE KEY UPDATE ' . $updateStatement;
-            $bindings   = array_merge($bindings, $updateBindings);
+            $bindings = array_merge($bindings, $updateBindings);
 
         }
 
@@ -373,7 +371,7 @@ abstract class BaseAdapter
      */
     private function getUpdateStatement(array $data): array
     {
-        $bindings  = [];
+        $bindings = [];
         $statement = '';
 
         foreach ($data as $key => $value) {
@@ -383,7 +381,7 @@ abstract class BaseAdapter
             if ($value instanceof Raw) {
                 $statement .= $value . ',';
             } else {
-                $statement  .= '?,';
+                $statement .= '?,';
                 $bindings[] = $value;
             }
         }
@@ -451,7 +449,7 @@ abstract class BaseAdapter
 
         // From
         $fromEnabled = false;
-        $tables      = '';
+        $tables = '';
 
         if (isset($statements['tables']) === true) {
             $tables = [];
@@ -472,7 +470,7 @@ abstract class BaseAdapter
                 $tables[] = $t;
             }
 
-            $tables      = implode(',', $tables);
+            $tables = implode(',', $tables);
             $fromEnabled = true;
         }
 
@@ -501,7 +499,7 @@ abstract class BaseAdapter
         }
 
         // LIMIT AND OFFSET
-        $limit  = isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
+        $limit = isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
         $offset = isset($statements['offset']) ? 'OFFSET ' . $statements['offset'] : '';
 
         // HAVING

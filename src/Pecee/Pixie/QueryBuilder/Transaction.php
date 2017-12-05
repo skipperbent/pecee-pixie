@@ -9,62 +9,50 @@ namespace Pecee\Pixie\QueryBuilder;
  */
 class Transaction extends QueryBuilderHandler
 {
-    /**
-     * Check if we are in transaction
-     *
-     * @return bool
-     */
-    public function inTransaction(): bool
-    {
-        return $this->pdo()->inTransaction();
-    }
 
-    /**
-     * Begin transaction
-     *
-     * @param bool $inTransaction
-     *
-     * @return $this
-     */
-    public function begin(bool $inTransaction = false): IQueryBuilderHandler
-    {
-        if (false === $inTransaction) {
-            $this->pdo()->beginTransaction();
-        }
-
-        return $this;
-    }
+    protected $transactionStatement;
 
     /**
      * Commit transaction
      *
-     * @param bool $inTransaction
-     *
-     * @return $this
+     * @throws \PDOException|TransactionHaltException
      */
-    public function commit(bool $inTransaction = false): IQueryBuilderHandler
+    public function commit()
     {
-        if (false === $inTransaction) {
-            $this->pdo()->commit();
-        }
-
-        return $this;
+        $this->pdo->commit();
+        throw new TransactionHaltException('Commit triggered transaction-halt.');
     }
 
     /**
      * RollBack transaction
      *
-     * @param bool $inTransaction
-     *
-     * @return $this
+     * @throws \PDOException|TransactionHaltException
      */
-    public function rollBack(bool $inTransaction = false): IQueryBuilderHandler
+    public function rollBack()
     {
-        if (false === $inTransaction) {
-            $this->pdo()->rollBack();
+        $this->pdo->rollBack();
+        throw new TransactionHaltException('Rollback triggered transaction-halt.');
+    }
+
+    /**
+     * Execute statement
+     *
+     * @param string $sql
+     * @param array $bindings
+     *
+     * @return array PDOStatement and execution time as float
+     */
+    public function statement(string $sql, array $bindings = []): array
+    {
+        $start = microtime(true);
+
+        if ($this->transactionStatement === null && $this->pdo->inTransaction() === true) {
+            $this->transactionStatement = $this->pdo->prepare($sql);
         }
 
-        return $this;
+        $this->transactionStatement->execute($bindings);
+
+        return [$this->transactionStatement, microtime(true) - $start];
     }
 
 
