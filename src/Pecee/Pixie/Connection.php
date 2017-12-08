@@ -189,10 +189,7 @@ class Connection
     public function transactionBegin(bool $inTransaction = false)
     {
         if (false === $inTransaction) {
-            var_dump(['begin success',$this->inTransaction()]);
             $this->pdoInstance->beginTransaction();
-        }else{
-            var_dump(['begin omit',$this->inTransaction()]);
         }
 
         return $this;
@@ -206,10 +203,7 @@ class Connection
     public function transactionCommit(bool $inTransaction = false)
     {
         if (false === $inTransaction) {
-            var_dump(['commit success',$this->inTransaction()]);
             $this->pdoInstance->commit();
-        }else{
-            var_dump(['commit omit',$this->inTransaction()]);
         }
 
         return $this;
@@ -223,10 +217,7 @@ class Connection
     public function transactionRollBack(bool $inTransaction = false)
     {
         if (false === $inTransaction) {
-            var_dump(['rollback success',$this->inTransaction()]);
             $this->pdoInstance->rollBack();
-        }else{
-            var_dump(['rollback omit',$this->inTransaction()]);
         }
 
         return $this;
