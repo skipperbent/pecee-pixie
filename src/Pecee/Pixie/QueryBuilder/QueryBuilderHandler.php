@@ -75,9 +75,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * @var array
      */
-    protected $statements = [
-        'groupBys' => [],
-    ];
+    protected $statements
+        = [
+            'groupBys' => [],
+        ];
 
     /**
      * @var PDO
@@ -129,9 +130,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception('No database connection found.', 1);
         }
 
-        $this->container = $this->connection->getContainer();
-        $this->pdo = $this->connection->getPdoInstance();
-        $this->adapter = $this->connection->getAdapter();
+        $this->container     = $this->connection->getContainer();
+        $this->pdo           = $this->connection->getPdoInstance();
+        $this->adapter       = $this->connection->getAdapter();
         $this->adapterConfig = $this->connection->getAdapterConfig();
 
         if (isset($this->adapterConfig['prefix']) === true) {
@@ -151,26 +152,321 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Add new statement to statement-list
+     * Fetch query results as object of specified type
      *
-     * @param string $key
-     * @param mixed $value
-     * @return void
+     * @param string $className
+     * @param array  $constructorArgs
+     *
+     * @return static
      */
-    protected function addStatement(string $key, $value)
+    public function asObject(string $className, array $constructorArgs = []): QueryBuilderHandler
     {
-        if (array_key_exists($key, $this->statements) === false) {
-            $this->statements[$key] = (array)$value;
+        return $this->setFetchMode(PDO::FETCH_CLASS, $className, $constructorArgs);
+    }
+
+    /**
+     * Add fetch parameters to the PDO-query.
+     *
+     * @param mixed $parameters ...
+     *
+     * @return static
+     */
+    public function setFetchMode($parameters = null)
+    {
+        $this->fetchParameters = \func_get_args();
+
+        return $this;
+    }
+
+    /**
+     * Get count of rows
+     *
+     * @throws Exception
+     * @return int
+     */
+    public function count(): int
+    {
+        // Get the current statements
+        $originalStatements = $this->statements;
+
+        unset($this->statements['orderBys'], $this->statements['limit'], $this->statements['offset']);
+
+        $count            = $this->aggregate('count');
+        $this->statements = $originalStatements;
+
+        return $count;
+    }
+
+    /**
+     * Performs special queries like COUNT, SUM etc based on the current query.
+     *
+     * @param string $type
+     *
+     * @throws Exception
+     * @return int
+     */
+    protected function aggregate(string $type): int
+    {
+        // Get the current selects
+        $mainSelects = $this->statements['selects'] ?? null;
+
+        // Replace select with a scalar value like `count`
+        $this->statements['selects'] = [$this->raw($type . '(*) AS `field`')];
+        $row                         = $this->get();
+
+        // Set the select as it was
+        if ($mainSelects !== null) {
+            $this->statements['selects'] = $mainSelects;
         } else {
-            $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
+            unset($this->statements['selects']);
         }
+
+        if (isset($row[0]) === true) {
+            if (\is_array($row[0]) === true) {
+                return (int)$row[0]['field'];
+            }
+            if (\is_object($row[0]) === true) {
+                return (int)$row[0]->field;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Adds a raw string to the current query.
+     * This query will be ignored from any parsing or formatting by the Query builder
+     * and should be used in conjunction with other statements in the query.
+     *
+     * For example: $qb->where('result', '>', $qb->raw('COUNT(`score`)));
+     *
+     * @param string           $value
+     * @param array|null|mixed $bindings ...
+     *
+     * @return Raw
+     */
+    public function raw($value, $bindings = null): Raw
+    {
+        if (\is_array($bindings) === false) {
+            $bindings = \func_get_args();
+            array_shift($bindings);
+        }
+
+        return $this->container->build(Raw::class, [$value, $bindings]);
+    }
+
+    /**
+     * Get all rows
+     *
+     * @throws Exception
+     * @return array
+     */
+    public function get(): array
+    {
+        /**
+         * @var $queryObject   \Pecee\Pixie\QueryBuilder\QueryObject
+         * @var $executionTime float
+         * @var $start         float
+         * @var $result        array
+         */
+        $queryObject   = null;
+        $executionTime = 0;
+
+        if ($this->pdoStatement === null) {
+            $queryObject = $this->getQuery();
+            list($this->pdoStatement, $executionTime) = $this->statement(
+                $queryObject->getSql(),
+                $queryObject->getBindings()
+            );
+        }
+
+        $start = microtime(true);
+        $this->fireEvents(static::EVENT_BEFORE_SELECT, $queryObject);
+        $result             = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
+        $executionTime      += microtime(true) - $start;
+        $this->pdoStatement = null;
+        $this->fireEvents(static::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
+
+        return $result;
+    }
+
+    /**
+     * Returns Query-object.
+     *
+     * @param string           $type
+     * @param array|mixed|null $dataToBePassed
+     *
+     * @return QueryObject
+     * @throws Exception
+     */
+    public function getQuery(string $type = 'select', $dataToBePassed = null): QueryObject
+    {
+        $allowedTypes = [
+            'select',
+            'insert',
+            'insertignore',
+            'replace',
+            'delete',
+            'update',
+            'criteriaonly',
+        ];
+
+        if (\in_array(strtolower($type), $allowedTypes, true) === false) {
+            throw new Exception($type . ' is not a known type.', 2);
+        }
+
+        $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
+
+        return $this->container->build(QueryObject::class, [
+                $queryArr['sql'],
+                $queryArr['bindings'],
+                $this->pdo,
+            ]
+        );
+    }
+
+    /**
+     * Execute statement
+     *
+     * @param string $sql
+     * @param array  $bindings
+     *
+     * @return array PDOStatement and execution time as float
+     */
+    public function statement(string $sql, array $bindings = []): array
+    {
+        $start = microtime(true);
+
+        $pdoStatement = $this->pdo->prepare($sql);
+
+        $pdoStatement->execute($bindings);
+
+        return [$pdoStatement, microtime(true) - $start];
+    }
+
+    /**
+     * Fires event by given event name
+     *
+     * @param string $name
+     * @param ... $parameters
+     *
+     * @return mixed|null
+     */
+    public function fireEvents($name, $parameters = null)
+    {
+        $params = \func_get_args();
+        array_unshift($params, $this);
+
+        return \call_user_func_array([$this->connection->getEventHandler(), 'fireEvents'], $params);
+    }
+
+    /**
+     * Forms delete on the current query.
+     *
+     * @return \PDOStatement
+     * @throws Exception
+     */
+    public function delete(): \PDOStatement
+    {
+        /* @var $response \PDOStatement */
+        $queryObject = $this->getQuery('delete');
+
+        $this->fireEvents(static::EVENT_BEFORE_DELETE, $queryObject);
+
+        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+        $this->fireEvents(static::EVENT_AFTER_DELETE, $queryObject, $executionTime);
+
+        return $response;
+    }
+
+    /**
+     * Find by value and field name.
+     *
+     * @param string|int|float $value
+     * @param string           $fieldName
+     *
+     * @throws Exception
+     * @return \stdClass|string|null
+     */
+    public function find($value, $fieldName = 'id')
+    {
+        return $this->where($fieldName, '=', $value)->first();
+    }
+
+    /**
+     * Returns the first row
+     *
+     * @throws Exception
+     * @return \stdClass|string|null
+     */
+    public function first()
+    {
+        $result = $this->limit(1)->get();
+
+        return ($result !== null && \count($result) > 0) ? $result[0] : null;
+    }
+
+    /**
+     * Adds LIMIT statement to the current query.
+     *
+     * @param int $limit
+     *
+     * @return static
+     */
+    public function limit($limit): IQueryBuilderHandler
+    {
+        $this->statements['limit'] = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Adds WHERE statement to the current query.
+     *
+     * @param string|Raw|\Closure     $key
+     * @param string|null             $operator
+     * @param mixed|Raw|\Closure|null $value
+     *
+     * @return static
+     */
+    public function where($key, $operator = null, $value = null): IQueryBuilderHandler
+    {
+        // If two params are given then assume operator is =
+        if (\func_num_args() === 2) {
+            $value    = $operator;
+            $operator = '=';
+        }
+
+        if (\is_bool($value) === true) {
+            $value = (int)$value;
+        }
+
+        return $this->whereHandler($key, $operator, $value);
+    }
+
+    /**
+     * Handles where statements
+     *
+     * @param string|Raw|\Closure      $key
+     * @param string|null              $operator
+     * @param string|Raw|\Closure|null $value
+     * @param string                   $joiner
+     *
+     * @return static
+     */
+    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
+    {
+        $key                          = $this->addTablePrefix($key);
+        $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
+
+        return $this;
     }
 
     /**
      * Add table prefix (if given) on given string.
      *
      * @param string|array|Raw|\Closure $values
-     * @param bool $tableFieldMix If we have mixes of field and table names with a "."
+     * @param bool                      $tableFieldMix If we have mixes of field and table names with a "."
      *
      * @return array|string
      */
@@ -219,185 +515,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Performs special queries like COUNT, SUM etc based on the current query.
-     *
-     * @param string $type
-     *
-     * @throws Exception
-     * @return int
-     */
-    protected function aggregate(string $type): int
-    {
-        // Get the current selects
-        $mainSelects = $this->statements['selects'] ?? null;
-
-        // Replace select with a scalar value like `count`
-        $this->statements['selects'] = [$this->raw($type . '(*) AS `field`')];
-        $row = $this->get();
-
-        // Set the select as it was
-        if ($mainSelects !== null) {
-            $this->statements['selects'] = $mainSelects;
-        } else {
-            unset($this->statements['selects']);
-        }
-
-        if (isset($row[0]) === true) {
-            if (\is_array($row[0]) === true) {
-                return (int)$row[0]['field'];
-            }
-            if (\is_object($row[0]) === true) {
-                return (int)$row[0]->field;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Add or change table alias
-     * Example: table AS alias
-     *
-     * @param string $alias
-     * @param string $table
-     *
-     * @return static
-     */
-    public function alias(string $alias, string $table = null): IQueryBuilderHandler
-    {
-        if ($table === null && isset($this->statements['tables'][0]) === true) {
-            $table = $this->statements['tables'][0];
-        } else {
-            $table = $this->tablePrefix . $table;
-        }
-
-        $this->statements['aliases'][$table] = strtolower($alias);
-
-        return $this;
-    }
-
-    /**
-     * Fetch query results as object of specified type
-     *
-     * @param string $className
-     * @param array $constructorArgs
-     *
-     * @return static
-     */
-    public function asObject(string $className, array $constructorArgs = []): QueryBuilderHandler
-    {
-        return $this->setFetchMode(PDO::FETCH_CLASS, $className, $constructorArgs);
-    }
-
-    /**
-     * Get count of rows
-     *
-     * @throws Exception
-     * @return int
-     */
-    public function count(): int
-    {
-        // Get the current statements
-        $originalStatements = $this->statements;
-
-        unset($this->statements['orderBys'], $this->statements['limit'], $this->statements['offset']);
-
-        $count = $this->aggregate('count');
-        $this->statements = $originalStatements;
-
-        return $count;
-    }
-
-    /**
-     * Forms delete on the current query.
-     *
-     * @return \PDOStatement
-     * @throws Exception
-     */
-    public function delete(): \PDOStatement
-    {
-        /* @var $response \PDOStatement */
-        $queryObject = $this->getQuery('delete');
-
-        $this->fireEvents(static::EVENT_BEFORE_DELETE, $queryObject);
-
-        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-        $this->fireEvents(static::EVENT_AFTER_DELETE, $queryObject, $executionTime);
-
-        return $response;
-    }
-
-    /**
-     * Performs insert
-     *
-     * @param array $data
-     * @param string $type
-     *
-     * @throws Exception
-     * @return array|string|null
-     */
-    private function doInsert(array $data, string $type)
-    {
-        // Insert single item
-
-        if (\is_array(current($data)) === false) {
-            $queryObject = $this->getQuery($type, $data);
-
-            $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
-            /**
-             * @var $result        \PDOStatement
-             * @var $executionTime float
-             */
-            list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-
-            $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
-
-            return $insertId;
-        }
-
-        $insertIds = [];
-
-        // If the current batch insert is not in a transaction, we create one...
-
-        if ($this->pdo->inTransaction() === false) {
-
-            $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type) {
-                foreach ($data as $subData) {
-                    $insertIds[] = $transaction->doInsert($subData, $type);
-                }
-            });
-
-            return $insertIds;
-        }
-
-        // Otherwise insert one by one...
-
-        foreach ($data as $subData) {
-            $insertIds[] = $this->doInsert($subData, $type);
-        }
-
-        return $insertIds;
-    }
-
-    /**
-     * Find by value and field name.
-     *
-     * @param string|int|float $value
-     * @param string $fieldName
-     *
-     * @throws Exception
-     * @return \stdClass|string|null
-     */
-    public function find($value, $fieldName = 'id')
-    {
-        return $this->where($fieldName, '=', $value)->first();
-    }
-
-    /**
      * Find all by field name and value
      *
-     * @param string $fieldName
+     * @param string           $fieldName
      * @param string|int|float $value
      *
      * @throws Exception
@@ -406,35 +526,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function findAll(string $fieldName, $value): array
     {
         return $this->where($fieldName, '=', $value)->get();
-    }
-
-    /**
-     * Fires event by given event name
-     *
-     * @param string $name
-     * @param ... $parameters
-     *
-     * @return mixed|null
-     */
-    public function fireEvents($name, $parameters = null)
-    {
-        $params = \func_get_args();
-        array_unshift($params, $this);
-
-        return \call_user_func_array([$this->connection->getEventHandler(), 'fireEvents'], $params);
-    }
-
-    /**
-     * Returns the first row
-     *
-     * @throws Exception
-     * @return \stdClass|string|null
-     */
-    public function first()
-    {
-        $result = $this->limit(1)->get();
-
-        return ($result !== null && \count($result) > 0) ? $result[0] : null;
     }
 
     /**
@@ -457,54 +548,26 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get all rows
+     * Add new statement to statement-list
      *
-     * @throws Exception
-     * @return array
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return void
      */
-    public function get(): array
+    protected function addStatement(string $key, $value)
     {
-        /**
-         * @var $queryObject   \Pecee\Pixie\QueryBuilder\QueryObject
-         * @var $executionTime float
-         * @var $start         float
-         * @var $result        array
-         */
-        $queryObject = null;
-        $executionTime = 0;
-
-        if ($this->pdoStatement === null) {
-            $queryObject = $this->getQuery();
-            list($this->pdoStatement, $executionTime) = $this->statement(
-                $queryObject->getSql(),
-                $queryObject->getBindings()
-            );
+        if (array_key_exists($key, $this->statements) === false) {
+            $this->statements[$key] = (array)$value;
+        } else {
+            $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
         }
-
-        $start = microtime(true);
-        $this->fireEvents(static::EVENT_BEFORE_SELECT, $queryObject);
-        $result = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
-        $executionTime += microtime(true) - $start;
-        $this->pdoStatement = null;
-        $this->fireEvents(static::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
-
-        return $result;
-    }
-
-    /**
-     * Get connection object
-     *
-     * @return Connection
-     */
-    public function getConnection(): Connection
-    {
-        return $this->connection;
     }
 
     /**
      * Get event by event name
      *
-     * @param string $name
+     * @param string      $name
      * @param string|null $table
      *
      * @return \Closure|null
@@ -512,41 +575,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function getEvent(string $name, string $table = null)
     {
         return $this->connection->getEventHandler()->getEvent($name, $table);
-    }
-
-    /**
-     * Returns Query-object.
-     *
-     * @param string $type
-     * @param array|mixed|null $dataToBePassed
-     *
-     * @return QueryObject
-     * @throws Exception
-     */
-    public function getQuery(string $type = 'select', $dataToBePassed = null): QueryObject
-    {
-        $allowedTypes = [
-            'select',
-            'insert',
-            'insertignore',
-            'replace',
-            'delete',
-            'update',
-            'criteriaonly',
-        ];
-
-        if (\in_array(strtolower($type), $allowedTypes, true) === false) {
-            throw new Exception($type . ' is not a known type.', 2);
-        }
-
-        $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
-
-        return $this->container->build(QueryObject::class, [
-                $queryArr['sql'],
-                $queryArr['bindings'],
-                $this->pdo
-            ]
-        );
     }
 
     /**
@@ -582,29 +610,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Adds HAVING statement to the current query.
-     *
-     * @param string|Raw|\Closure $key
-     * @param string|mixed $operator
-     * @param string|mixed $value
-     * @param string $joiner
-     *
-     * @return static
-     */
-    public function having($key, $operator, $value, $joiner = 'AND'): IQueryBuilderHandler
-    {
-        $key = $this->addTablePrefix($key);
-        $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
-
-        return $this;
-    }
-
-    /**
      * Adds new INNER JOIN statement to the current query.
      *
-     * @param string|Raw|\Closure $table
-     * @param string|Raw|\Closure $key
-     * @param string|mixed|null $operator
+     * @param string|Raw|\Closure      $table
+     * @param string|Raw|\Closure      $key
+     * @param string|mixed|null        $operator
      * @param string|Raw|\Closure|null $value
      *
      * @return static
@@ -615,39 +625,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Insert key/value array
-     *
-     * @param array $data
-     *
-     * @throws Exception
-     * @return array|string
-     */
-    public function insert(array $data)
-    {
-        return $this->doInsert($data, 'insert');
-    }
-
-    /**
-     * Insert with ignore key/value array
-     *
-     * @param array $data
-     *
-     * @throws Exception
-     * @return array|string
-     */
-    public function insertIgnore($data)
-    {
-        return $this->doInsert($data, 'insertignore');
-    }
-
-    /**
      * Adds new JOIN statement to the current query.
      *
      * @param string|Raw|\Closure|array $table
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
-     * @param string|Raw|\Closure $value
-     * @param string $type
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure       $value
+     * @param string                    $type
      *
      * @return static
      * ```
@@ -693,32 +677,133 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Insert with ignore key/value array
+     *
+     * @param array $data
+     *
+     * @throws Exception
+     * @return array|string
+     */
+    public function insertIgnore($data)
+    {
+        return $this->doInsert($data, 'insertignore');
+    }
+
+    /**
+     * Performs insert
+     *
+     * @param array  $data
+     * @param string $type
+     *
+     * @throws Exception
+     * @return array|string|null
+     */
+    private function doInsert(array $data, string $type)
+    {
+        // Insert single item
+
+        if (\is_array(current($data)) === false) {
+            $queryObject = $this->getQuery($type, $data);
+
+            $this->fireEvents(static::EVENT_BEFORE_INSERT, $queryObject);
+            /**
+             * @var $result        \PDOStatement
+             * @var $executionTime float
+             */
+            list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+
+            $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+            $this->fireEvents(static::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
+
+            return $insertId;
+        }
+
+        $insertIds = [];
+
+        // If the current batch insert is not in a transaction, we create one...
+
+
+        $this->transaction(function (QueryBuilderHandler $qb) use (&$insertIds, $data, $type) {
+            foreach ($data as $subData) {
+                $insertIds[] = $qb->doInsert($subData, $type);
+            }
+        });
+
+
+        return $insertIds;
+    }
+
+    /**
+     * Performs the transaction
+     *
+     * @param \Closure $callback
+     *
+     * @throws Exception
+     * @return static
+     */
+    public function transaction(\Closure $callback): IQueryBuilderHandler
+    {
+        $inTransaction = $this->getConnection()->inTransaction();
+
+        try {
+            // Begin the PDO transaction
+            $this->getConnection()->transactionBegin($inTransaction);
+
+            // Call closure
+            $callback($this);
+
+            // If no errors have been thrown or the transaction wasn't completed within the closure, commit the changes
+            $this->getConnection()->transactionCommit($inTransaction);
+
+            return $this;
+
+        } catch (\Exception $e) {
+            // Something went wrong. Rollback and throw Exception
+            $this->getConnection()->transactionRollBack($inTransaction);
+
+            throw new Exception($e->getMessage(), 1, $e);
+        }
+
+
+    }
+
+    /**
+     * Get connection object
+     *
+     * @return Connection
+     */
+    public function getConnection(): Connection
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Set connection object
+     *
+     * @param Connection $connection
+     *
+     * @return static
+     */
+    public function setConnection(Connection $connection)
+    {
+        $this->connection = $connection;
+
+        return $this;
+    }
+
+    /**
      * Adds new LEFT JOIN statement to the current query.
      *
      * @param string|Raw|\Closure|array $table
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure|null  $value
      *
      * @return static
      */
     public function leftJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value, 'left');
-    }
-
-    /**
-     * Adds LIMIT statement to the current query.
-     *
-     * @param int $limit
-     *
-     * @return static
-     */
-    public function limit($limit): IQueryBuilderHandler
-    {
-        $this->statements['limit'] = $limit;
-
-        return $this;
     }
 
     /**
@@ -769,8 +854,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Adds OR HAVING statement to the current query.
      *
-     * @param string|Raw|\Closure $key
-     * @param string|Raw|\Closure $operator
+     * @param string|Raw|\Closure     $key
+     * @param string|Raw|\Closure     $operator
      * @param mixed|Raw|\Closure|null $value
      *
      * @return static
@@ -781,10 +866,28 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Adds OR WHERE statement to the current query.
+     * Adds HAVING statement to the current query.
      *
      * @param string|Raw|\Closure $key
-     * @param string|null $operator
+     * @param string|mixed        $operator
+     * @param string|mixed        $value
+     * @param string              $joiner
+     *
+     * @return static
+     */
+    public function having($key, $operator, $value, $joiner = 'AND'): IQueryBuilderHandler
+    {
+        $key                           = $this->addTablePrefix($key);
+        $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
+
+        return $this;
+    }
+
+    /**
+     * Adds OR WHERE statement to the current query.
+     *
+     * @param string|Raw|\Closure     $key
+     * @param string|null             $operator
      * @param mixed|Raw|\Closure|null $value
      *
      * @return static
@@ -793,7 +896,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -803,7 +906,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Adds OR WHERE BETWEEN statement to the current query.
      *
-     * @param string|Raw|\Closure $key
+     * @param string|Raw|\Closure  $key
      * @param string|integer|float $valueFrom
      * @param string|integer|float $valueTo
      *
@@ -818,7 +921,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds OR WHERE IN statement to the current query.
      *
      * @param string|Raw|\Closure $key
-     * @param array|Raw|\Closure $values
+     * @param array|Raw|\Closure  $values
      *
      * @return static
      */
@@ -830,8 +933,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Adds OR WHERE NOT statement to the current query.
      *
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
+     * @param string|Raw|\Closure     $key
+     * @param string|null             $operator
      * @param mixed|Raw|\Closure|null $value
      *
      * @return static
@@ -840,7 +943,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -851,7 +954,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds or WHERE NOT IN statement to the current query.
      *
      * @param string|Raw|\Closure $key
-     * @param array|Raw|\Closure $values
+     * @param array|Raw|\Closure  $values
      *
      * @return static
      */
@@ -873,6 +976,23 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Handles WHERE NULL statements.
+     *
+     * @param string|Raw|\Closure $key
+     * @param string              $prefix
+     * @param string              $operator
+     *
+     * @return static
+     */
+    protected function whereNullHandler($key, $prefix = '', $operator = ''): IQueryBuilderHandler
+    {
+        $key    = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
+        $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
+
+        return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
+    }
+
+    /**
      * Adds OR WHERE NULL statement to the current query.
      *
      * @param string|Raw|\Closure $key
@@ -888,7 +1008,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds ORDER BY statement to the current query.
      *
      * @param string|Raw|\Closure|array $fields
-     * @param string $defaultDirection
+     * @param string                    $defaultDirection
      *
      * @return static
      */
@@ -900,11 +1020,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         foreach ((array)$fields as $key => $value) {
             $field = $key;
-            $type = $value;
+            $type  = $value;
 
             if (\is_int($key) === true) {
                 $field = $value;
-                $type = $defaultDirection;
+                $type  = $defaultDirection;
             }
 
             if (($field instanceof Raw) === false) {
@@ -931,7 +1051,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Performs query.
      *
      * @param string $sql
-     * @param array $bindings
+     * @param array  $bindings
      *
      * @return static
      */
@@ -943,33 +1063,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Adds a raw string to the current query.
-     * This query will be ignored from any parsing or formatting by the Query builder
-     * and should be used in conjunction with other statements in the query.
-     *
-     * For example: $qb->where('result', '>', $qb->raw('COUNT(`score`)));
-     *
-     * @param string $value
-     * @param array|null|mixed $bindings ...
-     *
-     * @return Raw
-     */
-    public function raw($value, $bindings = null): Raw
-    {
-        if (\is_array($bindings) === false) {
-            $bindings = \func_get_args();
-            array_shift($bindings);
-        }
-
-        return $this->container->build(Raw::class, [$value, $bindings]);
-    }
-
-    /**
      * Register new event
      *
-     * @param string $name
+     * @param string      $name
      * @param string|null $table
-     * @param \Closure $action
+     * @param \Closure    $action
      *
      * @return void
      */
@@ -981,7 +1079,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Remove event by event-name and/or table
      *
-     * @param string $name
+     * @param string      $name
      * @param string|null $table
      *
      * @return void
@@ -1008,15 +1106,30 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds new right join statement to the current query.
      *
      * @param string|Raw|\Closure|array $table
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|Raw|\Closure       $key
+     * @param string|null               $operator
+     * @param string|Raw|\Closure|null  $value
      *
      * @return static
      */
     public function rightJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value, 'right');
+    }
+
+    /**
+     * Performs select distinct on the current query.
+     *
+     * @param string|Raw|\Closure|array $fields
+     *
+     * @return static
+     */
+    public function selectDistinct($fields)
+    {
+        $this->select($fields);
+        $this->addStatement('distinct', true);
+
+        return $this;
     }
 
     /**
@@ -1043,73 +1156,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Performs select distinct on the current query.
-     *
-     * @param string|Raw|\Closure|array $fields
-     *
-     * @return static
-     */
-    public function selectDistinct($fields)
-    {
-        $this->select($fields);
-        $this->addStatement('distinct', true);
-
-        return $this;
-    }
-
-    /**
-     * Set connection object
-     *
-     * @param Connection $connection
-     *
-     * @return static
-     */
-    public function setConnection(Connection $connection)
-    {
-        $this->connection = $connection;
-
-        return $this;
-    }
-
-    /**
-     * Add fetch parameters to the PDO-query.
-     *
-     * @param mixed $parameters ...
-     *
-     * @return static
-     */
-    public function setFetchMode($parameters = null)
-    {
-        $this->fetchParameters = \func_get_args();
-
-        return $this;
-    }
-
-    /**
-     * Execute statement
-     *
-     * @param string $sql
-     * @param array $bindings
-     *
-     * @return array PDOStatement and execution time as float
-     */
-    public function statement(string $sql, array $bindings = []): array
-    {
-        $start = microtime(true);
-
-        $pdoStatement = $this->pdo->prepare($sql);
-
-        $pdoStatement->execute($bindings);
-
-        return [$pdoStatement, microtime(true) - $start];
-    }
-
-    /**
      * Performs new sub-query.
      * Call this method when you want to add a new sub-query in your where etc.
      *
      * @param QueryBuilderHandler $queryBuilder
-     * @param string|null $alias
+     * @param string|null         $alias
      *
      * @throws Exception
      * @return Raw
@@ -1168,52 +1219,42 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Performs the transaction
+     * Add or change table alias
+     * Example: table AS alias
      *
-     * @param \Closure $callback
+     * @param string $alias
+     * @param string $table
      *
-     * @throws Exception
      * @return static
      */
-    public function transaction(\Closure $callback): IQueryBuilderHandler
+    public function alias(string $alias, string $table = null): IQueryBuilderHandler
     {
-        /**
-         * Get the Transaction class
-         *
-         * @var \Pecee\Pixie\QueryBuilder\Transaction $queryTransaction
-         * @throws \Exception
-         */
-        $queryTransaction = $this->container->build(Transaction::class, [$this->connection]);
-        $queryTransaction->statements = $this->statements;
-
-        try {
-            // Begin the PDO transaction
-            if($this->pdo->inTransaction() === false) {
-                $this->pdo->beginTransaction();
-            }
-
-            // Call closure - this callback will return TransactionHaltException if user has already committed the transaction
-            $callback($queryTransaction);
-
-            // If no errors have been thrown or the transaction wasn't completed within the closure, commit the changes
-            $this->pdo->commit();
-
-        } catch (TransactionHaltException $e) {
-
-            // Commit or rollback behavior has been triggered in the closure
-            return $this;
-
-        } catch (\Exception $e) {
-
-            // Something went wrong. Rollback and throw Exception
-            if($this->pdo->inTransaction() === true) {
-                $this->pdo->rollBack();
-            }
-
-            throw new Exception($e->getMessage());
+        if ($table === null && isset($this->statements['tables'][0]) === true) {
+            $table = $this->statements['tables'][0];
+        } else {
+            $table = $this->tablePrefix . $table;
         }
 
-        return $queryTransaction;
+        $this->statements['aliases'][$table] = strtolower($alias);
+
+        return $this;
+    }
+
+    /**
+     * Update or insert key/value array
+     *
+     * @param array $data
+     *
+     * @return array|\PDOStatement|string
+     * @throws Exception
+     */
+    public function updateOrInsert($data)
+    {
+        if ($this->first() !== null) {
+            return $this->update($data);
+        }
+
+        return $this->insert($data);
     }
 
     /**
@@ -1240,50 +1281,22 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Update or insert key/value array
+     * Insert key/value array
      *
      * @param array $data
      *
-     * @return array|\PDOStatement|string
      * @throws Exception
+     * @return array|string
      */
-    public function updateOrInsert($data)
+    public function insert(array $data)
     {
-        if ($this->first() !== null) {
-            return $this->update($data);
-        }
-
-        return $this->insert($data);
-    }
-
-    /**
-     * Adds WHERE statement to the current query.
-     *
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
-     * @param mixed|Raw|\Closure|null $value
-     *
-     * @return static
-     */
-    public function where($key, $operator = null, $value = null): IQueryBuilderHandler
-    {
-        // If two params are given then assume operator is =
-        if (\func_num_args() === 2) {
-            $value = $operator;
-            $operator = '=';
-        }
-
-        if (\is_bool($value) === true) {
-            $value = (int)$value;
-        }
-
-        return $this->whereHandler($key, $operator, $value);
+        return $this->doInsert($data, 'insert');
     }
 
     /**
      * Adds WHERE BETWEEN statement to the current query.
      *
-     * @param string|Raw|\Closure $key
+     * @param string|Raw|\Closure  $key
      * @param string|integer|float $valueFrom
      * @param string|integer|float $valueTo
      *
@@ -1295,28 +1308,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Handles where statements
-     *
-     * @param string|Raw|\Closure $key
-     * @param string|null $operator
-     * @param string|Raw|\Closure|null $value
-     * @param string $joiner
-     *
-     * @return static
-     */
-    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
-    {
-        $key = $this->addTablePrefix($key);
-        $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
-
-        return $this;
-    }
-
-    /**
      * Adds WHERE IN statement to the current query.
      *
      * @param string|Raw|\Closure $key
-     * @param array|Raw|\Closure $values
+     * @param array|Raw|\Closure  $values
      *
      * @return static
      */
@@ -1328,9 +1323,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Adds WHERE NOT statement to the current query.
      *
-     * @param string|Raw|\Closure $key
+     * @param string|Raw|\Closure            $key
      * @param string|array|Raw|\Closure|null $operator
-     * @param mixed|Raw|\Closure|null $value
+     * @param mixed|Raw|\Closure|null        $value
      *
      * @return static
      */
@@ -1338,7 +1333,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
-            $value = $operator;
+            $value    = $operator;
             $operator = '=';
         }
 
@@ -1349,7 +1344,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds OR WHERE NOT IN statement to the current query.
      *
      * @param string|Raw|\Closure $key
-     * @param array|Raw|\Closure $values
+     * @param array|Raw|\Closure  $values
      *
      * @return static
      */
@@ -1380,22 +1375,5 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function whereNull($key): IQueryBuilderHandler
     {
         return $this->whereNullHandler($key);
-    }
-
-    /**
-     * Handles WHERE NULL statements.
-     *
-     * @param string|Raw|\Closure $key
-     * @param string $prefix
-     * @param string $operator
-     *
-     * @return static
-     */
-    protected function whereNullHandler($key, $prefix = '', $operator = ''): IQueryBuilderHandler
-    {
-        $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
-        $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
-
-        return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
     }
 }
