@@ -52,18 +52,11 @@ class Connection
         $this
             ->setAdapter($adapter)
             ->setAdapterConfig($adapterConfig)
-            ->connect();
+            ->connect()
+        ;
 
         // Create event dependency
         $this->eventHandler = $this->container->build(EventHandler::class);
-    }
-
-    /**
-     * @return Connection
-     */
-    public static function getStoredConnection(): Connection
-    {
-        return static::$storedConnection;
     }
 
     /**
@@ -87,6 +80,14 @@ class Connection
     }
 
     /**
+     * @return Connection
+     */
+    public static function getStoredConnection(): Connection
+    {
+        return static::$storedConnection;
+    }
+
+    /**
      * @return string
      */
     public function getAdapter(): string
@@ -95,11 +96,35 @@ class Connection
     }
 
     /**
+     * @param string $adapter
+     *
+     * @return \Pecee\Pixie\Connection
+     */
+    public function setAdapter(string $adapter): Connection
+    {
+        $this->adapter = $adapter;
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getAdapterConfig(): array
     {
         return $this->adapterConfig;
+    }
+
+    /**
+     * @param array $adapterConfig
+     *
+     * @return \Pecee\Pixie\Connection
+     */
+    public function setAdapterConfig(array $adapterConfig): Connection
+    {
+        $this->adapterConfig = $adapterConfig;
+
+        return $this;
     }
 
     /**
@@ -127,6 +152,18 @@ class Connection
     }
 
     /**
+     * @param \PDO $pdo
+     *
+     * @return \Pecee\Pixie\Connection
+     */
+    public function setPdoInstance(\PDO $pdo): Connection
+    {
+        $this->pdoInstance = $pdo;
+
+        return $this;
+    }
+
+    /**
      * Returns an instance of Query Builder
      *
      * @return QueryBuilderHandler
@@ -137,37 +174,60 @@ class Connection
     }
 
     /**
-     * @param string $adapter
-     *
-     * @return \Pecee\Pixie\Connection
+     * @return bool
      */
-    public function setAdapter(string $adapter): Connection
+    public function inTransaction(): bool
     {
-        $this->adapter = $adapter;
+        return $this->pdoInstance->inTransaction();
+    }
+
+    /**
+     * @param bool $inTransaction
+     *
+     * @return $this
+     */
+    public function transactionBegin(bool $inTransaction = false)
+    {
+        if (false === $inTransaction) {
+            var_dump(['begin success',$this->inTransaction()]);
+            $this->pdoInstance->beginTransaction();
+        }else{
+            var_dump(['begin omit',$this->inTransaction()]);
+        }
 
         return $this;
     }
 
     /**
-     * @param array $adapterConfig
+     * @param bool $inTransaction
      *
-     * @return \Pecee\Pixie\Connection
+     * @return $this
      */
-    public function setAdapterConfig(array $adapterConfig): Connection
+    public function transactionCommit(bool $inTransaction = false)
     {
-        $this->adapterConfig = $adapterConfig;
+        if (false === $inTransaction) {
+            var_dump(['commit success',$this->inTransaction()]);
+            $this->pdoInstance->commit();
+        }else{
+            var_dump(['commit omit',$this->inTransaction()]);
+        }
 
         return $this;
     }
 
     /**
-     * @param \PDO $pdo
+     * @param bool $inTransaction
      *
-     * @return \Pecee\Pixie\Connection
+     * @return $this
      */
-    public function setPdoInstance(\PDO $pdo): Connection
+    public function transactionRollBack(bool $inTransaction = false)
     {
-        $this->pdoInstance = $pdo;
+        if (false === $inTransaction) {
+            var_dump(['rollback success',$this->inTransaction()]);
+            $this->pdoInstance->rollBack();
+        }else{
+            var_dump(['rollback omit',$this->inTransaction()]);
+        }
 
         return $this;
     }

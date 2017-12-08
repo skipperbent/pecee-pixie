@@ -1172,48 +1172,34 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param \Closure $callback
      *
-     * @throws Exception
+     * @throws \Exception
      * @return static
      */
     public function transaction(\Closure $callback): IQueryBuilderHandler
     {
-        /**
-         * Get the Transaction class
-         *
-         * @var \Pecee\Pixie\QueryBuilder\Transaction $queryTransaction
-         * @throws \Exception
-         */
-        $queryTransaction = $this->container->build(Transaction::class, [$this->connection]);
-        $queryTransaction->statements = $this->statements;
+        $inTransaction = $this->getConnection()->inTransaction();
 
         try {
             // Begin the PDO transaction
-            if($this->pdo->inTransaction() === false) {
-                $this->pdo->beginTransaction();
-            }
+            $this->getConnection()->transactionBegin($inTransaction);
 
-            // Call closure - this callback will return TransactionHaltException if user has already committed the transaction
-            $callback($queryTransaction);
+            // Call closure
+            $callback($this);
 
             // If no errors have been thrown or the transaction wasn't completed within the closure, commit the changes
-            $this->pdo->commit();
+            $this->getConnection()->transactionCommit($inTransaction);
 
-        } catch (TransactionHaltException $e) {
-
-            // Commit or rollback behavior has been triggered in the closure
             return $this;
 
         } catch (\Exception $e) {
-
+            var_dump('exception');
             // Something went wrong. Rollback and throw Exception
-            if($this->pdo->inTransaction() === true) {
-                $this->pdo->rollBack();
-            }
+            $this->getConnection()->transactionRollBack($inTransaction);
 
-            throw new Exception($e->getMessage());
+            throw $e;
         }
 
-        return $queryTransaction;
+
     }
 
     /**
