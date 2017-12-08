@@ -704,20 +704,22 @@ are made.
 Here's a basic transaction:
 
 ```php
-$queryBuilder->transaction(function (QueryBuilderHandler $qb) {
-    $qb
-        ->table('my_table')
-        ->insert(array(
-            'name' => 'Test',
-            'url' => 'example.com'
-        );
-
-    $qb
-        ->table('my_table')
-        ->insert(array(
-            'name' => 'Test2',
-            'url' => 'example.com'
-        ));
+$queryBuilder
+    ->transaction(function (Transaction $transaction) {
+    
+        $transaction
+            ->table('my_table')
+            ->insert(array(
+                'name' => 'Test',
+                'url' => 'example.com'
+            );
+    
+        $transaction
+            ->table('my_table')
+            ->insert(array(
+                'name' => 'Test2',
+                'url' => 'example.com'
+            ));
 });
 ```
 
@@ -730,20 +732,44 @@ If you wish to manually commit or rollback your changes, you can use the
 
 ```php
 $queryBuilder
-    ->transaction(function (qb)
+    ->transaction(function (Transaction $transaction)
         {
-            $queryBuilder
+            $transaction
                 ->table('my_table')
                 ->insert($data);
 
             // Commit changes (data will be saved)
-
-            $queryBuilder->commit();
+            $transaction->commit();
 
             // Rollback changes (data would be rejected)
-            $queryBuilder->rollback();
+            $transaction->rollback();
         }
     );
+```
+
+Transactions will automatically be used when inserting multiple records. For example:
+
+```php
+$queryBuilder->table('people')->insert([
+    [
+        'name' => 'Simon',
+        'age' => 12,
+        'awesome' => true,
+        'nickname' => 'ponylover94',
+    ],
+    [
+        'name' => 'Peter',
+        'age' => 40,
+        'awesome' => false,
+        'nickname' => null,
+    ],
+    [
+        'name' => 'Bobby',
+        'age' => 20,
+        'awesome' => true,
+        'nickname' => 'peter',
+    ],
+]);
 ```
 
 ### Get Built Query
