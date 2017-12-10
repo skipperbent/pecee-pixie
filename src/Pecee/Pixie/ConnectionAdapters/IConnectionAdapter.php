@@ -1,10 +1,22 @@
 <?php
+
 namespace Pecee\Pixie\ConnectionAdapters;
 
 interface IConnectionAdapter {
 
-    public function connect($config);
+	/**
+	 * Connect to database
+	 *
+	 * @param array $config
+	 *
+	 * @return \PDO
+	 */
+	public function connect($config);
 
-    public function getQueryAdapterClass();
+	/**
+	 * Get query adapter class
+	 * @return string
+	 */
+	public function getQueryAdapterClass();
 
 }

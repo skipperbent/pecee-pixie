@@ -2,6 +2,7 @@
 
 namespace Pecee\Pixie;
 
+use PDO;
 use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
@@ -10,147 +11,139 @@ use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
  *
  * @package Pecee\Pixie
  */
-class Connection
-{
+class Connection {
 
-    /**
-     * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
-     * @var string
-     */
-    protected $adapter;
+	/**
+	 * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
+	 * @var IConnectionAdapter
+	 */
+	protected $adapter;
 
-    /**
-     * @var array
-     */
-    protected $adapterConfig;
+	/**
+	 * @var array
+	 */
+	protected $adapterConfig;
 
-    /**
-     * @var \PDO
-     */
-    protected $pdoInstance;
+	/**
+	 * @var PDO
+	 */
+	protected $pdoInstance;
 
-    /**
-     * @var Connection
-     */
-    protected static $storedConnection;
+	/**
+	 * @var Connection
+	 */
+	protected static $storedConnection;
 
-    /**
-     * @var EventHandler
-     */
-    protected $eventHandler;
+	/**
+	 * @var EventHandler
+	 */
+	protected $eventHandler;
 
-    /**
-     * @param string|IConnectionAdapter $adapter
-     * @param array $adapterConfig
-     */
-    public function __construct($adapter, array $adapterConfig)
-    {
-        if(($adapter instanceof IConnectionAdapter) === false) {
-            $adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
-            $adapter = new $adapter();
-        }
+	/**
+	 * @param string|IConnectionAdapter $adapter
+	 * @param array $adapterConfig
+	 */
+	public function __construct($adapter, array $adapterConfig) {
+		if (($adapter instanceof IConnectionAdapter) === false) {
+			$adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
+			$adapter = new $adapter();
+		}
 
-        $this->setAdapter($adapter)->setAdapterConfig($adapterConfig)->connect();
+		$this->setAdapter($adapter)->setAdapterConfig($adapterConfig)->connect();
 
-        // Create event dependency
-        $this->eventHandler = new EventHandler();
-    }
+		// Create event dependency
+		$this->eventHandler = new EventHandler();
+	}
 
-    /**
-     * Returns an instance of Query Builder
-     * @throws Exception
-     * @return QueryBuilderHandler
-     */
-    public function getQueryBuilder()
-    {
-        return new QueryBuilderHandler($this);
-    }
+	/**
+	 * Returns an instance of Query Builder
+	 *
+	 * @return QueryBuilderHandler
+	 * @throws Exception
+	 */
+	public function getQueryBuilder() {
+		return new QueryBuilderHandler($this);
+	}
 
-    /**
-     * Create the connection adapter
-     */
-    protected function connect()
-    {
-        // Build a database connection if we don't have one connected
-        $pdo = $this->adapter->connect($this->adapterConfig);
-        $this->setPdoInstance($pdo);
+	/**
+	 * Create the connection adapter
+	 */
+	protected function connect() {
+		// Build a database connection if we don't have one connected
+		$pdo = $this->adapter->connect($this->adapterConfig);
+		$this->setPdoInstance($pdo);
 
-        // Preserve the first database connection with a static property
-        if (static::$storedConnection === null) {
-            static::$storedConnection = $this;
-        }
-    }
+		// Preserve the first database connection with a static property
+		if (static::$storedConnection === null) {
+			static::$storedConnection = $this;
+		}
+	}
 
-    /**
-     * @param \PDO $pdo
-     * @return static
-     */
-    public function setPdoInstance(\PDO $pdo)
-    {
-        $this->pdoInstance = $pdo;
+	/**
+	 * @param PDO $pdo
+	 *
+	 * @return static
+	 */
+	public function setPdoInstance(PDO $pdo) {
+		$this->pdoInstance = $pdo;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * @return \PDO
-     */
-    public function getPdoInstance()
-    {
-        return $this->pdoInstance;
-    }
+	/**
+	 * @return PDO
+	 */
+	public function getPdoInstance() {
+		return $this->pdoInstance;
+	}
 
-    /**
-     * @param IConnectionAdapter $adapter
-     * @return static
-     */
-    public function setAdapter(IConnectionAdapter $adapter)
-    {
-        $this->adapter = $adapter;
+	/**
+	 * @param IConnectionAdapter $adapter
+	 *
+	 * @return static
+	 */
+	public function setAdapter(IConnectionAdapter $adapter) {
+		$this->adapter = $adapter;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * @return IConnectionAdapter
-     */
-    public function getAdapter()
-    {
-        return $this->adapter;
-    }
+	/**
+	 * @return IConnectionAdapter
+	 */
+	public function getAdapter() {
+		return $this->adapter;
+	}
 
-    /**
-     * @param array $adapterConfig
-     * @return static
-     */
-    public function setAdapterConfig(array $adapterConfig)
-    {
-        $this->adapterConfig = $adapterConfig;
+	/**
+	 * @param array $adapterConfig
+	 *
+	 * @return static
+	 */
+	public function setAdapterConfig(array $adapterConfig) {
+		$this->adapterConfig = $adapterConfig;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * @return array
-     */
-    public function getAdapterConfig()
-    {
-        return $this->adapterConfig;
-    }
+	/**
+	 * @return array
+	 */
+	public function getAdapterConfig() {
+		return $this->adapterConfig;
+	}
 
-    /**
-     * @return EventHandler
-     */
-    public function getEventHandler()
-    {
-        return $this->eventHandler;
-    }
+	/**
+	 * @return EventHandler
+	 */
+	public function getEventHandler() {
+		return $this->eventHandler;
+	}
 
-    /**
-     * @return Connection
-     */
-    public static function getStoredConnection()
-    {
-        return static::$storedConnection;
-    }
+	/**
+	 * @return Connection
+	 */
+	public static function getStoredConnection() {
+		return static::$storedConnection;
+	}
 }
