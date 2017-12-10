@@ -2,20 +2,17 @@
 namespace Pecee\Pixie;
 
 use Mockery as m;
+use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Viocon\Container;
 
 class TestCase extends \PHPUnit_Framework_TestCase {
-    /**
-     * @var Container
-     */
-    protected $container;
+
     protected $mockConnection;
     protected $mockPdo;
     protected $mockPdoStatement;
 
     public function setUp()
     {
-        $this->container = new Container();
 
         $this->mockPdoStatement = $this->getMock(\PDOStatement::class);
 
@@ -68,7 +65,7 @@ class TestCase extends \PHPUnit_Framework_TestCase {
 
         $this->mockConnection = m::mock(Connection::class);
         $this->mockConnection->shouldReceive('getPdoInstance')->andReturn($this->mockPdo);
-        $this->mockConnection->shouldReceive('getAdapter')->andReturn('mysql');
+        $this->mockConnection->shouldReceive('getAdapter')->andReturn(new Mysql());
         $this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(array('prefix' => 'cb_'));
         $this->mockConnection->shouldReceive('getContainer')->andReturn($this->container);
         $this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);

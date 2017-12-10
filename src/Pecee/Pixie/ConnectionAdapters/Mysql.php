@@ -38,15 +38,17 @@ class Mysql extends BaseAdapter
         /**
          * @var \PDO $connection
          */
-        $connection = $this->container->build(
-            \PDO::class,
-            [$connectionString, $config['username'], $config['password'], $config['options']]
-        );
+        $connection = new \PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
-        if (isset($config['charset'])) {
+        if (isset($config['charset']) === true) {
             $connection->prepare("SET NAMES '{$config['charset']}'")->execute();
         }
 
         return $connection;
+    }
+
+    public function getQueryAdapterClass()
+    {
+        return \Pecee\Pixie\QueryBuilder\Adapters\Mysql::class;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Pecee\Pixie;
 
+use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
-use Viocon\Container;
 
 /**
  * Class Connection
@@ -12,11 +12,6 @@ use Viocon\Container;
  */
 class Connection
 {
-
-    /**
-     * @var Container
-     */
-    protected $container;
 
     /**
      * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
@@ -45,28 +40,30 @@ class Connection
     protected $eventHandler;
 
     /**
-     * @param string $adapter
+     * @param string|IConnectionAdapter $adapter
      * @param array $adapterConfig
-     * @param Container|null $container
      */
-    public function __construct($adapter, array $adapterConfig, Container $container = null)
+    public function __construct($adapter, array $adapterConfig)
     {
-        $container = $container ?: new Container();
-
-        $this->container = $container;
+        if(($adapter instanceof IConnectionAdapter) === false) {
+            $adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
+            $adapter = new $adapter();
+        }
 
         $this->setAdapter($adapter)->setAdapterConfig($adapterConfig)->connect();
 
         // Create event dependency
-        $this->eventHandler = $this->container->build(EventHandler::class);
+        $this->eventHandler = new EventHandler();
     }
 
     /**
      * Returns an instance of Query Builder
+     * @throws Exception
+     * @return QueryBuilderHandler
      */
     public function getQueryBuilder()
     {
-        return $this->container->build(QueryBuilderHandler::class, [$this]);
+        return new QueryBuilderHandler($this);
     }
 
     /**
@@ -75,12 +72,7 @@ class Connection
     protected function connect()
     {
         // Build a database connection if we don't have one connected
-
-        $adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($this->adapter));
-
-        $adapterInstance = $this->container->build($adapter, [$this->container]);
-
-        $pdo = $adapterInstance->connect($this->adapterConfig);
+        $pdo = $this->adapter->connect($this->adapterConfig);
         $this->setPdoInstance($pdo);
 
         // Preserve the first database connection with a static property
@@ -109,10 +101,10 @@ class Connection
     }
 
     /**
-     * @param string $adapter
+     * @param IConnectionAdapter $adapter
      * @return static
      */
-    public function setAdapter($adapter)
+    public function setAdapter(IConnectionAdapter $adapter)
     {
         $this->adapter = $adapter;
 
@@ -120,7 +112,7 @@ class Connection
     }
 
     /**
-     * @return string
+     * @return IConnectionAdapter
      */
     public function getAdapter()
     {
@@ -144,14 +136,6 @@ class Connection
     public function getAdapterConfig()
     {
         return $this->adapterConfig;
-    }
-
-    /**
-     * @return Container
-     */
-    public function getContainer()
-    {
-        return $this->container;
     }
 
     /**

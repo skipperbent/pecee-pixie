@@ -23,9 +23,12 @@ class Sqlite extends BaseAdapter
 
         $connectionString = 'sqlite:' . $config['database'];
 
-        return $this->container->build(
-            \PDO::class,
-            [$connectionString, null, null, $config['options']]
-        );
+        return new \PDO($connectionString, null, null, $config['options']);
     }
+
+    public function getQueryAdapterClass()
+    {
+        return \Pecee\Pixie\QueryBuilder\Adapters\Sqlite::class;
+    }
+
 }
