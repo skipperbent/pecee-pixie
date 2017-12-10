@@ -68,7 +68,6 @@ class TestCase extends \PHPUnit_Framework_TestCase {
 		$this->mockConnection->shouldReceive('getPdoInstance')->andReturn($this->mockPdo);
 		$this->mockConnection->shouldReceive('getAdapter')->andReturn(new Mysql());
 		$this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(array('prefix' => 'cb_'));
-		$this->mockConnection->shouldReceive('getContainer')->andReturn($this->container);
 		$this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);
 	}
 

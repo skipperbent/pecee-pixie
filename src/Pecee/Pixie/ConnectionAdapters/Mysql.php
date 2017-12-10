@@ -35,9 +35,6 @@ class Mysql extends BaseAdapter {
 			$connectionString .= ";unix_socket={$config['unix_socket']}";
 		}
 
-		/**
-		 * @var \PDO $connection
-		 */
 		$connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
 		if (isset($config['charset']) === true) {

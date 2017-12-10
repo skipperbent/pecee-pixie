@@ -84,7 +84,6 @@ abstract class BaseAdapter {
 				 * Build a new NestedCriteria class, keep it by reference so any changes made in the closure should reflect here
 				 */
 
-				/* @var $nestedCriteria NestedCriteria */
 				$nestedCriteria = new NestedCriteria($this->connection);
 
 				// Call the closure with our new nestedCriteria object

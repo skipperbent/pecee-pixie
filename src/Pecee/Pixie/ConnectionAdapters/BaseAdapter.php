@@ -10,11 +10,11 @@ namespace Pecee\Pixie\ConnectionAdapters;
 abstract class BaseAdapter implements IConnectionAdapter {
 
 	/**
-	 * @param $config
+	 * @param array $config
 	 *
 	 * @return \PDO
 	 */
-	public function connect($config) {
+	public function connect(array $config) {
 		if (isset($config['options']) === false) {
 			$config['options'] = [];
 		}

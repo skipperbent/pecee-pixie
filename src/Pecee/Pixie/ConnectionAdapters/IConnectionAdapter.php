@@ -11,7 +11,7 @@ interface IConnectionAdapter {
 	 *
 	 * @return \PDO
 	 */
-	public function connect($config);
+	public function connect(array $config);
 
 	/**
 	 * Get query adapter class

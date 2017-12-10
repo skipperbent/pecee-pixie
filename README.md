@@ -43,7 +43,7 @@ For example when pushing changes to version 3, the pull request should use the `
 
 - When adding new stuff, please remember to add new unit-tests for the functionality.
 
-#### Credits
+#### Credits & features
 
 This project is based on the original [Pixie project by usmanhalalit](https://github.com/usmanhalalit/pixie) but has some extra features like:
 

@@ -45,6 +45,7 @@ class Connection {
 	 */
 	public function __construct($adapter, array $adapterConfig) {
 		if (($adapter instanceof IConnectionAdapter) === false) {
+			/* @var $adapter IConnectionAdapter */
 			$adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
 			$adapter = new $adapter();
 		}
