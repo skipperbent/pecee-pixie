@@ -266,17 +266,23 @@ $queryBuilder
     ->join('table2', 'table2.person_id', '=', 'foo1.id');
 ```
 
-You can change the alias anytime by using
+You can change the alias anytime by using:
 
 ```php
-$queryBuilder->alias($table, $alias);
+$queryBuilder->alias('foo1', 'table1');
+
+// Simplified way...
+
+$queryBuilder->table('table1')->alias('foo1');
 ```
+
+**Note:** If `$table` parameter is null - the querybuilder will use the table from latest call to `table($table)` method.
 
 Output:
 
 ```sql
 SELECT *
-FROM `table1` AS foo1
+FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
