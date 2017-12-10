@@ -10,193 +10,184 @@ use Pecee\Pixie\QueryBuilder\Transaction;
  *
  * @package Pecee\Pixie
  */
-class TransactionTest extends \PHPUnit\Framework\TestCase
-{
-    /**
-     * @var QueryBuilderHandler
-     */
-    private $builder;
+class TransactionTest extends \PHPUnit\Framework\TestCase {
+	/**
+	 * @var QueryBuilderHandler
+	 */
+	private $builder;
 
-    public function setUp()
-    {
-        // NOTE: This test will require a live PDO connection
+	public function setUp() {
+		// NOTE: This test will require a live PDO connection
 
-        $connection = new \Pecee\Pixie\Connection('mysql', [
-            'driver' => 'mysql',
-            'host' => '127.0.0.1',
-            'database' => 'test',
-            'username' => 'root',
-            'password' => '',
-            'charset' => 'utf8mb4', // Optional
-            'collation' => 'utf8mb4_unicode_ci', // Optional
-            'prefix' => '', // Table prefix, optional
-        ]);
+		$connection = new \Pecee\Pixie\Connection('mysql', [
+			'driver'    => 'mysql',
+			'host'      => '127.0.0.1',
+			'database'  => 'test',
+			'username'  => 'root',
+			'password'  => '123456',
+			'charset'   => 'utf8mb4', // Optional
+			'collation' => 'utf8mb4_unicode_ci', // Optional
+			'prefix'    => '', // Table prefix, optional
+		]);
 
-        $this->builder = $connection->getQueryBuilder();
+		$this->builder = $connection->getQueryBuilder();
 
-    }
+	}
 
-    public function testTransactionResult()
-    {
+	public function testTransactionResult() {
 
-        $this->builder->statement('TRUNCATE `people`');
+		$this->builder->statement('TRUNCATE `people`');
 
-        $ids = [];
+		$ids = [];
 
-        $this->builder->transaction(function (Transaction $q) use (&$ids) {
+		$this->builder->transaction(function (Transaction $q) use (&$ids) {
 
-            $ids = $q->table('people')->insert([
-                [
-                    'name' => 'Simon',
-                    'age' => 12,
-                    'awesome' => true,
-                    'nickname' => 'ponylover94',
-                ],
-                [
-                    'name' => 'Peter',
-                    'age' => 40,
-                    'awesome' => false,
-                    'nickname' => null,
-                ],
-                [
-                    'name' => 'Bobby',
-                    'age' => 20,
-                    'awesome' => true,
-                    'nickname' => 'peter',
-                ],
-            ]);
+			$ids = $q->table('people')->insert([
+				[
+					'name'     => 'Simon',
+					'age'      => 12,
+					'awesome'  => true,
+					'nickname' => 'ponylover94',
+				],
+				[
+					'name'     => 'Peter',
+					'age'      => 40,
+					'awesome'  => false,
+					'nickname' => null,
+				],
+				[
+					'name'     => 'Bobby',
+					'age'      => 20,
+					'awesome'  => true,
+					'nickname' => 'peter',
+				],
+			]);
 
-        });
+		});
 
-        $this->assertEquals(1, $ids[0]);
-        $this->assertEquals(2, $ids[1]);
-        $this->assertEquals(3, $ids[2]);
+		$this->assertEquals(1, $ids[0]);
+		$this->assertEquals(2, $ids[1]);
+		$this->assertEquals(3, $ids[2]);
 
-        $this->assertEquals($this->builder->table('people')->count(), 3);
+		$this->assertEquals($this->builder->table('people')->count(), 3);
 
-    }
+	}
 
 
-    /**
-     * @throws Exception
-     */
-    public function testNestedTransactions()
-    {
+	/**
+	 * @throws Exception
+	 */
+	public function testNestedTransactions() {
 
-        $this->builder->statement('TRUNCATE `people`; TRUNCATE `animals`');
+		$this->builder->statement('TRUNCATE `people`; TRUNCATE `animal`');
 
-        function getAnimals()
-        {
-            return [
-                ['name' => 'mouse', 'number_of_legs' => '28'],
-                ['name' => 'horse', 'number_of_legs' => '4'],
-                ['name' => 'cat', 'number_of_legs' => '8']
-            ];
-        }
+		function getAnimals() {
+			return [
+				['name' => 'mouse', 'number_of_legs' => '28'],
+				['name' => 'horse', 'number_of_legs' => '4'],
+				['name' => 'cat', 'number_of_legs' => '8']
+			];
+		}
 
-        function getPersons()
-        {
-            return
-            [
-                [
-                    'name' => 'Osama',
-                    'age' => '2',
-                    'awesome' => '1',
-                    'nickname' => 'jihad4evar',
-                ],
-                [
-                    'name' => 'Leila',
-                    'age' => '76',
-                    'awesome' => '1',
-                    'nickname' => 'coolcatlady',
-                ],
-                [
-                    'name' => 'Henry',
-                    'age' => '56',
-                    'awesome' => '1',
-                    'nickname' => 'ponylover95',
-                ]
-            ];
-        }
+		function getPersons() {
+			return
+				[
+					[
+						'name'     => 'Osama',
+						'age'      => '2',
+						'awesome'  => '1',
+						'nickname' => 'jihad4evar',
+					],
+					[
+						'name'     => 'Leila',
+						'age'      => '76',
+						'awesome'  => '1',
+						'nickname' => 'coolcatlady',
+					],
+					[
+						'name'     => 'Henry',
+						'age'      => '56',
+						'awesome'  => '1',
+						'nickname' => 'ponylover95',
+					]
+				];
+		}
 
-        $this->builder->transaction(function (Transaction $qb) {
+		$this->builder->transaction(function (Transaction $qb) {
 
-            function firstTrans(Transaction $oQuery)
-            {
+			function firstTrans(Transaction $oQuery) {
 
-                $oQuery->transaction(function (Transaction $qb) {
+				$oQuery->transaction(function (Transaction $qb) {
 
-                    $qb->table('animals')->insert([
-                        getAnimals()
-                    ]);
+					$qb->table('animal')->insert([
+						getAnimals()
+					]);
 
-                });
-            }
+				});
+			}
 
-            function secondTrans(Transaction $oQuery)
-            {
-                $oQuery->transaction(function (\Pecee\Pixie\QueryBuilder\Transaction $qb) {
+			function secondTrans(Transaction $oQuery) {
+				$oQuery->transaction(function (\Pecee\Pixie\QueryBuilder\Transaction $qb) {
 
-                    $qb->table('people')->insert([
-                        getPersons()
-                    ]);
+					$qb->table('people')->insert([
+						getPersons()
+					]);
 
-                });
-            }
+				});
+			}
 
-            firstTrans($qb);
-            secondTrans($qb);
+			firstTrans($qb);
+			secondTrans($qb);
 
-        });
+		});
 
 
-        $animals = $this->builder->table('animals')->select(['name', 'number_of_legs'])->get();
-        $persons = $this->builder->table('people')->select(['name', 'age', 'awesome', 'nickname'])->get();
+		$animals = $this->builder->table('animal')->select(['name', 'number_of_legs'])->get();
+		$persons = $this->builder->table('people')->select(['name', 'age', 'awesome', 'nickname'])->get();
 
-        $originalPersons = getPersons();
-        $originalAnimals = getAnimals();
+		$originalPersons = getPersons();
+		$originalAnimals = getAnimals();
 
-        $this->assertSameSize($persons, $originalPersons);
-        $this->assertEquals((array)$persons[0], $originalPersons[0]);
-        $this->assertEquals((array)$persons[1], $originalPersons[1]);
-        $this->assertEquals((array)$persons[2], $originalPersons[2]);
+		$this->assertSameSize($persons, $originalPersons);
+		$this->assertEquals((array)$persons[0], $originalPersons[0]);
+		$this->assertEquals((array)$persons[1], $originalPersons[1]);
+		$this->assertEquals((array)$persons[2], $originalPersons[2]);
 
-        $this->assertSameSize($animals, $originalAnimals);
-        $this->assertEquals((array)$animals[0], $originalAnimals[0]);
-        $this->assertEquals((array)$animals[1], $originalAnimals[1]);
-    }
+		$this->assertSameSize($animals, $originalAnimals);
+		$this->assertEquals((array)$animals[0], $originalAnimals[0]);
+		$this->assertEquals((array)$animals[1], $originalAnimals[1]);
+	}
 
-    public function testTransactionMultipleInsert()
-    {
-        $this->builder->statement('TRUNCATE `people`');
+	public function testTransactionMultipleInsert() {
+		$this->builder->statement('TRUNCATE `people`');
 
-        $ids = $this->builder->table('people')->insert([
-            [
-                'name' => 'Simon',
-                'age' => 12,
-                'awesome' => true,
-                'nickname' => 'ponylover94',
-            ],
-            [
-                'name' => 'Peter',
-                'age' => 40,
-                'awesome' => false,
-                'nickname' => null,
-            ],
-            [
-                'name' => 'Bobby',
-                'age' => 20,
-                'awesome' => true,
-                'nickname' => 'peter',
-            ],
-        ]);
+		$ids = $this->builder->table('people')->insert([
+			[
+				'name'     => 'Simon',
+				'age'      => 12,
+				'awesome'  => true,
+				'nickname' => 'ponylover94',
+			],
+			[
+				'name'     => 'Peter',
+				'age'      => 40,
+				'awesome'  => false,
+				'nickname' => null,
+			],
+			[
+				'name'     => 'Bobby',
+				'age'      => 20,
+				'awesome'  => true,
+				'nickname' => 'peter',
+			],
+		]);
 
-        $this->assertEquals(1, $ids[0]);
-        $this->assertEquals(2, $ids[1]);
-        $this->assertEquals(3, $ids[2]);
+		$this->assertEquals(1, $ids[0]);
+		$this->assertEquals(2, $ids[1]);
+		$this->assertEquals(3, $ids[2]);
 
-        $this->assertEquals($this->builder->table('people')->count(), 3);
+		$this->assertEquals($this->builder->table('people')->count(), 3);
 
-    }
+	}
 
 }

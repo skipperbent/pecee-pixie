@@ -2,173 +2,153 @@
 
 namespace Pecee\Pixie;
 
+use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
-use Viocon\Container;
 
 /**
  * Class Connection
  *
  * @package Pecee\Pixie
  */
-class Connection
-{
+class Connection {
 
-    /**
-     * @var Connection
-     */
-    protected static $storedConnection;
-    /**
-     * @var Container
-     */
-    protected $container;
-    /**
-     * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
-     *
-     * @var string
-     */
-    protected $adapter;
-    /**
-     * @var array
-     */
-    protected $adapterConfig;
-    /**
-     * @var \PDO
-     */
-    protected $pdoInstance;
-    /**
-     * @var EventHandler
-     */
-    protected $eventHandler;
+	/**
+	 * @var Connection
+	 */
+	protected static $storedConnection;
 
-    /**
-     * @param string         $adapter
-     * @param array          $adapterConfig
-     * @param Container|null $container
-     */
-    public function __construct(string $adapter, array $adapterConfig, Container $container = null)
-    {
-        $this->container = $container ?? new Container();
+	/**
+	 * Connection adapter (i.e. Mysql, Pgsql, Sqlite)
+	 *
+	 * @var IConnectionAdapter
+	 */
+	protected $adapter;
 
-        $this
-            ->setAdapter($adapter)
-            ->setAdapterConfig($adapterConfig)
-            ->connect();
+	/**
+	 * @var array
+	 */
+	protected $adapterConfig;
 
-        // Create event dependency
-        $this->eventHandler = $this->container->build(EventHandler::class);
-    }
+	/**
+	 * @var \PDO
+	 */
+	protected $pdoInstance;
 
-    /**
-     * @return Connection
-     */
-    public static function getStoredConnection(): Connection
-    {
-        return static::$storedConnection;
-    }
+	/**
+	 * @var EventHandler
+	 */
+	protected $eventHandler;
 
-    /**
-     * Create the connection adapter
-     */
-    public function connect()
-    {
-        // Build a database connection if we don't have one connected
+	/**
+	 * @param string $adapter Adapter name or class
+	 * @param array $adapterConfig
+	 */
+	public function __construct($adapter, array $adapterConfig) {
+		if (($adapter instanceof IConnectionAdapter) === false) {
+			/* @var $adapter IConnectionAdapter */
+			$adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
+			$adapter = new $adapter();
+		}
 
-        $adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($this->adapter));
+		$this
+			->setAdapter($adapter)
+			->setAdapterConfig($adapterConfig)
+			->connect();
 
-        $adapterInstance = $this->container->build($adapter, [$this->container]);
+		// Create event dependency
+		$this->eventHandler = new EventHandler();
+	}
 
-        $pdo = $adapterInstance->connect($this->adapterConfig);
-        $this->setPdoInstance($pdo);
+	/**
+	 * @return Connection
+	 */
+	public static function getStoredConnection(): Connection {
+		return static::$storedConnection;
+	}
 
-        // Preserve the first database connection with a static property
-        if (static::$storedConnection === null) {
-            static::$storedConnection = $this;
-        }
-    }
+	/**
+	 * Create the connection adapter
+	 */
+	public function connect() {
+		// Build a database connection if we don't have one connected
 
-    /**
-     * @return string
-     */
-    public function getAdapter(): string
-    {
-        return $this->adapter;
-    }
+		$pdo = $this->adapter->connect($this->adapterConfig);
+		$this->setPdoInstance($pdo);
 
-    /**
-     * @return array
-     */
-    public function getAdapterConfig(): array
-    {
-        return $this->adapterConfig;
-    }
+		// Preserve the first database connection with a static property
+		if (static::$storedConnection === null) {
+			static::$storedConnection = $this;
+		}
+	}
 
-    /**
-     * @return Container
-     */
-    public function getContainer(): Container
-    {
-        return $this->container;
-    }
+	/**
+	 * @return IConnectionAdapter
+	 */
+	public function getAdapter(): IConnectionAdapter {
+		return $this->adapter;
+	}
 
-    /**
-     * @return EventHandler
-     */
-    public function getEventHandler(): EventHandler
-    {
-        return $this->eventHandler;
-    }
+	/**
+	 * @return array
+	 */
+	public function getAdapterConfig(): array {
+		return $this->adapterConfig;
+	}
 
-    /**
-     * @return \PDO
-     */
-    public function getPdoInstance(): \PDO
-    {
-        return $this->pdoInstance;
-    }
+	/**
+	 * @return EventHandler
+	 */
+	public function getEventHandler(): EventHandler {
+		return $this->eventHandler;
+	}
 
-    /**
-     * Returns an instance of Query Builder
-     *
-     * @return QueryBuilderHandler
-     */
-    public function getQueryBuilder(): QueryBuilderHandler
-    {
-        return $this->container->build(QueryBuilderHandler::class, [$this]);
-    }
+	/**
+	 * @return \PDO
+	 */
+	public function getPdoInstance(): \PDO {
+		return $this->pdoInstance;
+	}
 
-    /**
-     * @param string $adapter
-     *
-     * @return \Pecee\Pixie\Connection
-     */
-    public function setAdapter(string $adapter): Connection
-    {
-        $this->adapter = $adapter;
+	/**
+	 * Returns an instance of Query Builder
+	 *
+	 * @return QueryBuilderHandler
+	 * @throws Exception
+	 */
+	public function getQueryBuilder(): QueryBuilderHandler {
+		return new QueryBuilderHandler($this);
+	}
 
-        return $this;
-    }
+	/**
+	 * @param IConnectionAdapter $adapter
+	 *
+	 * @return \Pecee\Pixie\Connection
+	 */
+	public function setAdapter(IConnectionAdapter $adapter): Connection {
+		$this->adapter = $adapter;
 
-    /**
-     * @param array $adapterConfig
-     *
-     * @return \Pecee\Pixie\Connection
-     */
-    public function setAdapterConfig(array $adapterConfig): Connection
-    {
-        $this->adapterConfig = $adapterConfig;
+		return $this;
+	}
 
-        return $this;
-    }
+	/**
+	 * @param array $adapterConfig
+	 *
+	 * @return \Pecee\Pixie\Connection
+	 */
+	public function setAdapterConfig(array $adapterConfig): Connection {
+		$this->adapterConfig = $adapterConfig;
 
-    /**
-     * @param \PDO $pdo
-     *
-     * @return \Pecee\Pixie\Connection
-     */
-    public function setPdoInstance(\PDO $pdo): Connection
-    {
-        $this->pdoInstance = $pdo;
+		return $this;
+	}
 
-        return $this;
-    }
+	/**
+	 * @param \PDO $pdo
+	 *
+	 * @return \Pecee\Pixie\Connection
+	 */
+	public function setPdoInstance(\PDO $pdo): Connection {
+		$this->pdoInstance = $pdo;
+
+		return $this;
+	}
 }

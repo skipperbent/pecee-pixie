@@ -7,7 +7,6 @@ namespace Pecee\Pixie\ConnectionAdapters;
  *
  * @package Pecee\Pixie\ConnectionAdapters
  */
-class Exception extends \Pecee\Pixie\Exception
-{
+class Exception extends \Pecee\Pixie\Exception {
 
 }
