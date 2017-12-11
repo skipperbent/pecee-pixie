@@ -88,9 +88,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 		$this->adapterInstance = new $adapterClass($this->connection);
 
 		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-		// PDO will parse parameter datatypes automatically
-		$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 	}
 
 	/**
@@ -102,7 +99,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 	 * @return void
 	 */
 	protected function addStatement(string $key, $value) {
-		if (array_key_exists($key, $this->statements) === false) {
+		if (\array_key_exists($key, $this->statements) === false) {
 			$this->statements[ $key ] = (array)$value;
 		} else {
 			$this->statements[ $key ] = array_merge($this->statements[ $key ], (array)$value);
@@ -411,10 +408,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 			);
 		}
 
-		$start = microtime(true);
+		$start = \microtime(true);
 		$this->fireEvents(EventHandler::EVENT_BEFORE_SELECT, $queryObject);
 		$result             = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
-		$executionTime      += microtime(true) - $start;
+		$executionTime      += \microtime(true) - $start;
 		$this->pdoStatement = null;
 		$this->fireEvents(EventHandler::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
 
@@ -981,6 +978,26 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 	}
 
 	/**
+	 * Parse parameter type from value
+	 *
+	 * @param mixed $value
+	 *
+	 * @return int
+	 */
+	protected function parseParameterType($value) {
+
+		if ($value === null) {
+			return PDO::PARAM_NULL;
+		}
+
+		if (\is_int($value) === true || \is_bool($value) === true) {
+			return PDO::PARAM_INT;
+		}
+
+		return PDO::PARAM_STR;
+	}
+
+	/**
 	 * Execute statement
 	 *
 	 * @param string $sql
@@ -989,13 +1006,27 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 	 * @return array PDOStatement and execution time as float
 	 */
 	public function statement(string $sql, array $bindings = []): array {
-		$start = microtime(true);
+		$start = \microtime(true);
 
 		$pdoStatement = $this->pdo->prepare($sql);
 
-		$pdoStatement->execute($bindings);
+		/**
+		 * NOTE:
+		 * PHP 5.6 & 7 bug: https://bugs.php.net/bug.php?id=38546
+		 * \PDO::PARAM_BOOL is not supported, use \PDO::PARAM_INT instead
+		 */
 
-		return [$pdoStatement, microtime(true) - $start];
+		foreach ($bindings as $key => $value) {
+			$pdoStatement->bindValue(
+				\is_int($key) ? $key + 1 : $key,
+				$value,
+				$this->parseParameterType($value)
+			);
+		}
+
+		$pdoStatement->execute();
+
+		return [$pdoStatement, \microtime(true) - $start];
 	}
 
 	/**
