@@ -7,7 +7,6 @@ namespace Pecee\Pixie;
  *
  * @package Pecee\Pixie
  */
-class Exception extends \Exception
-{
+class Exception extends \Exception {
 
 }
