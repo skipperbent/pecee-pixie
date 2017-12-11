@@ -39,7 +39,6 @@ class TestCase extends \PHPUnit\Framework\TestCase {
 	}
 
 	public function setUp() {
-		$this->container = new Container();
 
 		$this->mockPdoStatement = $this->getMockBuilder(\PDOStatement::class)->getMock();
 
