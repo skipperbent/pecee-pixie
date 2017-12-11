@@ -7,10 +7,9 @@ namespace Pecee\Pixie\QueryBuilder\Adapters;
  *
  * @package Pecee\Pixie\QueryBuilder\Adapters
  */
-class Sqlite extends BaseAdapter
-{
-    /**
-     * @var string
-     */
-    const SANITIZER = '"';
+class Sqlite extends BaseAdapter {
+	/**
+	 * @var string
+	 */
+	const SANITIZER = '"';
 }

@@ -7,10 +7,9 @@ namespace Pecee\Pixie\QueryBuilder\Adapters;
  *
  * @package Pecee\Pixie\QueryBuilder\Adapters
  */
-class Mysql extends BaseAdapter
-{
-    /**
-     * @var string
-     */
-    const SANITIZER = '`';
+class Mysql extends BaseAdapter {
+	/**
+	 * @var string
+	 */
+	const SANITIZER = '`';
 }
