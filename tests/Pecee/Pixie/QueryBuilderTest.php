@@ -82,10 +82,10 @@ class QueryBuilder extends TestCase {
 		$queryArr = $this->builder->query($query, $bindings)->get();
 
 		$this->assertEquals(
-			[
+			array(
 				$query,
-				[5, 'usman', null],
-			],
+				array(array(5, \PDO::PARAM_INT), array('usman', \PDO::PARAM_STR), array(null, \PDO::PARAM_NULL)),
+			),
 			$queryArr
 		);
 	}
