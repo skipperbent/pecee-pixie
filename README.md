@@ -15,6 +15,8 @@ This library is stable, maintained and are used by many sites, including:
 **Requirements:**
 - PHP 5.6 or higher is required.
 
+Versions prior to 3.x are available [here](https://github.com/skipperbent/pixie).
+
 #### Feedback and development
 
 If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
@@ -41,7 +43,7 @@ For example when pushing changes to version 3, the pull request should use the `
 
 - When adding new stuff, please remember to add new unit-tests for the functionality.
 
-#### Credits
+#### Credits & features
 
 This project is based on the original [Pixie project by usmanhalalit](https://github.com/usmanhalalit/pixie) but has some extra features like:
 
@@ -63,14 +65,10 @@ This project is based on the original [Pixie project by usmanhalalit](https://gi
 
 Most importantly this project is used on many live-sites and maintained.
 
-#### Versions prior to 3.x
-
-Older versions prior to 3.x are available [https://github.com/skipperbent/pixie](https://github.com/skipperbent/pixie).
-
 #### Note
 
-`AliasFacade` used for calling the database-connection as a fixed constant has been removed to increase performance.
-If this feature is required in your setup we encourage you to implement your own solution.
+`Facades` and `Container` support has been removed to increase performance. To implement your own adapters, please extends the
+`IConnectionAdapter` interface.
 
 ## Example
 ```php
@@ -79,7 +77,7 @@ require 'vendor/autoload.php';
 
 // Create a connection, once only.
 $config = array(
-            'driver'    => 'mysql', // Db driver
+            'driver'    => 'mysql', // Db driver or IConnectionAdapter class
             'host'      => 'localhost',
             'database'  => 'your-database',
             'username'  => 'root',
@@ -266,19 +264,25 @@ $queryBuilder
     ->join('table2', 'table2.person_id', '=', 'foo1.id');
 ```
 
-You can change the alias anytime by using
+You can change the alias anytime by using:
 
 ```php
-$queryBuilder->alias($table, $alias);
+$queryBuilder->alias('foo1', 'table1');
+
+// Simplified way...
+
+$queryBuilder->table('table1')->alias('foo1');
 ```
 
 Output:
 
 ```sql
 SELECT *
-FROM `table1` AS foo1
+FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
+
+**Note:** If `$table` parameter is null - the querybuilder will use the table from latest call to `table($table)` method.
 
 ### Get Easily
 
@@ -861,21 +865,23 @@ Pixie comes with powerful query events to supercharge your application. These ev
 
 #### Available Events
 
- - after-*
- - before-*
- - before-select
- - after-select
- - before-insert
- - after-insert
- - before-update
- - after-update
- - before-delete
- - after-delete
+| Event constant                        | Event value/name  | Description                                |
+| :------------------------------------ | :-------------    | :------------                              |
+| `EventHandler::EVENT_BEFORE_ALL`      | `before-*`        | Event-type that fires before each query.   |
+| `EventHandler::EVENT_AFTER_ALL`       | `after-*`         | Event-type that fires after each query.    |
+| `EventHandler::EVENT_BEFORE_SELECT`   | `before-select`   | Event-type that fires before select query. |
+| `EventHandler::EVENT_AFTER_SELECT`    | `after-select`    | Event-type that fires after insert query.  |
+| `EventHandler::EVENT_BEFORE_INSERT`   | `before-insert`   | Event-type that fires before insert query  |
+| `EventHandler::EVENT_AFTER_INSERT`    | `after-insert`    | Event-type that fires after insert query.  |
+| `EventHandler::EVENT_BEFORE_UPDATE`   | `before-update`   | Event-type that fires before update query. |
+| `EventHandler::EVENT_AFTER_UPDATE`    | `after-update`    | Event-type that fires after update query.  |
+| `EventHandler::EVENT_BEFORE_DELETE`   | `before-delete`   | Event-type that fires before delete query. |
+| `EventHandler::EVENT_AFTER_DELETE`    | `after-delete`    | Event-type that fires after delete query.  |
 
 #### Registering Events
 
 ```php
-$queryBuilder->registerEvent('before-select', 'users', function(QueryBuilderHandler $qb)
+$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(QueryBuilderHandler $qb)
 {
     $qb->where('status', '!=', 'banned');
 });
@@ -891,7 +897,7 @@ If you want the event to be performed when **any table is being queried**, provi
 After inserting data into `my_table`, details will be inserted into another table
 
 ```php
-$queryBuilder->registerEvent('after-insert', 'my_table', function(QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(QueryBuilderHandler $qb, $insertId)
 {
     $qb
         ->table('person_details')->insert(array(
@@ -905,7 +911,7 @@ $queryBuilder->registerEvent('after-insert', 'my_table', function(QueryBuilderHa
 Whenever data is inserted into `person_details` table, set the timestamp field `created_at`, so we don't have to specify it everywhere:
 
 ```php
-$queryBuilder->registerEvent('after-insert', 'person_details', function(QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(QueryBuilderHandler $qb, $insertId)
 {
     $qb
         ->table('person_details')
@@ -919,7 +925,7 @@ $queryBuilder->registerEvent('after-insert', 'person_details', function(QueryBui
 After deleting from `my_table` delete the relations:
 
 ```php
-$queryBuilder->registerEvent('after-delete', 'my_table', function(QueryBuilderHandler $qb, $queryObject)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(QueryBuilderHandler $qb, $queryObject)
 {
     $bindings = $queryObject->getBindings();
     $qb
@@ -943,7 +949,7 @@ Only on `after-*` events you get three parameters: **first** is the query builde
 #### Removing Events
 
 ```php
-$queryBuilder->removeEvent('event-name', 'table-name');
+$queryBuilder->removeEvent($event, $table = null);
 ```
 
 #### Some Use Cases

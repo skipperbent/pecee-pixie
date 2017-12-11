@@ -10,113 +10,188 @@ use Pecee\Pixie\QueryBuilder\Raw;
  *
  * @package Pecee\Pixie
  */
-class EventHandler
-{
-    /**
-     * @var array
-     */
-    protected $events = [];
+class EventHandler {
 
-    /**
-     * @var array
-     */
-    protected $firedEvents = [];
+	/**
+	 * Event-type that fires before each query
+	 *
+	 * @var string
+	 */
+	const EVENT_BEFORE_ALL = 'before-*';
 
-    /**
-     * @return array
-     */
-    public function getEvents()
-    {
-        return $this->events;
-    }
+	/**
+	 * Event-type that fires after each query
+	 *
+	 * @var string
+	 */
+	const EVENT_AFTER_ALL = 'after-*';
 
-    /**
-     * @param string $event
-     * @param string|null $table
-     * @return callable|null
-     */
-    public function getEvent($event, $table = null)
-    {
-        $table = $table ?: ':any';
+	/**
+	 * Event-type that fires before select
+	 *
+	 * @var string
+	 */
+	const EVENT_BEFORE_SELECT = 'before-select';
 
-        if ($table instanceof Raw) {
-            return null;
-        }
+	/**
+	 * Event-type that fires after select
+	 *
+	 * @var string
+	 */
+	const EVENT_AFTER_SELECT = 'after-select';
 
-        // Find event with *
-        if (isset($this->events[$table]) === true) {
-            foreach ((array)$this->events[$table] as $name => $e) {
-                if (strpos($name, '*') !== false) {
-                    $name = substr($name, 0, strpos($name, '*'));
-                    if (stripos($event, $name) !== false) {
-                        return $e;
-                    }
-                }
-            }
-        }
+	/**
+	 * Event-type that fires before insert
+	 *
+	 * @var string
+	 */
+	const EVENT_BEFORE_INSERT = 'before-insert';
 
-        return isset($this->events[$table][$event]) ? $this->events[$table][$event] : null;
-    }
+	/**
+	 * Event-type that fires after insert
+	 *
+	 * @var string
+	 */
+	const EVENT_AFTER_INSERT = 'after-insert';
 
-    /**
-     * @param string $event
-     * @param string $table
-     * @param \Closure $action
-     * @return void
-     */
-    public function registerEvent($event, $table, \Closure $action)
-    {
-        $table = $table ?: ':any';
+	/**
+	 * Event-type that fires before update
+	 *
+	 * @var string
+	 */
+	const EVENT_BEFORE_UPDATE = 'before-update';
 
-        $this->events[$table][$event] = $action;
-    }
+	/**
+	 * Event-type that fires after update
+	 *
+	 * @var string
+	 */
+	const EVENT_AFTER_UPDATE = 'after-update';
 
-    /**
-     * @param string $event
-     * @param string $table
-     * @return void
-     */
-    public function removeEvent($event, $table = null)
-    {
-        $table = $table ?: 'any';
-        unset($this->events[$table][$event]);
-    }
+	/**
+	 * Event-type that fires before delete
+	 *
+	 * @var string
+	 */
+	const EVENT_BEFORE_DELETE = 'before-delete';
 
-    /**
-     * @param QueryBuilderHandler $queryBuilder
-     * @param string $event
-     * @return mixed|null
-     */
-    public function fireEvents($queryBuilder, $event)
-    {
-        $statements = $queryBuilder->getStatements();
-        $tables = isset($statements['tables']) ? $statements['tables'] : [];
+	/**
+	 * Event-type that fires after delete
+	 *
+	 * @var string
+	 */
+	const EVENT_AFTER_DELETE = 'after-delete';
 
-        // Events added with :any will be fired in case of any table,
-        // we are adding :any as a fake table at the beginning.
-        array_unshift($tables, ':any');
+	/**
+	 * Fake table name for any table events
+	 */
+	const TABLE_ANY = ':any';
 
-        $handlerParams = func_get_args();
-        unset($handlerParams[1]);
+	/**
+	 * @var array
+	 */
+	protected $events = [];
 
-        // Fire all events
-        foreach ($tables as $table) {
-            // Fire before events for :any table
-            $action = $this->getEvent($event, $table);
-            if ($action !== null) {
+	/**
+	 * @var array
+	 */
+	protected $firedEvents = [];
 
-                // Make an event id, with event type and table
-                $eventId = $event . $table;
+	/**
+	 * @param QueryBuilderHandler $queryBuilder
+	 * @param string $event
+	 *
+	 * @return mixed
+	 */
+	public function fireEvents($queryBuilder, $event) {
+		$statements = $queryBuilder->getStatements();
+		$tables     = isset($statements['tables']) ? $statements['tables'] : [];
 
-                // Fire event and add to fired list
-                $this->firedEvents[] = $eventId;
-                $result = call_user_func_array($action, $handlerParams);
-                if ($result !== null) {
-                    return $result;
-                }
-            }
-        }
+		// Events added with :any will be fired in case of any table,
+		// we are adding :any as a fake table at the beginning.
+		array_unshift($tables, static::TABLE_ANY);
 
-        return null;
-    }
+		$handlerParams = func_get_args();
+		unset($handlerParams[1]);
+
+		// Fire all events
+		foreach ($tables as $table) {
+			// Fire before events for :any table
+			$action = $this->getEvent($event, $table);
+			if ($action !== null) {
+
+				// Make an event id, with event type and table
+				$eventId = $event . $table;
+
+				// Fire event and add to fired list
+				$this->firedEvents[] = $eventId;
+				$result              = call_user_func_array($action, $handlerParams);
+				if ($result !== null) {
+					return $result;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param string $event
+	 * @param string|Raw|null $table
+	 *
+	 * @return \Closure|null
+	 */
+	public function getEvent($event, $table = null) {
+		$table = $table ?: static::TABLE_ANY;
+
+		if ($table instanceof Raw) {
+			return null;
+		}
+
+		// Find event with wildcard (*)
+		if (isset($this->events[ $table ]) === true) {
+			foreach ((array)$this->events[ $table ] as $name => $e) {
+				if (strpos($name, '*') !== false) {
+					$name = substr($name, 0, strpos($name, '*'));
+					if (stripos($event, $name) !== false) {
+						return $e;
+					}
+				}
+			}
+		}
+
+		return isset($this->events[ $table ][ $event ]) ? $this->events[ $table ][ $event ] : null;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getEvents() {
+		return $this->events;
+	}
+
+	/**
+	 * Register new event
+	 *
+	 * @param string $event
+	 * @param string $table
+	 * @param \Closure $action
+	 *
+	 * @return void
+	 */
+	public function registerEvent($event, $table, \Closure $action) {
+		$this->events[ $table ?: static::TABLE_ANY ][ $event ] = $action;
+	}
+
+	/**
+	 * Remove event
+	 *
+	 * @param string $event
+	 * @param string $table
+	 *
+	 * @return void
+	 */
+	public function removeEvent($event, $table = null) {
+		unset($this->events[ $table ?: static::TABLE_ANY ][ $event ]);
+	}
 }
