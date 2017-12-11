@@ -88,9 +88,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 		$this->adapterInstance = new $adapterClass($this->connection);
 
 		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-		// PDO will parse parameter datatypes automatically
-		$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 	}
 
 	/**
@@ -102,7 +99,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 	 * @return void
 	 */
 	protected function addStatement(string $key, $value) {
-		if (array_key_exists($key, $this->statements) === false) {
+		if (\array_key_exists($key, $this->statements) === false) {
 			$this->statements[ $key ] = (array)$value;
 		} else {
 			$this->statements[ $key ] = array_merge($this->statements[ $key ], (array)$value);
