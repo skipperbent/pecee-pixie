@@ -170,6 +170,7 @@ composer install pecee/pixie
  - [**Delete**](#delete)
  - [Transactions](#transactions)
  - [Get Built Query](#get-built-query)
+    - [Get QueryObject from last executed query](#get-queryobject-from-last-executed-query)
  - [Sub Queries and Nested Queries](#sub-queries-and-nested-queries)
  - [Get PDO Instance](#get-pdo-instance)
  - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
@@ -823,6 +824,17 @@ Calling the `getRawSql()` method will return a query including bindings like thi
 ```sql
 SELECT * FROM my_table where `id` = 3
 ```
+
+#### Get QueryObject from last executed query
+
+You can also retrieve the query-object from the last executed query.
+
+**Example:**
+
+```php
+$queryString = $qb->getLastQuery()->getRawSql();
+```
+
 
 ### Sub Queries and Nested Queries
 
