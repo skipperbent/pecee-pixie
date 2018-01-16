@@ -98,6 +98,7 @@ class TestCase extends \PHPUnit\Framework\TestCase {
 		$this->mockConnection->shouldReceive('getAdapter')->andReturn(new Mysql());
 		$this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(['prefix' => 'cb_']);
 		$this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);
+		$this->mockConnection->shouldReceive('setLastQuery');
 	}
 
 	public function tearDown() {
