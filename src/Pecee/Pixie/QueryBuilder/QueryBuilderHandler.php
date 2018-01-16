@@ -1087,7 +1087,7 @@ class QueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $this->connection->getLastQuery());
         }
 
         return [$pdoStatement, microtime(true) - $start];
@@ -1200,7 +1200,7 @@ class QueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->connection->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
 
         return $queryTransaction;
