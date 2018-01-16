@@ -36,7 +36,7 @@ class Transaction extends QueryBuilderHandler
         try {
             $this->pdo->commit();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->getConnection()->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
 
         throw new TransactionHaltException('Commit triggered transaction-halt.');
@@ -52,7 +52,7 @@ class Transaction extends QueryBuilderHandler
         try {
             $this->pdo->rollBack();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->getConnection()->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
 
         throw new TransactionHaltException('Rollback triggered transaction-halt.');
@@ -79,7 +79,7 @@ class Transaction extends QueryBuilderHandler
 
             $this->transactionStatement->execute($bindings);
         } catch(\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->getConnection()->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
 
         return [$this->transactionStatement, microtime(true) - $start];

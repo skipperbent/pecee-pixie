@@ -29,7 +29,7 @@ class Sqlite extends BaseAdapter
         try {
             return new PDO($connectionString, null, null, $config['options']);
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious());
         }
     }
 
