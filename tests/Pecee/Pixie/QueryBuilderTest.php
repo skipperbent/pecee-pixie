@@ -102,4 +102,13 @@ class QueryBuilder extends TestCase {
 
 	}
 
+	public function testWhereBetween() {
+
+	    $qb = $this->builder;
+	    $query = $qb->table('animals')->whereBetween('created_date', $qb->raw('NOW()'), '27-05-2017');
+
+	    $this->assertEquals($query->getQuery()->getRawSql(), 'SELECT * FROM `cb_animals` WHERE `created_date` BETWEEN NOW() AND \'27-05-2017\'');
+
+    }
+
 }

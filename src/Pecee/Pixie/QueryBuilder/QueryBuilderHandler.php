@@ -1203,8 +1203,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler {
 	 * Adds WHERE BETWEEN statement to the current query.
 	 *
 	 * @param string|Raw|\Closure $key
-	 * @param string|integer|float $valueFrom
-	 * @param string|integer|float $valueTo
+	 * @param string|integer|float|Raw|\Closure $valueFrom
+	 * @param string|integer|float|Raw|\Closure $valueTo
 	 *
 	 * @return static
 	 */
