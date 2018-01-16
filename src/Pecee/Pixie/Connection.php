@@ -5,146 +5,188 @@ namespace Pecee\Pixie;
 use PDO;
 use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
+use Pecee\Pixie\QueryBuilder\QueryObject;
 
 /**
  * Class Connection
  *
  * @package Pecee\Pixie
  */
-class Connection {
+class Connection
+{
 
-	/**
-	 * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
-	 * @var IConnectionAdapter
-	 */
-	protected $adapter;
+    /**
+     * Name of DB adapter (i.e. Mysql, Pgsql, Sqlite)
+     * @var IConnectionAdapter
+     */
+    protected $adapter;
 
-	/**
-	 * @var array
-	 */
-	protected $adapterConfig;
+    /**
+     * @var array
+     */
+    protected $adapterConfig;
 
-	/**
-	 * @var PDO
-	 */
-	protected $pdoInstance;
+    /**
+     * @var PDO
+     */
+    protected $pdoInstance;
 
-	/**
-	 * @var Connection
-	 */
-	protected static $storedConnection;
+    /**
+     * @var Connection
+     */
+    protected static $storedConnection;
 
-	/**
-	 * @var EventHandler
-	 */
-	protected $eventHandler;
+    /**
+     * @var EventHandler
+     */
+    protected $eventHandler;
 
-	/**
-	 * @param string|IConnectionAdapter $adapter
-	 * @param array $adapterConfig
-	 */
-	public function __construct($adapter, array $adapterConfig) {
-		if (($adapter instanceof IConnectionAdapter) === false) {
-			/* @var $adapter IConnectionAdapter */
-			$adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
-			$adapter = new $adapter();
-		}
+    /**
+     * @var QueryObject|null
+     */
+    protected $lastQuery;
 
-		$this->setAdapter($adapter)->setAdapterConfig($adapterConfig)->connect();
+    /**
+     * @param string|IConnectionAdapter $adapter
+     * @param array $adapterConfig
+     */
+    public function __construct($adapter, array $adapterConfig)
+    {
+        if (($adapter instanceof IConnectionAdapter) === false) {
+            /* @var $adapter IConnectionAdapter */
+            $adapter = '\Pecee\Pixie\ConnectionAdapters\\' . ucfirst(strtolower($adapter));
+            $adapter = new $adapter();
+        }
 
-		// Create event dependency
-		$this->eventHandler = new EventHandler();
-	}
+        $this->setAdapter($adapter)->setAdapterConfig($adapterConfig)->connect();
 
-	/**
-	 * Returns an instance of Query Builder
-	 *
-	 * @return QueryBuilderHandler
-	 * @throws Exception
-	 */
-	public function getQueryBuilder() {
-		return new QueryBuilderHandler($this);
-	}
+        // Create event dependency
+        $this->eventHandler = new EventHandler();
+    }
 
-	/**
-	 * Create the connection adapter
-	 */
-	protected function connect() {
-		// Build a database connection if we don't have one connected
-		$pdo = $this->adapter->connect($this->adapterConfig);
-		$this->setPdoInstance($pdo);
+    /**
+     * Returns an instance of Query Builder
+     *
+     * @return QueryBuilderHandler
+     * @throws Exception
+     */
+    public function getQueryBuilder()
+    {
+        return new QueryBuilderHandler($this);
+    }
 
-		// Preserve the first database connection with a static property
-		if (static::$storedConnection === null) {
-			static::$storedConnection = $this;
-		}
-	}
+    /**
+     * Create the connection adapter
+     */
+    protected function connect()
+    {
+        // Build a database connection if we don't have one connected
+        $pdo = $this->adapter->connect($this->adapterConfig);
+        $this->setPdoInstance($pdo);
 
-	/**
-	 * @param PDO $pdo
-	 *
-	 * @return static
-	 */
-	public function setPdoInstance(PDO $pdo) {
-		$this->pdoInstance = $pdo;
+        // Preserve the first database connection with a static property
+        if (static::$storedConnection === null) {
+            static::$storedConnection = $this;
+        }
+    }
 
-		return $this;
-	}
+    /**
+     * @param PDO $pdo
+     *
+     * @return static
+     */
+    public function setPdoInstance(PDO $pdo)
+    {
+        $this->pdoInstance = $pdo;
 
-	/**
-	 * @return PDO
-	 */
-	public function getPdoInstance() {
-		return $this->pdoInstance;
-	}
+        return $this;
+    }
 
-	/**
-	 * @param IConnectionAdapter $adapter
-	 *
-	 * @return static
-	 */
-	public function setAdapter(IConnectionAdapter $adapter) {
-		$this->adapter = $adapter;
+    /**
+     * @return PDO
+     */
+    public function getPdoInstance()
+    {
+        return $this->pdoInstance;
+    }
 
-		return $this;
-	}
+    /**
+     * @param IConnectionAdapter $adapter
+     *
+     * @return static
+     */
+    public function setAdapter(IConnectionAdapter $adapter)
+    {
+        $this->adapter = $adapter;
 
-	/**
-	 * @return IConnectionAdapter
-	 */
-	public function getAdapter() {
-		return $this->adapter;
-	}
+        return $this;
+    }
 
-	/**
-	 * @param array $adapterConfig
-	 *
-	 * @return static
-	 */
-	public function setAdapterConfig(array $adapterConfig) {
-		$this->adapterConfig = $adapterConfig;
+    /**
+     * @return IConnectionAdapter
+     */
+    public function getAdapter()
+    {
+        return $this->adapter;
+    }
 
-		return $this;
-	}
+    /**
+     * @param array $adapterConfig
+     *
+     * @return static
+     */
+    public function setAdapterConfig(array $adapterConfig)
+    {
+        $this->adapterConfig = $adapterConfig;
 
-	/**
-	 * @return array
-	 */
-	public function getAdapterConfig() {
-		return $this->adapterConfig;
-	}
+        return $this;
+    }
 
-	/**
-	 * @return EventHandler
-	 */
-	public function getEventHandler() {
-		return $this->eventHandler;
-	}
+    /**
+     * @return array
+     */
+    public function getAdapterConfig()
+    {
+        return $this->adapterConfig;
+    }
 
-	/**
-	 * @return Connection
-	 */
-	public static function getStoredConnection() {
-		return static::$storedConnection;
-	}
+    /**
+     * @return EventHandler
+     */
+    public function getEventHandler()
+    {
+        return $this->eventHandler;
+    }
+
+    /**
+     * @return Connection
+     */
+    public static function getStoredConnection()
+    {
+        return static::$storedConnection;
+    }
+
+    /**
+     * Set query-object from last executed query.
+     *
+     * @param QueryObject $query
+     * @return static $this
+     */
+    public function setLastQuery(QueryObject $query)
+    {
+        $this->lastQuery = $query;
+
+        return $this;
+    }
+
+    /**
+     * Get query-object from last executed query.
+     *
+     * @return QueryObject|null
+     */
+    public function getLastQuery()
+    {
+        return $this->lastQuery;
+    }
+
 }
