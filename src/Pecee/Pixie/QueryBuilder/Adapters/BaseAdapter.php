@@ -162,6 +162,11 @@ abstract class BaseAdapter
             $valuePlaceholder = '?';
             $bindings[] = [$value];
             $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
+
+            // Add bindings from key
+            if ($key instanceof Raw) {
+                $bindings[] = $key->getBindings();
+            }
         }
 
         // Clear all white spaces, and, or from beginning and white spaces from ending

@@ -2,64 +2,81 @@
 
 namespace Pecee\Pixie\QueryBuilder;
 
+use Pecee\Pixie\Exception;
+
 /**
  * Class Transaction
  *
  * @package Pecee\Pixie\QueryBuilder
  */
-class Transaction extends QueryBuilderHandler {
+class Transaction extends QueryBuilderHandler
+{
 
-	protected $transactionStatement;
+    protected $transactionStatement;
 
-	/**
-	 * @param \Closure $callback
-	 *
-	 * @return static
-	 */
-	public function transaction(\Closure $callback) {
-		$callback($this);
+    /**
+     * @param \Closure $callback
+     *
+     * @return static
+     */
+    public function transaction(\Closure $callback)
+    {
+        $callback($this);
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Commit transaction
-	 *
-	 * @throws \PDOException|TransactionHaltException
-	 */
-	public function commit() {
-		$this->pdo->commit();
-		throw new TransactionHaltException('Commit triggered transaction-halt.');
-	}
+    /**
+     * Commit transaction
+     *
+     * @throws Exception|TransactionHaltException
+     */
+    public function commit()
+    {
+        try {
+            $this->pdo->commit();
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getConnection()->getLastQuery());
+        }
 
-	/**
-	 * RollBack transaction
-	 *
-	 * @throws \PDOException|TransactionHaltException
-	 */
-	public function rollBack() {
-		$this->pdo->rollBack();
-		throw new TransactionHaltException('Rollback triggered transaction-halt.');
-	}
+        throw new TransactionHaltException('Commit triggered transaction-halt.');
+    }
 
-	/**
-	 * Execute statement
-	 *
-	 * @param string $sql
-	 * @param array $bindings
-	 *
-	 * @return array PDOStatement and execution time as float
-	 */
-	public function statement($sql, array $bindings = []) {
-		$start = microtime(true);
+    /**
+     * RollBack transaction
+     *
+     * @throws Exception|TransactionHaltException
+     */
+    public function rollBack()
+    {
+        try {
+            $this->pdo->rollBack();
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getConnection()->getLastQuery());
+        }
 
-		if ($this->transactionStatement === null && $this->pdo->inTransaction() === true) {
-			$this->transactionStatement = $this->pdo->prepare($sql);
-		}
+        throw new TransactionHaltException('Rollback triggered transaction-halt.');
+    }
 
-		$this->transactionStatement->execute($bindings);
+    /**
+     * Execute statement
+     *
+     * @param string $sql
+     * @param array $bindings
+     *
+     * @return array PDOStatement and execution time as float
+     */
+    public function statement($sql, array $bindings = [])
+    {
+        $start = microtime(true);
 
-		return [$this->transactionStatement, microtime(true) - $start];
-	}
+        if ($this->transactionStatement === null && $this->pdo->inTransaction() === true) {
+            $this->transactionStatement = $this->pdo->prepare($sql);
+        }
+
+        $this->transactionStatement->execute($bindings);
+
+        return [$this->transactionStatement, microtime(true) - $start];
+    }
 
 }
