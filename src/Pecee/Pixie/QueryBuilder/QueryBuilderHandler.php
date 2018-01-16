@@ -260,12 +260,12 @@ class QueryBuilderHandler
         /* @var $response \PDOStatement */
         $queryObject = $this->getQuery('delete');
 
+        $this->connection->setLastQuery($queryObject);
+
         $this->fireEvents(EventHandler::EVENT_BEFORE_DELETE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents(EventHandler::EVENT_AFTER_DELETE, $queryObject, $executionTime);
-
-        $this->connection->setLastQuery($queryObject);
 
         return $response;
     }
@@ -286,6 +286,8 @@ class QueryBuilderHandler
         if (is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
+            $this->connection->setLastQuery($queryObject);
+
             $this->fireEvents(EventHandler::EVENT_BEFORE_INSERT, $queryObject);
             /**
              * @var $result        \PDOStatement
@@ -295,8 +297,6 @@ class QueryBuilderHandler
 
             $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
             $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
-
-            $this->connection->setLastQuery($queryObject);
 
             return $insertId;
         }
@@ -420,12 +420,13 @@ class QueryBuilderHandler
 
         if ($this->pdoStatement === null) {
             $queryObject = $this->getQuery();
+
+            $this->connection->setLastQuery($queryObject);
+
             list($this->pdoStatement, $executionTime) = $this->statement(
                 $queryObject->getSql(),
                 $queryObject->getBindings()
             );
-
-            $this->connection->setLastQuery($queryObject);
         }
 
         $start = microtime(true);
@@ -880,6 +881,7 @@ class QueryBuilderHandler
      * @param array $bindings
      *
      * @return static
+     * @throws Exception
      */
     public function query($sql, array $bindings = [])
     {
@@ -1060,6 +1062,7 @@ class QueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
+     * @throws Exception
      */
     public function statement($sql, array $bindings = [])
     {
@@ -1081,7 +1084,11 @@ class QueryBuilderHandler
             );
         }
 
-        $pdoStatement->execute();
+        try {
+            $pdoStatement->execute();
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
+        }
 
         return [$pdoStatement, microtime(true) - $start];
     }
@@ -1193,7 +1200,7 @@ class QueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage());
+            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
         }
 
         return $queryTransaction;
@@ -1214,12 +1221,12 @@ class QueryBuilderHandler
          */
         $queryObject = $this->getQuery('update', $data);
 
+        $this->connection->setLastQuery($queryObject);
+
         $this->fireEvents(EventHandler::EVENT_BEFORE_UPDATE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, $executionTime);
-
-        $this->connection->setLastQuery($queryObject);
 
         return $response;
     }

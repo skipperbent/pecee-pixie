@@ -52,7 +52,7 @@ abstract class BaseAdapter
                 $piece = $this->wrapSanitizer($piece);
             }
 
-            if (\is_int($key) === false) {
+            if (is_int($key) === false) {
                 $piece = ($wrapSanitizer ? $this->wrapSanitizer($key) : $key) . ' AS ' . $piece;
             }
 
@@ -71,15 +71,21 @@ abstract class BaseAdapter
      * @throws Exception
      * @return array
      */
-    protected function buildCriteria(array $statements, $bindValues = true)
+    protected function buildCriteria(array $statements, $bindValues = true): array
     {
         $criteria = '';
         $bindings = [[]];
 
         foreach ($statements as $statement) {
 
-            $key = $this->wrapSanitizer($statement['key']);
+            $key = $statement['key'];
+
+            $key = $this->wrapSanitizer($key);
             $value = $statement['value'];
+
+            if ($statement['key'] instanceof Raw) {
+                $bindings[] = $statement['key']->getBindings();
+            }
 
             if ($value === null && $key instanceof \Closure) {
 
@@ -113,19 +119,19 @@ abstract class BaseAdapter
                 if ($statement['operator'] === 'BETWEEN') {
                     $bindings[] = $statement['value'];
                     $criteria .= ' ? AND ? ';
-                } else {
-                    $valuePlaceholder = '';
-                    foreach ((array)$statement['value'] as $subValue) {
-                        $valuePlaceholder .= '?, ';
-                        $bindings[] = [$subValue];
-                    }
-
-                    $valuePlaceholder = trim($valuePlaceholder, ', ');
-                    $criteria .= ' (' . $valuePlaceholder . ') ';
+                    continue;
                 }
 
-                continue;
+                $valuePlaceholder = '';
+                foreach ((array)$statement['value'] as $subValue) {
+                    $valuePlaceholder .= '?, ';
+                    $bindings[] = [$subValue];
+                }
 
+                $valuePlaceholder = trim($valuePlaceholder, ', ');
+                $criteria .= ' (' . $valuePlaceholder . ') ';
+
+                continue;
             }
 
             if ($value instanceof Raw) {
@@ -147,13 +153,12 @@ abstract class BaseAdapter
 
                 if ($statement['operator'] !== null) {
                     $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
-                    $bindings[] = $statement['key']->getBindings();
+
                     $bindings[] = [$value];
-                } else {
-                    $criteria .= $statement['joiner'] . ' ' . $key . ' ';
-                    $bindings[] = $statement['key']->getBindings();
+                    continue;
                 }
 
+                $criteria .= $statement['joiner'] . ' ' . $key . ' ';
                 continue;
 
             }
@@ -210,12 +215,12 @@ abstract class BaseAdapter
     {
         $sql = '';
 
-        if (\array_key_exists('joins', $statements) === false || \count($statements['joins']) === 0) {
+        if (array_key_exists('joins', $statements) === false || count($statements['joins']) === 0) {
             return $sql;
         }
 
         foreach ((array)$statements['joins'] as $joinArr) {
-            if (\is_array($joinArr['table']) === true) {
+            if (is_array($joinArr['table']) === true) {
                 list($mainTable, $aliasTable) = $joinArr['table'];
                 $table = $this->wrapSanitizer($mainTable) . ' AS ' . $this->wrapSanitizer($aliasTable);
             } else {
@@ -336,7 +341,7 @@ abstract class BaseAdapter
 
         if (isset($statements['onduplicate']) === true) {
 
-            if (\count($statements['onduplicate']) < 1) {
+            if (count($statements['onduplicate']) < 1) {
                 throw new Exception('No data given.', 4);
             }
 
@@ -477,7 +482,7 @@ abstract class BaseAdapter
 
         // ORDER BY
         $orderBys = '';
-        if (isset($statements['orderBys']) && \is_array($statements['orderBys'])) {
+        if (isset($statements['orderBys']) && is_array($statements['orderBys'])) {
             foreach ($statements['orderBys'] as $orderBy) {
                 $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
             }
