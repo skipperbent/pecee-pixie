@@ -15,7 +15,7 @@ class Exception extends \Exception
 
     protected $query;
 
-    public function __construct(string $message = '', int $code = 0, Throwable $previous = null, QueryObject $query)
+    public function __construct(string $message = '', int $code = 0, Throwable $previous = null, QueryObject $query = null)
     {
         parent::__construct($message, $code, $previous);
         $this->query = $query;
