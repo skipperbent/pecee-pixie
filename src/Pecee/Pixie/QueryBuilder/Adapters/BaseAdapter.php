@@ -71,7 +71,7 @@ abstract class BaseAdapter
      * @throws Exception
      * @return array
      */
-    protected function buildCriteria(array $statements, $bindValues = true): array
+    protected function buildCriteria(array $statements, $bindValues = true)
     {
         $criteria = '';
         $bindings = [[]];
