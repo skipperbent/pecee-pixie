@@ -24,7 +24,7 @@ class TransactionTest extends \PHPUnit\Framework\TestCase {
 			'host'      => '127.0.0.1',
 			'database'  => 'test',
 			'username'  => 'root',
-			'password'  => '123456',
+			'password'  => '',
 			'charset'   => 'utf8mb4', // Optional
 			'collation' => 'utf8mb4_unicode_ci', // Optional
 			'prefix'    => '', // Table prefix, optional
