@@ -65,6 +65,7 @@ class Transaction extends QueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
+     * @throws Exception
      */
     public function statement($sql, array $bindings = [])
     {
@@ -74,7 +75,12 @@ class Transaction extends QueryBuilderHandler
             $this->transactionStatement = $this->pdo->prepare($sql);
         }
 
-        $this->transactionStatement->execute($bindings);
+        try {
+
+            $this->transactionStatement->execute($bindings);
+        } catch(\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
+        }
 
         return [$this->transactionStatement, microtime(true) - $start];
     }

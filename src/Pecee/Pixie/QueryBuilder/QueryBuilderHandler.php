@@ -881,6 +881,7 @@ class QueryBuilderHandler
      * @param array $bindings
      *
      * @return static
+     * @throws Exception
      */
     public function query($sql, array $bindings = [])
     {
@@ -1199,7 +1200,7 @@ class QueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage());
+            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
         }
 
         return $queryTransaction;
