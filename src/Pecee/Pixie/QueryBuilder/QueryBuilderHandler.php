@@ -1089,7 +1089,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
         }
 
         return [$pdoStatement, \microtime(true) - $start];
@@ -1201,7 +1201,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->getLastQuery());
+            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
         }
 
         return $queryTransaction;
