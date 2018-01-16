@@ -262,12 +262,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         /* @var $response \PDOStatement */
         $queryObject = $this->getQuery('delete');
 
+        $this->connection->setLastQuery($queryObject);
+
         $this->fireEvents(EventHandler::EVENT_BEFORE_DELETE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents(EventHandler::EVENT_AFTER_DELETE, $queryObject, $executionTime);
-
-        $this->connection->setLastQuery($queryObject);
 
         return $response;
     }
@@ -288,6 +288,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         if (\is_array(current($data)) === false) {
             $queryObject = $this->getQuery($type, $data);
 
+            $this->connection->setLastQuery($queryObject);
+
             $this->fireEvents(EventHandler::EVENT_BEFORE_INSERT, $queryObject);
             /**
              * @var $result        \PDOStatement
@@ -297,8 +299,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
             $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
             $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
-
-            $this->connection->setLastQuery($queryObject);
 
             return $insertId;
         }
@@ -422,12 +422,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         if ($this->pdoStatement === null) {
             $queryObject = $this->getQuery();
+
+            $this->connection->setLastQuery($queryObject);
+
             list($this->pdoStatement, $executionTime) = $this->statement(
                 $queryObject->getSql(),
                 $queryObject->getBindings()
             );
-
-            $this->connection->setLastQuery($queryObject);
         }
 
         $start = \microtime(true);
@@ -674,7 +675,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param \Pecee\Pixie\Connection|null $connection
      *
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      * @return static
      */
     public function newQuery(Connection $connection = null): IQueryBuilderHandler
@@ -882,6 +883,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return static
+     * @throws Exception
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
@@ -1013,7 +1015,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection) : IQueryBuilderHandler
     {
         $this->connection = $connection;
 
@@ -1027,7 +1029,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setFetchMode($parameters = null)
+    public function setFetchMode($parameters = null) : IQueryBuilderHandler
     {
         $this->fetchParameters = \func_get_args();
 
@@ -1062,6 +1064,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
+     * @throws Exception
      */
     public function statement(string $sql, array $bindings = []): array
     {
@@ -1083,7 +1086,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             );
         }
 
-        $pdoStatement->execute();
+        try {
+            $pdoStatement->execute();
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getLastQuery());
+        }
 
         return [$pdoStatement, \microtime(true) - $start];
     }
@@ -1127,7 +1134,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * ->table($qb->raw('table_one as one'))
      * ```
      */
-    public function table($tables)
+    public function table($tables) : IQueryBuilderHandler
     {
         $tTables = [];
         if (\is_array($tables) === false) {
@@ -1194,7 +1201,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage());
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getLastQuery());
         }
 
         return $queryTransaction;
@@ -1215,12 +1222,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
          */
         $queryObject = $this->getQuery('update', $data);
 
+        $this->connection->setLastQuery($queryObject);
+
         $this->fireEvents(EventHandler::EVENT_BEFORE_UPDATE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, $executionTime);
-
-        $this->connection->setLastQuery($queryObject);
 
         return $response;
     }

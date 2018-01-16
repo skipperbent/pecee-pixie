@@ -78,8 +78,14 @@ abstract class BaseAdapter
 
         foreach ($statements as $statement) {
 
-            $key = $this->wrapSanitizer($statement['key']);
+            $key = $statement['key'];
+
+            $key = $this->wrapSanitizer($key);
             $value = $statement['value'];
+
+            if ($statement['key'] instanceof Raw) {
+                $bindings[] = $statement['key']->getBindings();
+            }
 
             if ($value === null && $key instanceof \Closure) {
 
@@ -113,19 +119,19 @@ abstract class BaseAdapter
                 if ($statement['operator'] === 'BETWEEN') {
                     $bindings[] = $statement['value'];
                     $criteria .= ' ? AND ? ';
-                } else {
-                    $valuePlaceholder = '';
-                    foreach ((array)$statement['value'] as $subValue) {
-                        $valuePlaceholder .= '?, ';
-                        $bindings[] = [$subValue];
-                    }
-
-                    $valuePlaceholder = trim($valuePlaceholder, ', ');
-                    $criteria .= ' (' . $valuePlaceholder . ') ';
+                    continue;
                 }
 
-                continue;
+                $valuePlaceholder = '';
+                foreach ((array)$statement['value'] as $subValue) {
+                    $valuePlaceholder .= '?, ';
+                    $bindings[] = [$subValue];
+                }
 
+                $valuePlaceholder = \trim($valuePlaceholder, ', ');
+                $criteria .= ' (' . $valuePlaceholder . ') ';
+
+                continue;
             }
 
             if ($value instanceof Raw) {
@@ -147,13 +153,12 @@ abstract class BaseAdapter
 
                 if ($statement['operator'] !== null) {
                     $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
-                    $bindings[] = $statement['key']->getBindings();
+
                     $bindings[] = [$value];
-                } else {
-                    $criteria .= $statement['joiner'] . ' ' . $key . ' ';
-                    $bindings[] = $statement['key']->getBindings();
+                    continue;
                 }
 
+                $criteria .= $statement['joiner'] . ' ' . $key . ' ';
                 continue;
 
             }
@@ -167,7 +172,7 @@ abstract class BaseAdapter
         // Clear all white spaces, and, or from beginning and white spaces from ending
         $criteria = \preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
-        return [$criteria, array_merge(...$bindings)];
+        return [$criteria, \array_merge(...$bindings)];
     }
 
     /**
