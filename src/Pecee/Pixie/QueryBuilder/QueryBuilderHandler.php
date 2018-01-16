@@ -1200,7 +1200,7 @@ class QueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
+            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious(), $this->connection->getLastQuery());
         }
 
         return $queryTransaction;

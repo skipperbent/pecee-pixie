@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\QueryBuilder\QueryObject;
+use Throwable;
 
 /**
  * Class Exception
@@ -14,9 +15,9 @@ class Exception extends \Exception
 
     protected $query;
 
-    public function __construct($message = '', $code = 0, $query = null)
+    public function __construct($message = "", $code = 0, Throwable $previous = null, QueryObject $query = null)
     {
-        parent::__construct($message, $code);
+        parent::__construct($message, $code, $previous);
         $this->query = $query;
     }
 
