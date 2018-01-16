@@ -675,7 +675,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param \Pecee\Pixie\Connection|null $connection
      *
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      * @return static
      */
     public function newQuery(Connection $connection = null): IQueryBuilderHandler
@@ -883,6 +883,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return static
+     * @throws Exception
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
@@ -1014,7 +1015,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection) : IQueryBuilderHandler
     {
         $this->connection = $connection;
 
@@ -1028,7 +1029,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setFetchMode($parameters = null)
+    public function setFetchMode($parameters = null) : IQueryBuilderHandler
     {
         $this->fetchParameters = \func_get_args();
 
@@ -1088,7 +1089,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode(), $this->connection->getLastQuery());
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getLastQuery());
         }
 
         return [$pdoStatement, \microtime(true) - $start];
@@ -1133,7 +1134,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * ->table($qb->raw('table_one as one'))
      * ```
      */
-    public function table($tables)
+    public function table($tables) : IQueryBuilderHandler
     {
         $tTables = [];
         if (\is_array($tables) === false) {
@@ -1200,7 +1201,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $this->pdo->rollBack();
             }
 
-            throw new Exception($e->getMessage());
+            throw new Exception($e->getMessage(), $e->getCode(), $this->getLastQuery());
         }
 
         return $queryTransaction;

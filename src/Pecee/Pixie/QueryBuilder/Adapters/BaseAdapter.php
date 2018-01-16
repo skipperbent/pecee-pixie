@@ -128,7 +128,7 @@ abstract class BaseAdapter
                     $bindings[] = [$subValue];
                 }
 
-                $valuePlaceholder = trim($valuePlaceholder, ', ');
+                $valuePlaceholder = \trim($valuePlaceholder, ', ');
                 $criteria .= ' (' . $valuePlaceholder . ') ';
 
                 continue;
@@ -172,7 +172,7 @@ abstract class BaseAdapter
         // Clear all white spaces, and, or from beginning and white spaces from ending
         $criteria = \preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
-        return [$criteria, array_merge(...$bindings)];
+        return [$criteria, \array_merge(...$bindings)];
     }
 
     /**

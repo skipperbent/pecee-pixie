@@ -3,6 +3,7 @@
 namespace Pecee\Pixie\ConnectionAdapters;
 
 use PDO;
+use Pecee\Pixie\Exception;
 
 /**
  * Class Mysql
@@ -15,7 +16,7 @@ class Mysql extends BaseAdapter
      * @param array $config
      *
      * @return PDO
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      */
     protected function doConnect(array $config): PDO
     {
@@ -41,12 +42,12 @@ class Mysql extends BaseAdapter
 
             $connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
-            if (isset($config['charset'])) {
+            if (isset($config['charset']) === true) {
                 $connection->prepare("SET NAMES '{$config['charset']}'")->execute();
             }
 
         } catch (\PDOException $e) {
-            throw new \Pecee\Pixie\Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), $e->getCode());
         }
 
         return $connection;

@@ -3,6 +3,7 @@
 namespace Pecee\Pixie\ConnectionAdapters;
 
 use PDO;
+use Pecee\Pixie\Exception;
 
 /**
  * Class Pgsql
@@ -15,7 +16,7 @@ class Pgsql extends BaseAdapter
      * @param array $config
      *
      * @return PDO
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      */
     protected function doConnect(array $config): PDO
     {
@@ -42,7 +43,7 @@ class Pgsql extends BaseAdapter
             }
 
         } catch (\PDOException $e) {
-            throw new \Pecee\Pixie\Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), $e->getCode());
         }
 
         return $connection;
