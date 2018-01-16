@@ -47,7 +47,7 @@ class Mysql extends BaseAdapter
             }
 
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
 
         return $connection;
