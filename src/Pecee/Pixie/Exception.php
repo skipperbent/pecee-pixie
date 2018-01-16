@@ -16,7 +16,7 @@ class Exception extends \Exception
 
     public function __construct(string $message = '', int $code = 0, QueryObject $query = null)
     {
-        parent::__construct($message, $code, $query);
+        parent::__construct($message, $code);
     }
 
     /**
