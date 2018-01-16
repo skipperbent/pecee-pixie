@@ -9,42 +9,51 @@ use PDO;
  *
  * @package Pecee\Pixie\ConnectionAdapters
  */
-class Pgsql extends BaseAdapter {
-	/**
-	 * @param array $config
-	 *
-	 * @return PDO
-	 * @throws Exception
-	 */
-	protected function doConnect(array $config): PDO {
-		if (\extension_loaded('pdo_pgsql') === false) {
-			throw new Exception(sprintf('%s library not loaded', 'pdo_pgsql'));
-		}
+class Pgsql extends BaseAdapter
+{
+    /**
+     * @param array $config
+     *
+     * @return PDO
+     * @throws \Pecee\Pixie\Exception
+     */
+    protected function doConnect(array $config): PDO
+    {
+        if (\extension_loaded('pdo_pgsql') === false) {
+            throw new Exception(sprintf('%s library not loaded', 'pdo_pgsql'));
+        }
 
-		$connectionString = "pgsql:host={$config['host']};dbname={$config['database']}";
+        $connectionString = "pgsql:host={$config['host']};dbname={$config['database']}";
 
-		if (isset($config['port']) === true) {
-			$connectionString .= ";port={$config['port']}";
-		}
+        if (isset($config['port']) === true) {
+            $connectionString .= ";port={$config['port']}";
+        }
 
-		$connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
+        try {
 
-		if (isset($config['charset']) === true) {
-			$connection->prepare("SET NAMES '{$config['charset']}'")->execute();
-		}
+            $connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
-		if (isset($config['schema']) === true) {
-			$connection->prepare("SET search_path TO '{$config['schema']}'")->execute();
-		}
+            if (isset($config['charset']) === true) {
+                $connection->prepare("SET NAMES '{$config['charset']}'")->execute();
+            }
 
-		return $connection;
-	}
+            if (isset($config['schema']) === true) {
+                $connection->prepare("SET search_path TO '{$config['schema']}'")->execute();
+            }
 
-	/**
-	 * Get query adapter class
-	 * @return string
-	 */
-	public function getQueryAdapterClass(): string {
-		return \Pecee\Pixie\QueryBuilder\Adapters\Pgsql::class;
-	}
+        } catch (\PDOException $e) {
+            throw new \Pecee\Pixie\Exception($e->getMessage(), $e->getCode());
+        }
+
+        return $connection;
+    }
+
+    /**
+     * Get query adapter class
+     * @return string
+     */
+    public function getQueryAdapterClass(): string
+    {
+        return \Pecee\Pixie\QueryBuilder\Adapters\Pgsql::class;
+    }
 }
