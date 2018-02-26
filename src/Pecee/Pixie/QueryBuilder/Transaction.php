@@ -76,7 +76,16 @@ class Transaction extends QueryBuilderHandler
         }
 
         try {
-            $this->transactionStatement->execute($bindings);
+
+            foreach ($bindings as $key => $value) {
+                $this->transactionStatement->bindValue(
+                    \is_int($key) ? $key + 1 : $key,
+                    $value,
+                    $this->parseParameterType($value)
+                );
+            }
+
+            $this->transactionStatement->execute();
         } catch (\PDOException $e) {
             throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
