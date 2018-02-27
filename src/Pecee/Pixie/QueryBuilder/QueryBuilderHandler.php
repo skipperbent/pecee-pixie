@@ -359,16 +359,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Fires event by given event name
      *
      * @param string $name
+     * @param QueryObject $queryObject
      * @param ... $parameters
      *
-     * @return mixed|null
+     * @return \Closure|null
      */
-    public function fireEvents($name, $parameters = null)
+    public function fireEvents(string $name, QueryObject $queryObject, ... $parameters)
     {
-        $params = \func_get_args();
-        array_unshift($params, $this);
-
-        return \call_user_func_array([$this->connection->getEventHandler(), 'fireEvents'], $params);
+        return $this->connection->getEventHandler()->fireEvents($name, $queryObject, $this, $parameters);
     }
 
     /**
@@ -420,10 +418,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $queryObject = null;
         $executionTime = 0;
 
-        if ($this->pdoStatement === null) {
-            $queryObject = $this->getQuery();
+        $queryObject = $this->getQuery();
+        $this->connection->setLastQuery($queryObject);
 
-            $this->connection->setLastQuery($queryObject);
+        if ($this->pdoStatement === null) {
 
             list($this->pdoStatement, $executionTime) = $this->statement(
                 $queryObject->getSql(),
@@ -887,7 +885,16 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
-        list($this->pdoStatement) = $this->statement($sql, $bindings);
+        $queryObject = new QueryObject($sql, $bindings, $this->pdo);
+        $this->connection->setLastQuery($queryObject);
+
+        $this->fireEvents(EventHandler::EVENT_BEFORE_QUERY, $queryObject);
+
+        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+
+        $this->fireEvents(EventHandler::EVENT_AFTER_QUERY, $queryObject, $executionTime);
+
+        $this->pdoStatement = $response;
 
         return $this;
     }
@@ -1015,7 +1022,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setConnection(Connection $connection) : IQueryBuilderHandler
+    public function setConnection(Connection $connection): IQueryBuilderHandler
     {
         $this->connection = $connection;
 
@@ -1029,7 +1036,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setFetchMode($parameters = null) : IQueryBuilderHandler
+    public function setFetchMode($parameters = null): IQueryBuilderHandler
     {
         $this->fetchParameters = \func_get_args();
 
@@ -1134,7 +1141,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * ->table($qb->raw('table_one as one'))
      * ```
      */
-    public function table($tables) : IQueryBuilderHandler
+    public function table($tables): IQueryBuilderHandler
     {
         $tTables = [];
         if (\is_array($tables) === false) {

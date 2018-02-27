@@ -918,23 +918,25 @@ Pixie comes with powerful query events to supercharge your application. These ev
 
 #### Available Events
 
-| Event constant                        | Event value/name  | Description                                |
-| :------------------------------------ | :-------------    | :------------                              |
-| `EventHandler::EVENT_BEFORE_ALL`      | `before-*`        | Event-type that fires before each query.   |
-| `EventHandler::EVENT_AFTER_ALL`       | `after-*`         | Event-type that fires after each query.    |
-| `EventHandler::EVENT_BEFORE_SELECT`   | `before-select`   | Event-type that fires before select query. |
-| `EventHandler::EVENT_AFTER_SELECT`    | `after-select`    | Event-type that fires after insert query.  |
-| `EventHandler::EVENT_BEFORE_INSERT`   | `before-insert`   | Event-type that fires before insert query  |
-| `EventHandler::EVENT_AFTER_INSERT`    | `after-insert`    | Event-type that fires after insert query.  |
-| `EventHandler::EVENT_BEFORE_UPDATE`   | `before-update`   | Event-type that fires before update query. |
-| `EventHandler::EVENT_AFTER_UPDATE`    | `after-update`    | Event-type that fires after update query.  |
-| `EventHandler::EVENT_BEFORE_DELETE`   | `before-delete`   | Event-type that fires before delete query. |
-| `EventHandler::EVENT_AFTER_DELETE`    | `after-delete`    | Event-type that fires after delete query.  |
+| Event constant                        | Event value/name  | Description                                           |
+| :------------------------------------ | :-------------    | :------------                                         |
+| `EventHandler::EVENT_BEFORE_ALL`      | `before-*`        | Event-type that fires before each query.              |
+| `EventHandler::EVENT_AFTER_ALL`       | `after-*`         | Event-type that fires after each query.               |
+| `EventHandler::EVENT_BEFORE_QUERY`    | `before-query`    | Event-type that fires before a raw query is executed. |
+| `EventHandler::EVENT_AFTER_QUERY`     | `after-query`     | Event-type that fires after a raw query is executed   |
+| `EventHandler::EVENT_BEFORE_SELECT`   | `before-select`   | Event-type that fires before select query.            |
+| `EventHandler::EVENT_AFTER_SELECT`    | `after-select`    | Event-type that fires after insert query.             |
+| `EventHandler::EVENT_BEFORE_INSERT`   | `before-insert`   | Event-type that fires before insert query             |
+| `EventHandler::EVENT_AFTER_INSERT`    | `after-insert`    | Event-type that fires after insert query.             |
+| `EventHandler::EVENT_BEFORE_UPDATE`   | `before-update`   | Event-type that fires before update query.            |
+| `EventHandler::EVENT_AFTER_UPDATE`    | `after-update`    | Event-type that fires after update query.             |
+| `EventHandler::EVENT_BEFORE_DELETE`   | `before-delete`   | Event-type that fires before delete query.            |
+| `EventHandler::EVENT_AFTER_DELETE`    | `after-delete`    | Event-type that fires after delete query.             |
 
 #### Registering Events
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(QueryBuilderHandler $qb)
+$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(QueryObject $qo, QueryBuilderHandler $qb)
 {
     $qb->where('status', '!=', 'banned');
 });
@@ -950,7 +952,7 @@ If you want the event to be performed when **any table is being queried**, provi
 After inserting data into `my_table`, details will be inserted into another table
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(QueryObject $qo, QueryBuilderHandler $qb, $insertId)
 {
     $qb
         ->table('person_details')->insert(array(
@@ -964,7 +966,7 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', funct
 Whenever data is inserted into `person_details` table, set the timestamp field `created_at`, so we don't have to specify it everywhere:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(QueryObject $qo, QueryBuilderHandler $qb, $insertId)
 {
     $qb
         ->table('person_details')
@@ -978,7 +980,7 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details',
 After deleting from `my_table` delete the relations:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(QueryBuilderHandler $qb, $queryObject)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(QueryObject $qo, QueryBuilderHandler $qb)
 {
     $bindings = $queryObject->getBindings();
     $qb
@@ -994,6 +996,7 @@ If something other than `null` is returned from the `before-*` query handler, th
 
 Only on `after-*` events you get three parameters: **first** is the query builder, **third** is the execution time as float and **the second** varies:
 
+ - On `after-query` fires after a raw query has been executed.
  - On `after-select` you get the `results` obtained from `select`.
  - On `after-insert` you get the insert id (or array of ids in case of batch insert)
  - On `after-delete` you get the [query object](#get-built-query) (same as what you get from `getQuery()`), from it you can get SQL and Bindings.
