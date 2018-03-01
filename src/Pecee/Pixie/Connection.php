@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
+use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Pecee\Pixie\QueryBuilder\QueryObject;
 
@@ -191,6 +192,20 @@ class Connection
     public function getLastQuery()
     {
         return $this->lastQuery;
+    }
+
+    /**
+     * Register new event
+     *
+     * @param string $name
+     * @param string|null $table
+     * @param \Closure $action
+     *
+     * @return void
+     */
+    public function registerEvent($name, $table = null, \Closure $action)
+    {
+        $this->getEventHandler()->registerEvent($name, $table, $action);
     }
 
 }
