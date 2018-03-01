@@ -1167,8 +1167,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
     /**
      * Sets the table that the query is using
+     * Note: to remove a table set the $tables argument to null.
      *
-     * @param string|array $tables Single table or multiple tables as an array or as multiple parameters
+     * @param string|array|null $tables Single table or multiple tables as an array or as multiple parameters
      *
      * @throws Exception
      * @return static
@@ -1184,9 +1185,16 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * ->table($qb->raw('table_one as one'))
      * ```
      */
-    public function table($tables): IQueryBuilderHandler
+    public function table($tables = null): IQueryBuilderHandler
     {
+        if ($tables === null) {
+            $this->statements['tables'] = null;
+
+            return $this;
+        }
+
         $tTables = [];
+
         if (\is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = \func_get_args();
