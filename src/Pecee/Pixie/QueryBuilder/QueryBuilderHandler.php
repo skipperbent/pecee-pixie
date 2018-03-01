@@ -4,7 +4,7 @@ namespace Pecee\Pixie\QueryBuilder;
 
 use PDO;
 use Pecee\Pixie\Connection;
-use Pecee\Pixie\EventHandler;
+use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
 
 /**
@@ -16,6 +16,23 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 {
 
     /**
+     * Default union type
+     * @var string
+     */
+    const UNION_TYPE_NONE = '';
+
+    /**
+     * Union type distinct
+     * @var string
+     */
+    const UNION_TYPE_DISTINCT = 'DISTINCT';
+
+    /**
+     * Union type all
+     * @var string
+     */
+    const UNION_TYPE_ALL = 'ALL';
+    /**
      * @var Connection
      */
     protected $connection;
@@ -25,6 +42,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     protected $statements = [
         'groupBys' => [],
+        'unions'   => [],
     ];
 
     /**
@@ -107,6 +125,17 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         } else {
             $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
         }
+    }
+
+    /**
+     * @param array $statements
+     * @return static $this
+     */
+    public function setStatements(array $statements)
+    {
+        $this->statements = $statements;
+
+        return $this;
     }
 
     /**
@@ -267,7 +296,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $this->fireEvents(EventHandler::EVENT_BEFORE_DELETE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-        $this->fireEvents(EventHandler::EVENT_AFTER_DELETE, $queryObject, $executionTime);
+        $this->fireEvents(EventHandler::EVENT_AFTER_DELETE, $queryObject, [
+            'execution_time' => $executionTime,
+        ]);
 
         return $response;
     }
@@ -298,7 +329,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
             $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
-            $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, $insertId, $executionTime);
+            $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, [
+                'insert_id'      => $insertId,
+                'execution_time' => $executionTime,
+            ]);
 
             return $insertId;
         }
@@ -360,13 +394,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $name
      * @param QueryObject $queryObject
-     * @param ... $parameters
-     *
-     * @return \Closure|null
+     * @param array $eventArguments
+     * @return array
      */
-    public function fireEvents(string $name, QueryObject $queryObject, ... $parameters)
+    public function fireEvents(string $name, QueryObject $queryObject, array $eventArguments = []): array
     {
-        return $this->connection->getEventHandler()->fireEvents($name, $queryObject, $this, $parameters);
+        return $this->connection->getEventHandler()->fireEvents($name, $queryObject, $this, $eventArguments);
     }
 
     /**
@@ -415,11 +448,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
          * @var $start         float
          * @var $result        array
          */
-        $queryObject = null;
-        $executionTime = 0;
 
         $queryObject = $this->getQuery();
         $this->connection->setLastQuery($queryObject);
+
+        $this->fireEvents(EventHandler::EVENT_BEFORE_SELECT, $queryObject);
+
+        $executionTime = 0;
+        $startTime = \microtime(true);
 
         if ($this->pdoStatement === null) {
 
@@ -429,12 +465,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             );
         }
 
-        $start = \microtime(true);
-        $this->fireEvents(EventHandler::EVENT_BEFORE_SELECT, $queryObject);
         $result = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
-        $executionTime += \microtime(true) - $start;
         $this->pdoStatement = null;
-        $this->fireEvents(EventHandler::EVENT_AFTER_SELECT, $queryObject, $result, $executionTime);
+
+        $executionTime += \microtime(true) - $startTime;
+
+        $this->fireEvents(EventHandler::EVENT_AFTER_SELECT, $queryObject, [
+            'execution_time' => $executionTime,
+        ]);
 
         return $result;
     }
@@ -892,7 +930,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
-        $this->fireEvents(EventHandler::EVENT_AFTER_QUERY, $queryObject, $executionTime);
+        $this->fireEvents(EventHandler::EVENT_AFTER_QUERY, $queryObject, [
+            'execution_time' => $executionTime,
+        ]);
 
         $this->pdoStatement = $response;
 
@@ -1075,7 +1115,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function statement(string $sql, array $bindings = []): array
     {
-        $start = \microtime(true);
+        $startTime = \microtime(true);
 
         $pdoStatement = $this->pdo->prepare($sql);
 
@@ -1099,7 +1139,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
         }
 
-        return [$pdoStatement, \microtime(true) - $start];
+        return [
+            $pdoStatement,
+            \microtime(true) - $startTime,
+        ];
     }
 
     /**
@@ -1234,7 +1277,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $this->fireEvents(EventHandler::EVENT_BEFORE_UPDATE, $queryObject);
 
         list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
-        $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, $executionTime);
+
+        $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, [
+            'execution_time' => $executionTime,
+        ]);
 
         return $response;
     }
@@ -1397,6 +1443,31 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
 
         return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
+    }
+
+    /**
+     * Add union
+     *
+     * @param QueryBuilderHandler $query
+     * @param string|null $unionType
+     * @return static $this
+     */
+    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
+    {
+        $statements = $query->getStatements();
+
+        if (\count($statements['unions']) > 0) {
+            $this->statements['unions'] = $statements['unions'];
+            unset($statements['unions']);
+            $query->setStatements($statements);
+        }
+
+        $this->statements['unions'][] = [
+            'query' => $query,
+            'type'  => $unionType,
+        ];
+
+        return $this;
     }
 
     /**

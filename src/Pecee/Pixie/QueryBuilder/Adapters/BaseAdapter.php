@@ -5,6 +5,7 @@ namespace Pecee\Pixie\QueryBuilder\Adapters;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Exception;
 use Pecee\Pixie\QueryBuilder\NestedCriteria;
+use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Pecee\Pixie\QueryBuilder\Raw;
 
 /**
@@ -482,12 +483,12 @@ abstract class BaseAdapter
 
         // ORDER BY
         $orderBys = '';
-        if (isset($statements['orderBys']) && \is_array($statements['orderBys'])) {
+        if (isset($statements['orderBys']) === true && \is_array($statements['orderBys']) === true) {
             foreach ($statements['orderBys'] as $orderBy) {
                 $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
             }
 
-            if ($orderBys = trim($orderBys, ', ')) {
+            if ($orderBys = \trim($orderBys, ', ')) {
                 $orderBys = 'ORDER BY ' . $orderBys;
             }
         }
@@ -503,7 +504,7 @@ abstract class BaseAdapter
         $joinString = $this->buildJoin($statements);
 
         $sqlArray = [
-            'SELECT' . (isset($statements['distinct']) ? ' DISTINCT' : ''),
+            'SELECT' . (isset($statements['distinct']) === true ? ' DISTINCT' : ''),
             $selects,
             $fromEnabled ? 'FROM' : '',
             $tables,
@@ -518,12 +519,43 @@ abstract class BaseAdapter
 
         $sql = $this->concatenateQuery($sqlArray);
 
+        $sql = $this->buildUnion($statements, $sql);
+
         $bindings = array_merge(
             $whereBindings,
             $havingBindings
         );
 
         return compact('sql', 'bindings');
+    }
+
+    /**
+     * Adds union query to sql statement
+     *
+     * @param array $statements
+     * @param string $sql
+     * @return string
+     * @throws Exception
+     */
+    protected function buildUnion(array $statements, string $sql): string
+    {
+        if (isset($statements['unions']) === false || \count($statements['unions']) === 0) {
+            return $sql;
+        }
+
+        foreach ((array)$statements['unions'] as $i => $union) {
+            /* @var $queryBuilder QueryBuilderHandler */
+            $queryBuilder = $union['query'];
+
+            if ($i === 0) {
+                $sql .= ')';
+            }
+
+            $type = ($union['type'] !== QueryBuilderHandler::UNION_TYPE_NONE) ? $union['type'] . ' ' : '';
+            $sql .= sprintf(' UNION %s(%s)', $type, $queryBuilder->getQuery('select')->getRawSql());
+        }
+
+        return sprintf('(%s', $sql);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Pecee\Pixie;
+namespace Pecee\Pixie\Event;
 
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Pecee\Pixie\QueryBuilder\QueryObject;
@@ -113,15 +113,13 @@ class EventHandler
     protected $firedEvents = [];
 
     /**
-     * @param QueryBuilderHandler $queryBuilder
      * @param string $event
      * @param QueryObject $queryObject
      * @param QueryBuilderHandler $queryBuilder
-     * @param ...$parameters
-     *
-     * @return \Closure|null
+     * @param array $eventArguments
+     * @return array Event responses array
      */
-    public function fireEvents(string $event, QueryObject $queryObject, QueryBuilderHandler $queryBuilder, ...$parameters)
+    public function fireEvents(string $event, QueryObject $queryObject, QueryBuilderHandler $queryBuilder, array $eventArguments = []): array
     {
         $statements = $queryBuilder->getStatements();
         $tables = $statements['tables'] ?? [];
@@ -130,14 +128,7 @@ class EventHandler
         // we are adding :any as a fake table at the beginning.
         array_unshift($tables, static::TABLE_ANY);
 
-        $handlerParams = [
-            $queryObject,
-            $queryBuilder,
-        ];
-
-        if ($parameters !== null && count($parameters) > 0) {
-            $handlerParams = array_merge($handlerParams, $parameters);
-        }
+        $eventResponses = [];
 
         // Fire all events
         foreach ($tables as $table) {
@@ -153,14 +144,14 @@ class EventHandler
             // Fire event and add to fired list
             $this->firedEvents[] = $eventId;
 
-            $result = \call_user_func_array($action, $handlerParams);
+            $result = $action(new EventArguments($event, $queryObject, $queryBuilder, $eventArguments));
 
             if ($result !== null) {
-                return $result;
+                $eventResponses[] = $result;
             }
         }
 
-        return null;
+        return $eventResponses;
     }
 
     /**
