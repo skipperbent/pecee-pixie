@@ -115,9 +115,11 @@ $query->get();
 After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
 
 ```PHP
-$queryBuilder->registerEvent('before-select', 'users', function(QueryBuilderHandler $qb)
+$queryBuilder->registerEvent('before-select', 'users', function(EventArguments $arguments)
 {
-    $qb->where('status', '!=', 'banned');
+    $arguments
+        ->getQueryBuilder()
+        ->where('status', '!=', 'banned');
 });
 ```
 
@@ -161,6 +163,7 @@ composer install pecee/pixie
  - [Limit and Offset](#limit-and-offset)
  - [Join](#join)
     - [Multiple Join Criteria](#multiple-join-criteria)
+ - [Unions](#unions)
  - [Raw Query](#raw-query)
     - [Raw Expressions](#raw-expressions)
  - [**Insert**](#insert)
@@ -568,6 +571,62 @@ $queryBuilder
     ->join('another_table', 'another_table.person_id', '=', 'my_table.id', 'FULL OUTER')
 ```
 
+### Unions
+
+You can easily create unions by calling the `union` method on the `QueryBuilderHandler`.
+
+Example:
+
+```php
+$firstQuery = 
+    $queryBuilder
+    ->table('people')
+    ->whereNull('email');
+
+$secondQuery = 
+    $queryBuilder
+    ->table('people')
+    ->where('hair_color', '=', 'green')
+    ->union($firstQuery);
+
+$thirdQuery = 
+    $queryBuilder
+    ->table('people')
+    ->where('gender', '=', 'male')
+    ->union($secondQuery);
+    
+$items = $thirdQuery->get();
+```
+
+The example above will create a sql-statement similar to this:
+
+```sql
+(
+	SELECT *
+	FROM 
+		`cb_people`
+	WHERE 
+		`gender` = 'male'
+) 
+UNION 
+(
+	SELECT *
+	FROM 
+		`cb_people`
+	WHERE 
+		`email` 
+	IS NULL
+) 
+UNION 
+(
+	SELECT *
+	FROM 
+		`cb_people`
+	WHERE 
+		`hair_color` = 'green'
+)
+```
+
 #### Multiple Join Criteria
 
 If you need more than one criterion to join a table then pass a closure as second parameter.
@@ -935,10 +994,18 @@ Pixie comes with powerful query events to supercharge your application. These ev
 
 #### Registering Events
 
+You can easily register a new event either by using the `registerEvent` method on either the `QueryBuilderHandler`, `Connection` or `EventHandler` class.
+
+The event needs a custom callback function with a `EventArguments` object as parameters.
+
+**Examples:**
+
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(QueryObject $qo, QueryBuilderHandler $qb)
+$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(EventArguments $arguments)
 {
-    $qb->where('status', '!=', 'banned');
+    $arguments
+        ->getQueryBuilder()
+        ->where('status', '!=', 'banned');
 });
 ```
 Now every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
@@ -952,9 +1019,10 @@ If you want the event to be performed when **any table is being queried**, provi
 After inserting data into `my_table`, details will be inserted into another table
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(QueryObject $qo, QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(EventArguments $arguments)
 {
-    $qb
+    $arguments
+        ->getQueryBuilder()
         ->table('person_details')->insert(array(
         'person_id' => $insertId,
         'details' => 'Meh',
@@ -966,9 +1034,10 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', funct
 Whenever data is inserted into `person_details` table, set the timestamp field `created_at`, so we don't have to specify it everywhere:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(QueryObject $qo, QueryBuilderHandler $qb, $insertId)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(EventArguments $arguments)
 {
-    $qb
+    $arguments
+        ->getQueryBuilder()
         ->table('person_details')
         ->where('id', $insertId)
         ->update([
@@ -980,10 +1049,12 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details',
 After deleting from `my_table` delete the relations:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(QueryObject $qo, QueryBuilderHandler $qb)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(EventArguments $arguments)
 {
-    $bindings = $queryObject->getBindings();
-    $qb
+    $bindings = $arguments->getQuery()->getBindings();
+    
+    $arguments
+        ->getQueryBuilder()
         ->table('person_details')
         ->where('person_id', $binding[0])
         ->delete();
