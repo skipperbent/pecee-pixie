@@ -1,7 +1,7 @@
 # pecee/pixie: Advanced lightweight querybuilder
 
 A lightweight, expressive, framework agnostic query builder for PHP it can also be referred as a Database Abstraction Layer.
-Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitization, table prefixing among many other things, with a unified API.
+Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitization, table alias, unions among many other things, with a unified API.
 
 The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
@@ -145,7 +145,7 @@ composer install pecee/pixie
     - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
  - [Query](#query)
  - [**Select**](#select)
-    - [Table prefix](#table-alias)
+    - [Table alias](#table-alias)
     - [Get Easily](#get-easily)
     - [Multiple Selects](#multiple-selects)
     - [Select Distinct](#select-distinct)
@@ -287,6 +287,8 @@ SELECT *
 FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
+
+**Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
 
 ### Get Easily
 
