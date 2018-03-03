@@ -9,7 +9,7 @@ use Pecee\Pixie\Exception;
  *
  * @package Pecee\Pixie\Exceptions
  */
-class UnknownColumnException extends Exception
+class ColumnNotFoundException extends Exception
 {
 
 }
