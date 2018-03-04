@@ -92,7 +92,7 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Installation](#installation)
  - [Feedback and development](#feedback-and-development)
     - [Issues guidelines](#issues-guidelines)
-    - [Contribution and development](#contributing-and-development-guidelines)
+    - [Contribution and development guidelines](#contribution-and-development-guidelines)
  - [Connecting to the database](#connection-to-the-database)
     - [SQLite and PostgreSQL config example](#sqlite-and-postgresql-config-example)
  - [**Select**](#select)
