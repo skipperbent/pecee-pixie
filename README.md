@@ -57,14 +57,14 @@ $config = array(
 $queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 ```
 
-**Simple Query:**
+**Simple query:**
 
 The query below returns the row where id = 3, null if no rows.
 ```PHP
 $row = $queryBuilder->table('my_table')->find(3);
 ```
 
-**Full Queries:**
+**Full queries:**
 
 ```PHP
 $query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
@@ -73,7 +73,7 @@ $query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
 $query->get();
 ```
 
-**Query Events:**
+**Query events:**
 
 After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
 
@@ -93,13 +93,16 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Feedback and development](#feedback-and-development)
     - [Issues guidelines](#issues-guidelines)
     - [Contribution and development guidelines](#contribution-and-development-guidelines)
- - [Connecting to the database](#connection-to-the-database)
+ - [Connecting to the database](#connecting-to-the-database)
     - [SQLite and PostgreSQL config example](#sqlite-and-postgresql-config-example)
  - [**Select**](#select)
     - [Table alias](#table-alias)
     - [Get easily](#get-easily)
     - [Multiple selects](#multiple-selects)
     - [Select distinct](#select-distinct)
+    - [Select from query](#select-from-query)
+    - [Select single field](#select-single-field)
+    - [Select multiple fields](#select-multiple-fields)
     - [Get all](#get-all)
     - [Get first row](#get-first-row)
     - [Get rows count](#get-rows-count)
@@ -109,7 +112,7 @@ There are many advanced options which are documented below. Sold? Let's [install
     - [Where between](#where-between)
     - [Where null](#where-null)
     - [Grouped where](#grouped-where)
- - [Group- and order by](#group-and-order-by)
+ - [Group- and order by](#group--and-order-by)
  - [Having](#having)
  - [Limit and offset](#limit-and-offset)
  - [Join](#join)
@@ -126,16 +129,16 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Get raw query](#get-built-query)
     - [Get QueryObject from last executed query](#get-queryobject-from-last-executed-query)
  - [Sub-queries and nested queries](#sub-queries-and-nested-queries)
- - [Getting the PDO instance](#get-pdo-instance)
+ - [Getting the PDO instance](#getting-the-pdo-instance)
  - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
  - [Query events](#query-events)
-    - [Available events](#available-events)
-    - [Registering events](#registering-events)
-    - [Removing events](#removing-events)
-    - [Use cases](#some-use-cases)
+    - [Available event](#available-event)
+    - [Registering event](#registering-event)
+    - [Removing event](#removing-event)
+    - [Use cases](#use-cases)
     - [Notes](#notes)
- - [Custom exceptions](#custom-exceptions)
-    - [Getting sql-query from an exceptions](#getting-sql-query-from-an-exceptions)
+ - [Exceptions](#exceptions)
+    - [Getting sql-query from exceptions](#getting-sql-query-from-exceptions)
  - [Credits](#credits)
 
 ___
