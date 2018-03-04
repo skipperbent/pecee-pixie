@@ -6,6 +6,7 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
+use Pecee\Pixie\QueryException;
 
 /**
  * Class QueryBuilderHandler
@@ -16,18 +17,21 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 {
     /**
      * Default union type
+     *
      * @var string
      */
     const UNION_TYPE_NONE = '';
 
     /**
      * Union type distinct
+     *
      * @var string
      */
     const UNION_TYPE_DISTINCT = 'DISTINCT';
 
     /**
      * Union type all
+     *
      * @var string
      */
     const UNION_TYPE_ALL = 'ALL';
@@ -107,17 +111,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         } else {
             $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
         }
-    }
-
-    /**
-     * @param array $statements
-     * @return static $this
-     */
-    public function setStatements(array $statements)
-    {
-        $this->statements = $statements;
-
-        return $this;
     }
 
     /**
@@ -377,6 +370,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $name
      * @param QueryObject $queryObject
      * @param array $eventArguments
+     *
      * @return array
      */
     public function fireEvents(string $name, QueryObject $queryObject, array $eventArguments = []): array
@@ -480,6 +474,16 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function getEvent(string $name, string $table = null)
     {
         return $this->connection->getEventHandler()->getEvent($name, $table);
+    }
+
+    /**
+     * Get query-object from last executed query.
+     *
+     * @return QueryObject|null
+     */
+    public function getLastQuery()
+    {
+        return $this->connection->getLastQuery();
     }
 
     /**
@@ -885,6 +889,27 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Parse parameter type from value
+     *
+     * @param mixed $value
+     *
+     * @return int
+     */
+    protected function parseParameterType($value): int
+    {
+
+        if ($value === null) {
+            return PDO::PARAM_NULL;
+        }
+
+        if (\is_int($value) === true || \is_bool($value) === true) {
+            return PDO::PARAM_INT;
+        }
+
+        return PDO::PARAM_STR;
+    }
+
+    /**
      * Return PDO instance
      *
      * @return PDO
@@ -1066,24 +1091,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Parse parameter type from value
+     * @param array $statements
      *
-     * @param mixed $value
-     *
-     * @return int
+     * @return static $this
      */
-    protected function parseParameterType($value): int
+    public function setStatements(array $statements)
     {
+        $this->statements = $statements;
 
-        if ($value === null) {
-            return PDO::PARAM_NULL;
-        }
-
-        if (\is_int($value) === true || \is_bool($value) === true) {
-            return PDO::PARAM_INT;
-        }
-
-        return PDO::PARAM_STR;
+        return $this;
     }
 
     /**
@@ -1093,7 +1109,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\QueryException
+     * @throws \Pecee\Pixie\QueryException\DuplicateColumnException
+     * @throws \Pecee\Pixie\QueryException\DuplicateEntryException
+     * @throws \Pecee\Pixie\QueryException\DuplicateKeyException
+     * @throws \Pecee\Pixie\QueryException\ForeignKeyException
+     * @throws \Pecee\Pixie\QueryException\NotNullException
      */
     public function statement(string $sql, array $bindings = []): array
     {
@@ -1118,7 +1140,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
+            throw QueryException::create($e, $this->getLastQuery(), $this->getConnection()->getAdapter()->getQueryAdapterClass());
         }
 
         return [
@@ -1245,6 +1267,32 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         }
 
         return $queryTransaction;
+    }
+
+    /**
+     * Add union
+     *
+     * @param QueryBuilderHandler $query
+     * @param string|null $unionType
+     *
+     * @return static $this
+     */
+    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
+    {
+        $statements = $query->getStatements();
+
+        if (\count($statements['unions']) > 0) {
+            $this->statements['unions'] = $statements['unions'];
+            unset($statements['unions']);
+            $query->setStatements($statements);
+        }
+
+        $this->statements['unions'][] = [
+            'query' => $query,
+            'type'  => $unionType,
+        ];
+
+        return $this;
     }
 
     /**
@@ -1433,40 +1481,5 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
 
         return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
-    }
-
-    /**
-     * Add union
-     *
-     * @param QueryBuilderHandler $query
-     * @param string|null $unionType
-     * @return static $this
-     */
-    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
-    {
-        $statements = $query->getStatements();
-
-        if (\count($statements['unions']) > 0) {
-            $this->statements['unions'] = $statements['unions'];
-            unset($statements['unions']);
-            $query->setStatements($statements);
-        }
-
-        $this->statements['unions'][] = [
-            'query' => $query,
-            'type'  => $unionType,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Get query-object from last executed query.
-     *
-     * @return QueryObject|null
-     */
-    public function getLastQuery()
-    {
-        return $this->connection->getLastQuery();
     }
 }
