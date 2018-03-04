@@ -30,12 +30,15 @@ class Transaction extends QueryBuilderHandler
     /**
      * Commit transaction
      *
-     * @throws \Pecee\Pixie\Exceptions\NotNullException
-     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
     public function commit()
@@ -43,7 +46,7 @@ class Transaction extends QueryBuilderHandler
         try {
             $this->pdo()->commit();
         } catch (\PDOException $e) {
-            throw Exception::create($e, $this->adapter->getQueryAdapterClass(), $this);
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         throw new TransactionHaltException('Commit triggered transaction-halt.');
@@ -52,12 +55,15 @@ class Transaction extends QueryBuilderHandler
     /**
      * Rollback transaction
      *
-     * @throws \Pecee\Pixie\Exceptions\NotNullException
-     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
     public function rollBack()
@@ -65,7 +71,7 @@ class Transaction extends QueryBuilderHandler
         try {
             $this->pdo()->rollBack();
         } catch (\PDOException $e) {
-            throw Exception::create($e, $this->adapter->getQueryAdapterClass(), $this);
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         throw new TransactionHaltException('Rollback triggered transaction-halt.');
@@ -78,11 +84,15 @@ class Transaction extends QueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
-     * @throws \Pecee\Pixie\Exceptions\NotNullException
-     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
-     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws Exception
      */
     public function statement(string $sql, array $bindings = []): array
@@ -105,7 +115,7 @@ class Transaction extends QueryBuilderHandler
 
             $this->transactionStatement->execute();
         } catch (\PDOException $e) {
-            throw Exception::create($e, $this->adapter->getQueryAdapterClass(), $this);
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return [$this->transactionStatement, microtime(true) - $start];

@@ -181,7 +181,7 @@ class Connection
      * @param QueryObject $query
      * @return static
      */
-    public function setLastQuery(QueryObject $query) : self
+    public function setLastQuery(QueryObject $query): self
     {
         $this->lastQuery = $query;
 

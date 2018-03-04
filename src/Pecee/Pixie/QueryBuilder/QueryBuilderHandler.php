@@ -6,6 +6,7 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
+use Pecee\Pixie\Exceptions\ConnectionException;
 use Pecee\Pixie\Exceptions\TransactionHaltException;
 
 /**
@@ -80,7 +81,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $this->connection = $connection ?? Connection::getStoredConnection();
 
         if ($this->connection === null) {
-            throw new Exception('No database connection found.', 1);
+            throw new ConnectionException('No database connection found.', 404);
         }
 
         $adapterConfig = $this->connection->getAdapterConfig();
@@ -508,7 +509,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         ];
 
         if (\in_array(strtolower($type), $allowedTypes, true) === false) {
-            throw new Exception($type . ' is not a known type.', 2);
+            throw new Exception($type . ' is not a known type.', 1);
         }
 
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
@@ -1109,6 +1110,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
      * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
      * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
@@ -1139,7 +1143,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw Exception::create($e, $this->adapter->getQueryAdapterClass(), $this->getLastQuery());
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return [
@@ -1262,7 +1266,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $this->pdo()->rollBack();
             }
 
-            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return $queryTransaction;
