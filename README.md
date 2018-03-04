@@ -172,7 +172,7 @@ composer install pecee/pixie
  - [**Update**](#update)
  - [**Delete**](#delete)
  - [Transactions](#transactions)
- - [Get Built Query](#get-built-query)
+ - [Get built query](#get-built-query)
     - [Get QueryObject from last executed query](#get-queryobject-from-last-executed-query)
  - [Sub Queries and Nested Queries](#sub-queries-and-nested-queries)
  - [Get PDO Instance](#get-pdo-instance)
@@ -183,6 +183,8 @@ composer install pecee/pixie
     - [Removing Events](#removing-events)
     - [Some Use Cases](#some-use-cases)
     - [Notes](#notes)
+ - [Custom Exceptions](#custom-exceptions)
+    - [Getting sql-query from exceptions](#getting-sql-query-from-exceptions)
 
 ___
 
@@ -838,7 +840,7 @@ $queryBuilder->table('people')->insert([
 ]);
 ```
 
-### Get Built Query
+### Get built query
 
 Sometimes you may need to get the query string, it's possible.
 
@@ -947,10 +949,16 @@ Pixie doesn't use bindings for sub queries and nested queries. It quotes values 
 
 ### Get PDO Instance
 
-If you need to get the PDO instance you can do so.
+If you need the `\PDO` instance, you can easily get it by calling:
 
 ```php
-$queryBuilder->getConnection()->getPdoInstance();
+$queryBuilder->pdo();
+```
+
+If you want to get the `Connection` object you can do so like this:
+
+```php
+$connection = $queryBuilder->getConnection();
 ```
 
 ### Fetch results as objects of specified class
@@ -1098,7 +1106,34 @@ Here are some cases where Query Events can be extremely helpful:
  - Query Events are set as per connection basis so multiple database connection don't create any problem, and creating new query builder instance preserves your events.
  - Query Events go recursively, for example after inserting into `table_a` your event inserts into `table_b`, now you can have another event registered with `table_b` which inserts into `table_c`.
  - Of course Query Events don't work with raw queries.
+ 
+ ### Custom Exceptions
+ 
+ This is a list over exceptions thrown by pecee-pixie. 
+ 
+ All exceptions inherit from the base `Exception` class.
+ 
+ | Exception name             | 
+ | :------------------------- | 
+ | `ColumnNotFoundException`  | 
+ | `ConnectionException`      | 
+ | `DuplicateColumnException` | 
+ | `DuplicateEntryException`  | 
+ | `ForeignKeyException`      | 
+ | `NotNullException`         | 
+ | `TableNotFoundException`   | 
+ | `Exception`                | 
+ 
+#### Getting sql-query from exceptions
 
+If an error occours and you want to debug your query - you can easily do so as all exceptions thrown by Pixie will 
+contain the last executed query.
+
+You can retrieve the `QueryObject` by calling
+
+```php
+$sql = $exception->getQueryObject()->getRawSql();
+```
 ___
 If you find any typo then please edit and send a pull request.
 
