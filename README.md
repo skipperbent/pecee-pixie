@@ -90,8 +90,6 @@ $queryBuilder->registerEvent('before-select', 'users', function(EventArguments $
         ->where('status', '!=', 'banned');
 });
 ```
-
-
 There are many advanced options which are documented below. Sold? Let's install.
 
 ## Full Usage API
@@ -100,8 +98,8 @@ There are many advanced options which are documented below. Sold? Let's install.
 
  - [Installation](#installation)
  - [Feedback and development](#feedback-and-development)
- 	-[Issues guidelines](#issues-guidelines)
-	-[Contribution and development guidelines](#contributing-and-development-guidelines)
+    -[Issues guidelines](#issues-guidelines)
+    -[Contribution and development](#contributing-and-development-guidelines)
  - [Connection](#connection)
     - [Multiple Connection](#alias)
     - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
