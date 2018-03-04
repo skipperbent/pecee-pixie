@@ -16,7 +16,15 @@ class Sqlite extends BaseAdapter
      * @param array $config
      *
      * @return PDO
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      */
     public function doConnect(array $config): PDO
     {
@@ -29,7 +37,7 @@ class Sqlite extends BaseAdapter
         try {
             return new PDO($connectionString, null, null, $config['options']);
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), 0, $e->getPrevious());
+            throw Exception::create($e, $this->getQueryAdapterClass());
         }
     }
 

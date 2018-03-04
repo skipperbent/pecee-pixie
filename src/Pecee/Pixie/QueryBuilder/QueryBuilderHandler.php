@@ -6,6 +6,8 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
+use Pecee\Pixie\Exceptions\ConnectionException;
+use Pecee\Pixie\Exceptions\TransactionHaltException;
 
 /**
  * Class QueryBuilderHandler
@@ -14,21 +16,23 @@ use Pecee\Pixie\Exception;
  */
 class QueryBuilderHandler implements IQueryBuilderHandler
 {
-
     /**
      * Default union type
+     *
      * @var string
      */
     const UNION_TYPE_NONE = '';
 
     /**
      * Union type distinct
+     *
      * @var string
      */
     const UNION_TYPE_DISTINCT = 'DISTINCT';
 
     /**
      * Union type all
+     *
      * @var string
      */
     const UNION_TYPE_ALL = 'ALL';
@@ -44,11 +48,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         'groupBys' => [],
         'unions'   => [],
     ];
-
-    /**
-     * @var PDO
-     */
-    protected $pdo;
 
     /**
      * @var null|\PDOStatement
@@ -73,16 +72,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected $fetchParameters = [\PDO::FETCH_OBJ];
 
     /**
-     * @var string
-     */
-    protected $adapter;
-
-    /**
-     * @var array
-     */
-    protected $adapterConfig;
-
-    /**
      * @param \Pecee\Pixie\Connection|null $connection
      *
      * @throws \Pecee\Pixie\Exception
@@ -92,22 +81,20 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $this->connection = $connection ?? Connection::getStoredConnection();
 
         if ($this->connection === null) {
-            throw new Exception('No database connection found.', 1);
+            throw new ConnectionException('No database connection found.', 404);
         }
 
-        $this->pdo = $this->connection->getPdoInstance();
-        $this->adapter = $this->connection->getAdapter();
-        $this->adapterConfig = $this->connection->getAdapterConfig();
+        $adapterConfig = $this->connection->getAdapterConfig();
 
-        if (isset($this->adapterConfig['prefix']) === true) {
-            $this->tablePrefix = $this->adapterConfig['prefix'];
+        if (isset($adapterConfig['prefix']) === true) {
+            $this->tablePrefix = $adapterConfig['prefix'];
         }
 
         // Query builder adapter instance
-        $adapterClass = $this->adapter->getQueryAdapterClass();
+        $adapterClass = $this->connection->getAdapter()->getQueryAdapterClass();
         $this->adapterInstance = new $adapterClass($this->connection);
 
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->connection->getPdoInstance()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     /**
@@ -125,17 +112,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         } else {
             $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
         }
-    }
-
-    /**
-     * @param array $statements
-     * @return static $this
-     */
-    public function setStatements(array $statements)
-    {
-        $this->statements = $statements;
-
-        return $this;
     }
 
     /**
@@ -328,7 +304,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
              */
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
-            $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+            $insertId = $result->rowCount() === 1 ? $this->pdo()->lastInsertId() : null;
             $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, [
                 'insert_id'      => $insertId,
                 'execution_time' => $executionTime,
@@ -341,7 +317,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         // If the current batch insert is not in a transaction, we create one...
 
-        if ($this->pdo->inTransaction() === false) {
+        if ($this->pdo()->inTransaction() === false) {
 
             $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type) {
                 foreach ($data as $subData) {
@@ -395,6 +371,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $name
      * @param QueryObject $queryObject
      * @param array $eventArguments
+     *
      * @return array
      */
     public function fireEvents(string $name, QueryObject $queryObject, array $eventArguments = []): array
@@ -501,6 +478,16 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Get query-object from last executed query.
+     *
+     * @return QueryObject|null
+     */
+    public function getLastQuery()
+    {
+        return $this->connection->getLastQuery();
+    }
+
+    /**
      * Returns Query-object.
      *
      * @param string $type
@@ -522,12 +509,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         ];
 
         if (\in_array(strtolower($type), $allowedTypes, true) === false) {
-            throw new Exception($type . ' is not a known type.', 2);
+            throw new Exception($type . ' is not a known type.', 1);
         }
 
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
 
-        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->pdo);
+        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->pdo());
     }
 
     /**
@@ -903,13 +890,34 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Parse parameter type from value
+     *
+     * @param mixed $value
+     *
+     * @return int
+     */
+    protected function parseParameterType($value): int
+    {
+
+        if ($value === null) {
+            return PDO::PARAM_NULL;
+        }
+
+        if (\is_int($value) === true || \is_bool($value) === true) {
+            return PDO::PARAM_INT;
+        }
+
+        return PDO::PARAM_STR;
+    }
+
+    /**
      * Return PDO instance
      *
      * @return PDO
      */
     public function pdo(): PDO
     {
-        return $this->pdo;
+        return $this->getConnection()->getPdoInstance();
     }
 
     /**
@@ -923,7 +931,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
-        $queryObject = new QueryObject($sql, $bindings, $this->pdo);
+        $queryObject = new QueryObject($sql, $bindings, $this->pdo());
         $this->connection->setLastQuery($queryObject);
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_QUERY, $queryObject);
@@ -1084,24 +1092,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Parse parameter type from value
+     * @param array $statements
      *
-     * @param mixed $value
-     *
-     * @return int
+     * @return static $this
      */
-    protected function parseParameterType($value): int
+    public function setStatements(array $statements)
     {
+        $this->statements = $statements;
 
-        if ($value === null) {
-            return PDO::PARAM_NULL;
-        }
-
-        if (\is_int($value) === true || \is_bool($value) === true) {
-            return PDO::PARAM_INT;
-        }
-
-        return PDO::PARAM_STR;
+        return $this;
     }
 
     /**
@@ -1111,13 +1110,21 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array $bindings
      *
      * @return array PDOStatement and execution time as float
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      */
     public function statement(string $sql, array $bindings = []): array
     {
         $startTime = \microtime(true);
 
-        $pdoStatement = $this->pdo->prepare($sql);
+        $pdoStatement = $this->pdo()->prepare($sql);
 
         /**
          * NOTE:
@@ -1136,7 +1143,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return [
@@ -1237,15 +1244,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         try {
             // Begin the PDO transaction
-            if ($this->pdo->inTransaction() === false) {
-                $this->pdo->beginTransaction();
+            if ($this->pdo()->inTransaction() === false) {
+                $this->pdo()->beginTransaction();
             }
 
             // Call closure - this callback will return TransactionHaltException if user has already committed the transaction
             $callback($queryTransaction);
 
             // If no errors have been thrown or the transaction wasn't completed within the closure, commit the changes
-            $this->pdo->commit();
+            $this->pdo()->commit();
 
         } catch (TransactionHaltException $e) {
 
@@ -1255,14 +1262,40 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         } catch (\Exception $e) {
 
             // Something went wrong. Rollback and throw Exception
-            if ($this->pdo->inTransaction() === true) {
-                $this->pdo->rollBack();
+            if ($this->pdo()->inTransaction() === true) {
+                $this->pdo()->rollBack();
             }
 
-            throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
+            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return $queryTransaction;
+    }
+
+    /**
+     * Add union
+     *
+     * @param QueryBuilderHandler $query
+     * @param string|null $unionType
+     *
+     * @return static $this
+     */
+    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
+    {
+        $statements = $query->getStatements();
+
+        if (\count($statements['unions']) > 0) {
+            $this->statements['unions'] = $statements['unions'];
+            unset($statements['unions']);
+            $query->setStatements($statements);
+        }
+
+        $this->statements['unions'][] = [
+            'query' => $query,
+            'type'  => $unionType,
+        ];
+
+        return $this;
     }
 
     /**
@@ -1451,40 +1484,5 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
 
         return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
-    }
-
-    /**
-     * Add union
-     *
-     * @param QueryBuilderHandler $query
-     * @param string|null $unionType
-     * @return static $this
-     */
-    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
-    {
-        $statements = $query->getStatements();
-
-        if (\count($statements['unions']) > 0) {
-            $this->statements['unions'] = $statements['unions'];
-            unset($statements['unions']);
-            $query->setStatements($statements);
-        }
-
-        $this->statements['unions'][] = [
-            'query' => $query,
-            'type'  => $unionType,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Get query-object from last executed query.
-     *
-     * @return QueryObject|null
-     */
-    public function getLastQuery()
-    {
-        return $this->connection->getLastQuery();
     }
 }
