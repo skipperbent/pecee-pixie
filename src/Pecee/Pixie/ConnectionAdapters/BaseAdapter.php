@@ -9,24 +9,26 @@ use PDO;
  *
  * @package Pecee\Pixie\ConnectionAdapters
  */
-abstract class BaseAdapter implements IConnectionAdapter {
-	/**
-	 * @param array $config
-	 *
-	 * @return PDO
-	 */
-	public function connect(array $config): PDO {
-		if (isset($config['options']) === false) {
-			$config['options'] = [];
-		}
+abstract class BaseAdapter implements IConnectionAdapter
+{
+    /**
+     * @param array $config
+     *
+     * @return PDO
+     */
+    public function connect(array $config): PDO
+    {
+        if (isset($config['options']) === false) {
+            $config['options'] = [];
+        }
 
-		return $this->doConnect($config);
-	}
+        return $this->doConnect($config);
+    }
 
-	/**
-	 * @param array $config
-	 *
-	 * @return PDO
-	 */
-	abstract protected function doConnect(array $config): PDO;
+    /**
+     * @param array $config
+     *
+     * @return PDO
+     */
+    abstract protected function doConnect(array $config): PDO;
 }

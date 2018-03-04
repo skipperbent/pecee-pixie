@@ -7,40 +7,44 @@ namespace Pecee\Pixie\QueryBuilder;
  *
  * @package Pecee\Pixie\QueryBuilder
  */
-class Raw {
+class Raw
+{
 
-	/**
-	 * @var string
-	 */
-	protected $value;
+    /**
+     * @var string
+     */
+    protected $value;
 
-	/**
-	 * @var array
-	 */
-	protected $bindings;
+    /**
+     * @var array
+     */
+    protected $bindings;
 
-	/**
-	 * Raw constructor.
-	 *
-	 * @param string $value
-	 * @param array|string $bindings
-	 */
-	public function __construct(string $value, array $bindings = []) {
-		$this->value    = $value;
-		$this->bindings = $bindings;
-	}
+    /**
+     * Raw constructor.
+     *
+     * @param string $value
+     * @param array|string $bindings
+     */
+    public function __construct(string $value, array $bindings = [])
+    {
+        $this->value = $value;
+        $this->bindings = $bindings;
+    }
 
-	/**
-	 * @return string
-	 */
-	public function __toString(): string {
-		return (string)$this->value;
-	}
+    /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return (string)$this->value;
+    }
 
-	/**
-	 * @return array
-	 */
-	public function getBindings(): array {
-		return $this->bindings;
-	}
+    /**
+     * @return array
+     */
+    public function getBindings(): array
+    {
+        return $this->bindings;
+    }
 }
