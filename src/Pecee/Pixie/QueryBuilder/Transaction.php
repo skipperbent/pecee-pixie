@@ -34,7 +34,7 @@ class Transaction extends QueryBuilderHandler
     public function commit()
     {
         try {
-            $this->pdo->commit();
+            $this->pdo()->commit();
         } catch (\PDOException $e) {
             throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
@@ -50,7 +50,7 @@ class Transaction extends QueryBuilderHandler
     public function rollBack()
     {
         try {
-            $this->pdo->rollBack();
+            $this->pdo()->rollBack();
         } catch (\PDOException $e) {
             throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->connection->getLastQuery());
         }
@@ -71,8 +71,8 @@ class Transaction extends QueryBuilderHandler
     {
         $start = microtime(true);
 
-        if ($this->transactionStatement === null && $this->pdo->inTransaction() === true) {
-            $this->transactionStatement = $this->pdo->prepare($sql);
+        if ($this->transactionStatement === null && $this->pdo()->inTransaction() === true) {
+            $this->transactionStatement = $this->pdo()->prepare($sql);
         }
 
         try {

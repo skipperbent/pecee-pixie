@@ -14,7 +14,6 @@ use Pecee\Pixie\Exception;
  */
 class QueryBuilderHandler implements IQueryBuilderHandler
 {
-
     /**
      * Default union type
      * @var string
@@ -46,11 +45,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     ];
 
     /**
-     * @var PDO
-     */
-    protected $pdo;
-
-    /**
      * @var null|\PDOStatement
      */
     protected $pdoStatement;
@@ -73,16 +67,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected $fetchParameters = [\PDO::FETCH_OBJ];
 
     /**
-     * @var string
-     */
-    protected $adapter;
-
-    /**
-     * @var array
-     */
-    protected $adapterConfig;
-
-    /**
      * @param \Pecee\Pixie\Connection|null $connection
      *
      * @throws \Pecee\Pixie\Exception
@@ -95,19 +79,17 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception('No database connection found.', 1);
         }
 
-        $this->pdo = $this->connection->getPdoInstance();
-        $this->adapter = $this->connection->getAdapter();
-        $this->adapterConfig = $this->connection->getAdapterConfig();
+        $adapterConfig = $this->connection->getAdapterConfig();
 
-        if (isset($this->adapterConfig['prefix']) === true) {
-            $this->tablePrefix = $this->adapterConfig['prefix'];
+        if (isset($adapterConfig['prefix']) === true) {
+            $this->tablePrefix = $adapterConfig['prefix'];
         }
 
         // Query builder adapter instance
-        $adapterClass = $this->adapter->getQueryAdapterClass();
+        $adapterClass = $this->connection->getAdapter()->getQueryAdapterClass();
         $this->adapterInstance = new $adapterClass($this->connection);
 
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->connection->getPdoInstance()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     /**
@@ -328,7 +310,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
              */
             list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
-            $insertId = $result->rowCount() === 1 ? $this->pdo->lastInsertId() : null;
+            $insertId = $result->rowCount() === 1 ? $this->pdo()->lastInsertId() : null;
             $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, [
                 'insert_id'      => $insertId,
                 'execution_time' => $executionTime,
@@ -341,7 +323,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         // If the current batch insert is not in a transaction, we create one...
 
-        if ($this->pdo->inTransaction() === false) {
+        if ($this->pdo()->inTransaction() === false) {
 
             $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type) {
                 foreach ($data as $subData) {
@@ -527,7 +509,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
 
-        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->pdo);
+        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->pdo());
     }
 
     /**
@@ -909,7 +891,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function pdo(): PDO
     {
-        return $this->pdo;
+        return $this->getConnection()->getPdoInstance();
     }
 
     /**
@@ -923,7 +905,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
-        $queryObject = new QueryObject($sql, $bindings, $this->pdo);
+        $queryObject = new QueryObject($sql, $bindings, $this->pdo());
         $this->connection->setLastQuery($queryObject);
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_QUERY, $queryObject);
@@ -1117,7 +1099,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         $startTime = \microtime(true);
 
-        $pdoStatement = $this->pdo->prepare($sql);
+        $pdoStatement = $this->pdo()->prepare($sql);
 
         /**
          * NOTE:
@@ -1237,15 +1219,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         try {
             // Begin the PDO transaction
-            if ($this->pdo->inTransaction() === false) {
-                $this->pdo->beginTransaction();
+            if ($this->pdo()->inTransaction() === false) {
+                $this->pdo()->beginTransaction();
             }
 
             // Call closure - this callback will return TransactionHaltException if user has already committed the transaction
             $callback($queryTransaction);
 
             // If no errors have been thrown or the transaction wasn't completed within the closure, commit the changes
-            $this->pdo->commit();
+            $this->pdo()->commit();
 
         } catch (TransactionHaltException $e) {
 
@@ -1255,8 +1237,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         } catch (\Exception $e) {
 
             // Something went wrong. Rollback and throw Exception
-            if ($this->pdo->inTransaction() === true) {
-                $this->pdo->rollBack();
+            if ($this->pdo()->inTransaction() === true) {
+                $this->pdo()->rollBack();
             }
 
             throw new Exception($e->getMessage(), 0, $e->getPrevious(), $this->getLastQuery());
