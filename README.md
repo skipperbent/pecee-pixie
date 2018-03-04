@@ -98,10 +98,9 @@ There are many advanced options which are documented below. Sold? Let's install.
 
  - [Installation](#installation)
  - [Feedback and development](#feedback-and-development)
-    -[Issues guidelines](#issues-guidelines)
-    -[Contribution and development](#contributing-and-development-guidelines)
- - [Connection](#connection)
-    - [Multiple Connection](#alias)
+    - [Issues guidelines](#issues-guidelines)
+    - [Contribution and development](#contributing-and-development-guidelines)
+ - [Connecting to the database](#connection-to-the-database)
     - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
  - [Query](#query)
  - [**Select**](#select)
@@ -184,7 +183,7 @@ For example when pushing changes to version 3, the pull request should use the `
 
 - When adding new stuff, please remember to add new unit-tests for the functionality.
 
-## Connection
+## Connecting to the database
 Pixie supports three database drivers, MySQL, SQLite and PostgreSQL.
 You can specify the driver during connection and the associated configuration when creating a new connection. You can also create multiple connections, but you can use alias for only one connection at a time.;
 
@@ -288,7 +287,7 @@ INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 
 **Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
 
-### Get Easily
+### Get easily
 
 The query below returns the (first) row where id = 3, null if no rows.
 
