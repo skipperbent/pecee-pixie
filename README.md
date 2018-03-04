@@ -13,44 +13,17 @@ This library is stable, maintained and are used by many sites, including:
 - [BookAndBegin.com](https://bookandbegin.com)
 
 **Requirements:**
-- PHP version 7.0 or higher is required.
+- PHP version 7.0 or higher is required for pecee-pixie version 4.x and above.
 
-Versions prior to 3.x are available [here](https://github.com/skipperbent/pixie).
+Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
-#### Feedback and development
+### Features
 
-If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
-
-###### Issues guidelines
-
-- Please be as detailed as possible in the description when creating a new issue. This will help others to more easily understand- and solve your issue.
-For example: if you are experiencing issues, you should provide the necessary steps to reproduce the error within your description.
-
-- We love to hear out any ideas or feedback to the library.
-
-[Create a new issue here](https://github.com/skipperbent/pecee-pixie/issues)
-
-###### Contribution development guidelines
-
-- Please try to follow the PSR-2 codestyle guidelines.
-
-- Please create your pull requests to the development base that matches the version number you want to change.
-For example when pushing changes to version 3, the pull request should use the `v3-development` base/branch.
-
-- Create detailed descriptions for your commits, as these will be used in the changelog for new releases.
-
-- When changing existing functionality, please ensure that the unit-tests working.
-
-- When adding new stuff, please remember to add new unit-tests for the functionality.
-
-#### Credits & features
-
-This project is based on the original [Pixie project by usmanhalalit](https://github.com/usmanhalalit/pixie) but has some extra features like:
-
-- Easier sub-queries.
+- Improved sub-queries.
 - Custom prefix/aliases for tables (prefix.`table`).
-- Support for not defining table.
+- Support for not defining table and/or removing defined table.
 - Better handling of `Raw` objects in `where` statements.
+- Union queries.
 - Performance optimisations.
 - Tons of bug fixes.
 - Much more...
@@ -64,11 +37,6 @@ This project is based on the original [Pixie project by usmanhalalit](https://gi
 - Multiple Database Connections.
 
 Most importantly this project is used on many live-sites and maintained.
-
-#### Note
-
-`Facades` and `Container` support has been removed to increase performance. To implement your own adapters, please extends the
-`IConnectionAdapter` interface.
 
 ## Example
 ```php
@@ -126,20 +94,14 @@ $queryBuilder->registerEvent('before-select', 'users', function(EventArguments $
 
 There are many advanced options which are documented below. Sold? Let's install.
 
-## Installation
-
-Pixie uses [Composer](http://getcomposer.org/doc/00-intro.md#installation-nix) to make things easy.
-
-Learn to use composer and add this to require section (in your composer.json):
-
-```
-composer install pecee/pixie
-```
-
 ## Full Usage API
 
 ### Table of Contents
 
+ - [Installation](#installation)
+ - [Feedback and development](#feedback-and-development)
+ 	-[Issues guidelines](#issues-guidelines)
+	-[Contribution and development guidelines](#contributing-and-development-guidelines)
  - [Connection](#connection)
     - [Multiple Connection](#alias)
     - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
@@ -185,8 +147,44 @@ composer install pecee/pixie
     - [Notes](#notes)
  - [Custom Exceptions](#custom-exceptions)
     - [Getting sql-query from exceptions](#getting-sql-query-from-exceptions)
+ - [Credits](#credits)
 
 ___
+
+## Installation
+
+Pixie uses [Composer](http://getcomposer.org/doc/00-intro.md#installation-nix) to make things easy.
+
+Learn to use composer and add this to require section (in your composer.json):
+
+```
+composer install pecee/pixie
+```
+
+## Feedback and development
+
+If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
+
+#### Issues guidelines
+
+- Please be as detailed as possible in the description when creating a new issue. This will help others to more easily understand- and solve your issue. For example: if you are experiencing issues, you should provide the necessary steps to reproduce the error within your description.
+
+- We love to hear out any ideas or feedback to the library.
+
+[Create a new issue here](https://github.com/skipperbent/pecee-pixie/issues)
+
+#### Contribution and development guidelines
+
+- Please try to follow the PSR-2 codestyle guidelines.
+
+- Please create your pull requests to the development base that matches the version number you want to change.
+For example when pushing changes to version 3, the pull request should use the `v3-development` base/branch.
+
+- Create detailed descriptions for your commits, as these will be used in the changelog for new releases.
+
+- When changing existing functionality, please ensure that the unit-tests working.
+
+- When adding new stuff, please remember to add new unit-tests for the functionality.
 
 ## Connection
 Pixie supports three database drivers, MySQL, SQLite and PostgreSQL.
@@ -1134,12 +1132,11 @@ You can retrieve the `QueryObject` by calling
 ```php
 $sql = $exception->getQueryObject()->getRawSql();
 ```
+
+## Credits
+
+This project is based on the original [Pixie project](https://github.com/usmanhalalit/pixie) by the incredible talented usmanhalalit.
 ___
-If you find any typo then please edit and send a pull request.
-
-&copy; 2016 [Muhammad Usman](http://usman.it/), [Muhammad Usman]
-
-&copy; 2016 Simon Sessingø - [Pecee.dk](http://pecee.dk/).
 
 ## Licence
 
