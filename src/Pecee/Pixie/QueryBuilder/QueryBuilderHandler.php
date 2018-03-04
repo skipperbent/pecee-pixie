@@ -514,7 +514,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $queryArr = $this->adapterInstance->$type($this->statements, $dataToBePassed);
 
-        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->pdo());
+        return new QueryObject($queryArr['sql'], $queryArr['bindings'], $this->getConnection());
     }
 
     /**
@@ -931,7 +931,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function query($sql, array $bindings = []): IQueryBuilderHandler
     {
-        $queryObject = new QueryObject($sql, $bindings, $this->pdo());
+        $queryObject = new QueryObject($sql, $bindings, $this->getConnection());
         $this->connection->setLastQuery($queryObject);
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_QUERY, $queryObject);
@@ -1122,34 +1122,32 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function statement(string $sql, array $bindings = []): array
     {
-        $startTime = \microtime(true);
-
-        $pdoStatement = $this->pdo()->prepare($sql);
-
-        /**
-         * NOTE:
-         * PHP 5.6 & 7 bug: https://bugs.php.net/bug.php?id=38546
-         * \PDO::PARAM_BOOL is not supported, use \PDO::PARAM_INT instead
-         */
-
-        foreach ($bindings as $key => $value) {
-            $pdoStatement->bindValue(
-                \is_int($key) ? $key + 1 : $key,
-                $value,
-                $this->parseParameterType($value)
-            );
-        }
-
         try {
+            $startTime = \microtime(true);
+            $pdoStatement = $this->pdo()->prepare($sql);
+
+            /**
+             * NOTE:
+             * PHP 5.6 & 7 bug: https://bugs.php.net/bug.php?id=38546
+             * \PDO::PARAM_BOOL is not supported, use \PDO::PARAM_INT instead
+             */
+            foreach ($bindings as $key => $value) {
+                $pdoStatement->bindValue(
+                    \is_int($key) ? $key + 1 : $key,
+                    $value,
+                    $this->parseParameterType($value)
+                );
+            }
+
             $pdoStatement->execute();
+
+            return [
+                $pdoStatement,
+                \microtime(true) - $startTime,
+            ];
         } catch (\PDOException $e) {
             throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
         }
-
-        return [
-            $pdoStatement,
-            \microtime(true) - $startTime,
-        ];
     }
 
     /**
