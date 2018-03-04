@@ -1,6 +1,7 @@
 <?php
 
-namespace Pecee\Pixie\QueryBuilder;
+namespace Pecee\Pixie\Exceptions;
 
 class TransactionHaltException extends \Exception {
+
 }

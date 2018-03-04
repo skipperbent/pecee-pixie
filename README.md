@@ -5,52 +5,20 @@ Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitizat
 
 The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
-This library is stable, maintained and are used by many sites, including:
-
-- [Holla.dk](https://holla.dk)
-- [Dscuz.com](https://dscuz.com)
-- [NinjaImg.com](https://ninjaimg.com)
-- [BookAndBegin.com](https://bookandbegin.com)
+This library is stable, maintained and are used by sites around the world (check credits).
 
 **Requirements:**
-- PHP version 7.0 or higher is required.
+- PHP version 7.0 or higher is required for pecee-pixie version 4.x and above.
 
-Versions prior to 3.x are available [here](https://github.com/skipperbent/pixie).
+Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
-#### Feedback and development
+### Features
 
-If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
-
-###### Issues guidelines
-
-- Please be as detailed as possible in the description when creating a new issue. This will help others to more easily understand- and solve your issue.
-For example: if you are experiencing issues, you should provide the necessary steps to reproduce the error within your description.
-
-- We love to hear out any ideas or feedback to the library.
-
-[Create a new issue here](https://github.com/skipperbent/pecee-pixie/issues)
-
-###### Contribution development guidelines
-
-- Please try to follow the PSR-2 codestyle guidelines.
-
-- Please create your pull requests to the development base that matches the version number you want to change.
-For example when pushing changes to version 3, the pull request should use the `v3-development` base/branch.
-
-- Create detailed descriptions for your commits, as these will be used in the changelog for new releases.
-
-- When changing existing functionality, please ensure that the unit-tests working.
-
-- When adding new stuff, please remember to add new unit-tests for the functionality.
-
-#### Credits & features
-
-This project is based on the original [Pixie project by usmanhalalit](https://github.com/usmanhalalit/pixie) but has some extra features like:
-
-- Easier sub-queries.
+- Improved sub-queries.
 - Custom prefix/aliases for tables (prefix.`table`).
-- Support for not defining table.
+- Support for not defining table and/or removing defined table.
 - Better handling of `Raw` objects in `where` statements.
+- Union queries.
 - Performance optimisations.
 - Tons of bug fixes.
 - Much more...
@@ -64,11 +32,6 @@ This project is based on the original [Pixie project by usmanhalalit](https://gi
 - Multiple Database Connections.
 
 Most importantly this project is used on many live-sites and maintained.
-
-#### Note
-
-`Facades` and `Container` support has been removed to increase performance. To implement your own adapters, please extends the
-`IConnectionAdapter` interface.
 
 ## Example
 ```php
@@ -94,14 +57,14 @@ $config = array(
 $queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 ```
 
-**Simple Query:**
+**Simple query:**
 
 The query below returns the row where id = 3, null if no rows.
 ```PHP
 $row = $queryBuilder->table('my_table')->find(3);
 ```
 
-**Full Queries:**
+**Full queries:**
 
 ```PHP
 $query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
@@ -110,7 +73,7 @@ $query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
 $query->get();
 ```
 
-**Query Events:**
+**Query events:**
 
 After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
 
@@ -122,9 +85,63 @@ $queryBuilder->registerEvent('before-select', 'users', function(EventArguments $
         ->where('status', '!=', 'banned');
 });
 ```
+There are many advanced options which are documented below. Sold? Let's [install](#installation).
 
+### Table of Contents
 
-There are many advanced options which are documented below. Sold? Let's install.
+ - [Installation](#installation)
+ - [Feedback and development](#feedback-and-development)
+    - [Issues guidelines](#issues-guidelines)
+    - [Contribution and development guidelines](#contribution-and-development-guidelines)
+ - [Connecting to the database](#connecting-to-the-database)
+    - [SQLite and PostgreSQL config example](#sqlite-and-postgresql-config-example)
+ - [**Select**](#select)
+    - [Table alias](#table-alias)
+    - [Get easily](#get-easily)
+    - [Multiple selects](#multiple-selects)
+    - [Select distinct](#select-distinct)
+    - [Select from query](#select-from-query)
+    - [Select single field](#select-single-field)
+    - [Select multiple fields](#select-multiple-fields)
+    - [Get all](#get-all)
+    - [Get first row](#get-first-row)
+    - [Get rows count](#get-rows-count)
+    - [Selects with sub-queries](#select-with-sub-queries)
+ - [**Where**](#where)
+    - [Where in](#where-in)
+    - [Where between](#where-between)
+    - [Where null](#where-null)
+    - [Grouped where](#grouped-where)
+ - [Group- and order by](#group--and-order-by)
+ - [Having](#having)
+ - [Limit and offset](#limit-and-offset)
+ - [Join](#join)
+    - [Multiple join criteria](#multiple-join-criteria)
+ - [Unions](#unions)
+ - [Raw query](#raw-query)
+    - [Raw expressions](#raw-expressions)
+ - [**Insert**](#insert)
+    - [Batch insert](#batch-insert)
+    - [Insert with ON DUPLICATE KEY statement](#insert-with-on-duplicate-key-statement)
+ - [**Update**](#update)
+ - [**Delete**](#delete)
+ - [Transactions](#transactions)
+ - [Get raw query](#get-built-query)
+    - [Get QueryObject from last executed query](#get-queryobject-from-last-executed-query)
+ - [Sub-queries and nested queries](#sub-queries-and-nested-queries)
+ - [Getting the PDO instance](#getting-the-pdo-instance)
+ - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
+ - [Query events](#query-events)
+    - [Available event](#available-event)
+    - [Registering event](#registering-event)
+    - [Removing event](#removing-event)
+    - [Use cases](#use-cases)
+    - [Notes](#notes)
+ - [Exceptions](#exceptions)
+    - [Getting sql-query from exceptions](#getting-sql-query-from-exceptions)
+ - [Credits](#credits)
+
+___
 
 ## Installation
 
@@ -136,57 +153,32 @@ Learn to use composer and add this to require section (in your composer.json):
 composer install pecee/pixie
 ```
 
-## Full Usage API
+## Feedback and development
 
-### Table of Contents
+If you are missing a feature, experience problems or have ideas or feedback that you want us to hear, please feel free to create an issue.
 
- - [Connection](#connection)
-    - [Multiple Connection](#alias)
-    - [SQLite and PostgreSQL Config Sample](#sqlite-and-postgresql-config-sample)
- - [Query](#query)
- - [**Select**](#select)
-    - [Table alias](#table-alias)
-    - [Get Easily](#get-easily)
-    - [Multiple Selects](#multiple-selects)
-    - [Select Distinct](#select-distinct)
-    - [Get All](#get-all)
-    - [Get First Row](#get-first-row)
-    - [Get Rows Count](#get-rows-count)
-    - [Selects With Sub-Queries](#select-with-sub-queries)
- - [**Where**](#where)
-    - [Where In](#where-in)
-    - [Where Between](#where-between)
-    - [Where Null](#where-null)
-    - [Grouped Where](#grouped-where)
- - [Group By and Order By](#group-by-and-order-by)
- - [Having](#having)
- - [Limit and Offset](#limit-and-offset)
- - [Join](#join)
-    - [Multiple Join Criteria](#multiple-join-criteria)
- - [Unions](#unions)
- - [Raw Query](#raw-query)
-    - [Raw Expressions](#raw-expressions)
- - [**Insert**](#insert)
-    - [Batch Insert](#batch-insert)
-    - [Insert with ON DUPLICATE KEY statement](#insert-with-on-duplicate-key-statement)
- - [**Update**](#update)
- - [**Delete**](#delete)
- - [Transactions](#transactions)
- - [Get Built Query](#get-built-query)
-    - [Get QueryObject from last executed query](#get-queryobject-from-last-executed-query)
- - [Sub Queries and Nested Queries](#sub-queries-and-nested-queries)
- - [Get PDO Instance](#get-pdo-instance)
- - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
- - [Query Events](#query-events)
-    - [Available Events](#available-events)
-    - [Registering Events](#registering-events)
-    - [Removing Events](#removing-events)
-    - [Some Use Cases](#some-use-cases)
-    - [Notes](#notes)
+#### Issues guidelines
 
-___
+- Please be as detailed as possible in the description when creating a new issue. This will help others to more easily understand- and solve your issue. For example: if you are experiencing issues, you should provide the necessary steps to reproduce the error within your description.
 
-## Connection
+- We love to hear out any ideas or feedback to the library.
+
+[Create a new issue here](https://github.com/skipperbent/pecee-pixie/issues)
+
+#### Contribution and development guidelines
+
+- Please try to follow the PSR-2 codestyle guidelines.
+
+- Please create your pull requests to the development base that matches the version number you want to change.
+For example when pushing changes to version 3, the pull request should use the `v3-development` base/branch.
+
+- Create detailed descriptions for your commits, as these will be used in the changelog for new releases.
+
+- When changing existing functionality, please ensure that the unit-tests working.
+
+- When adding new stuff, please remember to add new unit-tests for the functionality.
+
+## Connecting to the database
 Pixie supports three database drivers, MySQL, SQLite and PostgreSQL.
 You can specify the driver during connection and the associated configuration when creating a new connection. You can also create multiple connections, but you can use alias for only one connection at a time.;
 
@@ -220,7 +212,7 @@ $person = $queryBuilder
 
 `$connection` here is optional, if not given it will always associate itself to the first connection, but it can be useful when you have multiple database connections.
 
-### SQLite and PostgreSQL Config Sample
+### SQLite and PostgreSQL config example
 
 The example below is for use with sqlite-databases.
 
@@ -247,7 +239,7 @@ $queryBuilder = new \Pecee\Pixie\Connection('pgsql', [
 ]);
 ```
 
-## Query
+## Select
 
 It is recommend to use `table()` method before every query, except raw `query()`.
 To select from multiple tables just pass an array.
@@ -258,7 +250,7 @@ However this is not required.
 $queryBuilder->table(array('mytable1', 'mytable2'));
 ```
 
-### Table alias
+#### Table alias
 
 You can easily set the table alias by using
 
@@ -290,7 +282,8 @@ INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 
 **Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
 
-### Get Easily
+
+#### Get easily
 
 The query below returns the (first) row where id = 3, null if no rows.
 
@@ -310,8 +303,26 @@ $result = $queryBuilder
             ->findAll('name', 'Sana');
 ```
 
+#### Multiple selects
 
-### Select
+```php
+$queryBuilder
+    ->select(
+        [
+            'mytable.myfield1',
+            'mytable.myfield2',
+            'another_table.myfield3'
+        ]
+    );
+```
+
+Using select method multiple times `select('a')->select('b')` will also select `a` and `b`. Can be useful if you want to do conditional selects (within a PHP `if`).
+
+#### Select distinct
+
+```php
+$queryBuilder->selectDistinct(array('mytable.myfield1', 'mytable.myfield2'));
+```
 
 #### Select from query
 
@@ -340,29 +351,6 @@ $queryBuilder->table('my_table')->select('*');
 $queryBuilder->table('my_table')->select(array('field1', 'field2'));
 ```
 
-#### Multiple selects
-
-```php
-$queryBuilder
-    ->select(
-        [
-            'mytable.myfield1',
-            'mytable.myfield2',
-            'another_table.myfield3'
-        ]
-    );
-```
-
-Using select method multiple times `select('a')->select('b')` will also select `a` and `b`. Can be useful if you want to do conditional selects (within a PHP `if`).
-
-
-#### Select distinct
-
-```php
-$queryBuilder->selectDistinct(array('mytable.myfield1', 'mytable.myfield2'));
-```
-
-
 #### Get all
 
 Returns an array.
@@ -382,7 +370,7 @@ foreach ($results as $row) {
 }
 ```
 
-#### Get First Row
+#### Get first row
 
 ```php
 $row = $queryBuilder
@@ -393,7 +381,7 @@ $row = $queryBuilder
 Returns the first row, or null if there is no record. Using this method you can also make sure if a record exists. Access these like `echo $row->name`.
 
 
-#### Get Rows Count
+#### Get rows count
 
 ```php
 $queryBuilder
@@ -402,7 +390,7 @@ $queryBuilder
     ->count();
 ```
 
-#### Select With Sub-Queries
+#### Select with sub-queries
 
 ```php
 // Creates the first sub-query
@@ -465,7 +453,7 @@ $queryBuilder
 ```
 
 
-#### Where In
+#### Where in
 
 ```php
 $queryBuilder
@@ -479,7 +467,7 @@ $queryBuilder
     ->orWhereNotIn('name', array('usman', 'sana'));
 ```
 
-#### Where Between
+#### Where between
 
 ```php
 $queryBuilder
@@ -488,7 +476,7 @@ $queryBuilder
     ->orWhereBetween('status', 5, 8);
 ```
 
-#### Where Null
+#### Where null
 
 ```php
 $queryBuilder
@@ -499,7 +487,7 @@ $queryBuilder
     ->orWhereNotNull('field4');
 ```
 
-#### Grouped Where
+#### Grouped where
 
 Sometimes queries get complex, where you need grouped criteria, for example `WHERE age = 10 and (name like '%usman%' or description LIKE '%usman%')`.
 
@@ -517,7 +505,7 @@ $queryBuilder
     });
 ```
 
-### Group By and Order By
+### Group- and order by
 
 ```php
 $query = $queryBuilder
@@ -526,7 +514,7 @@ $query = $queryBuilder
             ->orderBy('created_at', 'ASC');
 ```
 
-#### Multiple Group By
+#### Multiple group by
 
 ```php
 $queryBuilder
@@ -544,7 +532,7 @@ $queryBuilder
     ->orHaving('type', '=', 'admin');
 ```
 
-### Limit and Offset
+### Limit and offset
 
 ```php
 $queryBuilder
@@ -571,6 +559,20 @@ If you need `FULL OUTER` join or any other join, just pass it as 5th parameter o
 ```php
 $queryBuilder
     ->join('another_table', 'another_table.person_id', '=', 'my_table.id', 'FULL OUTER')
+```
+
+#### Multiple Join Criteria
+
+If you need more than one criterion to join a table then pass a closure as second parameter.
+
+```php
+$queryBuilder
+    ->join('another_table', function($table)
+    {
+        $table->on('another_table.person_id', '=', 'my_table.id');
+        $table->on('another_table.person_id2', '=', 'my_table.id2');
+        $table->orOn('another_table.age', '>', $queryBuilder->raw(1));
+    })
 ```
 
 ### Unions
@@ -629,21 +631,7 @@ UNION
 )
 ```
 
-#### Multiple Join Criteria
-
-If you need more than one criterion to join a table then pass a closure as second parameter.
-
-```php
-$queryBuilder
-    ->join('another_table', function($table)
-    {
-        $table->on('another_table.person_id', '=', 'my_table.id');
-        $table->on('another_table.person_id2', '=', 'my_table.id2');
-        $table->orOn('another_table.age', '>', $queryBuilder->raw(1));
-    })
-```
-
-### Raw Query
+### Raw query
 
 You can always perform raw queries, if needed.
 
@@ -660,7 +648,7 @@ $queryBuilder
     ->query('SELECT * FROM persons WHERE age = ? AND name = ?', array(10, 'usman'));
 ```
 
-#### Raw Expressions
+#### Raw expressions
 
 When you wrap an expression with `raw()` method, Pixie doesn't try to sanitize these.
 
@@ -692,7 +680,7 @@ $insertId = $queryBuilder
 
 `insert()` method returns the insert id.
 
-#### Batch Insert
+#### Batch insert
 
 ```php
 $data = [
@@ -838,7 +826,7 @@ $queryBuilder->table('people')->insert([
 ]);
 ```
 
-### Get Built Query
+### Get raw query
 
 Sometimes you may need to get the query string, it's possible.
 
@@ -896,8 +884,7 @@ You can also retrieve the query-object from the last executed query.
 $queryString = $qb->getLastQuery()->getRawSql();
 ```
 
-
-### Sub Queries and Nested Queries
+### Sub-queries and nested queries
 
 Rarely but you may need to do sub queries or nested queries. Pixie is powerful enough to do this for you. You can create different query objects and use the `$queryBuilder->subQuery()` method.
 
@@ -945,12 +932,18 @@ FROM
 
 Pixie doesn't use bindings for sub queries and nested queries. It quotes values with PDO's `quote()` method.
 
-### Get PDO Instance
+### Getting the PDO instance
 
-If you need to get the PDO instance you can do so.
+If you need the `\PDO` instance, you can easily get it by calling:
 
 ```php
-$queryBuilder->getConnection()->getPdoInstance();
+$queryBuilder->pdo();
+```
+
+If you want to get the `Connection` object you can do so like this:
+
+```php
+$connection = $queryBuilder->getConnection();
 ```
 
 ### Fetch results as objects of specified class
@@ -973,11 +966,11 @@ $queryBuilder
     ->get();
 ```
 
-### Query Events
+### Query events
 
 Pixie comes with powerful query events to supercharge your application. These events are like database triggers, you can perform some actions when an event occurs, for example you can hook `after-delete` event of a table and delete related data from another table.
 
-#### Available Events
+#### Available events
 
 | Event constant                        | Event value/name  | Description                                           |
 | :------------------------------------ | :-------------    | :------------                                         |
@@ -994,7 +987,7 @@ Pixie comes with powerful query events to supercharge your application. These ev
 | `EventHandler::EVENT_BEFORE_DELETE`   | `before-delete`   | Event-type that fires before delete query.            |
 | `EventHandler::EVENT_AFTER_DELETE`    | `after-delete`    | Event-type that fires after delete query.             |
 
-#### Registering Events
+#### Registering event
 
 You can easily register a new event either by using the `registerEvent` method on either the `QueryBuilderHandler`, `Connection` or `EventHandler` class.
 
@@ -1075,13 +1068,13 @@ Only on `after-*` events you get three parameters: **first** is the query builde
  - On `after-delete` you get the [query object](#get-built-query) (same as what you get from `getQuery()`), from it you can get SQL and Bindings.
  - On `after-update` you get the [query object](#get-built-query) like `after-delete`.
 
-#### Removing Events
+#### Removing event
 
 ```php
 $queryBuilder->removeEvent($event, $table = null);
 ```
 
-#### Some Use Cases
+#### Use cases
 
 Here are some cases where Query Events can be extremely helpful:
 
@@ -1098,13 +1091,49 @@ Here are some cases where Query Events can be extremely helpful:
  - Query Events are set as per connection basis so multiple database connection don't create any problem, and creating new query builder instance preserves your events.
  - Query Events go recursively, for example after inserting into `table_a` your event inserts into `table_b`, now you can have another event registered with `table_b` which inserts into `table_c`.
  - Of course Query Events don't work with raw queries.
+ 
+### Exceptions
+ 
+ This is a list over exceptions thrown by pecee-pixie. 
+ 
+ All exceptions inherit from the base `Exception` class.
+ 
+ | Exception name             | 
+ | :------------------------- | 
+ | `ColumnNotFoundException`  | 
+ | `ConnectionException`      | 
+ | `DuplicateColumnException` | 
+ | `DuplicateEntryException`  | 
+ | `ForeignKeyException`      | 
+ | `NotNullException`         | 
+ | `TableNotFoundException`   | 
+ | `Exception`                | 
+ 
+#### Getting sql-query from exceptions
+
+If an error occurs and you want to debug your query - you can easily do so as all exceptions thrown by Pixie will 
+contain the last executed query.
+
+You can retrieve the `QueryObject` by calling
+
+```php
+$sql = $exception->getQueryObject()->getRawSql();
+```
+
+## Credits
+
+This project is based on the original [Pixie project](https://github.com/usmanhalalit/pixie) by the incredible talented usmanhalalit.
+
+Thanks to all the people that have contributed and the users enjoying our library.
+
+Here's some of our references:
+
+- [Holla.dk](https://holla.dk)
+- [Dscuz.com](https://dscuz.com)
+- [NinjaImg.com](https://ninjaimg.com)
+- [BookAndBegin.com](https://bookandbegin.com)
 
 ___
-If you find any typo then please edit and send a pull request.
-
-&copy; 2016 [Muhammad Usman](http://usman.it/), [Muhammad Usman]
-
-&copy; 2016 Simon Sessingø - [Pecee.dk](http://pecee.dk/).
 
 ## Licence
 
@@ -1112,7 +1141,7 @@ Licensed under the MIT licence.
 
 ### The MIT License (MIT)
 
-Copyright (c) 2016 Simon Sessingø / simple-php-router
+Copyright (c) 2016 Simon Sessingø / pecee-pixie
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
