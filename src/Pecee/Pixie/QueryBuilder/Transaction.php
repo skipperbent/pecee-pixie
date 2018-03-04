@@ -97,28 +97,15 @@ class Transaction extends QueryBuilderHandler
      */
     public function statement(string $sql, array $bindings = []): array
     {
-        $start = microtime(true);
-
         if ($this->transactionStatement === null && $this->pdo()->inTransaction() === true) {
-            $this->transactionStatement = $this->pdo()->prepare($sql);
+
+            $results = parent::statement($sql, $bindings);
+            $this->transactionStatement = $results[0];
+
+            return $results;
         }
 
-        try {
-
-            foreach ($bindings as $key => $value) {
-                $this->transactionStatement->bindValue(
-                    \is_int($key) ? $key + 1 : $key,
-                    $value,
-                    $this->parseParameterType($value)
-                );
-            }
-
-            $this->transactionStatement->execute();
-        } catch (\PDOException $e) {
-            throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
-        }
-
-        return [$this->transactionStatement, microtime(true) - $start];
+        return parent::statement($sql, $bindings);
     }
 
 }
