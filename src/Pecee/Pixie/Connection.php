@@ -25,12 +25,12 @@ class Connection
      *
      * @var IConnectionAdapter
      */
-    protected $adapter;
+    protected static $adapter;
 
     /**
      * @var array
      */
-    protected $adapterConfig;
+    protected static $adapterConfig;
 
     /**
      * @var \PDO
@@ -71,8 +71,12 @@ class Connection
     /**
      * @return Connection
      */
-    public static function getStoredConnection(): Connection
+    public static function getStoredConnection(): self
     {
+        if (static::$storedConnection === null && static::$adapter !== null && static::$adapterConfig !== null) {
+            static::$storedConnection = new static(static::$adapter, static::$adapterConfig);
+        }
+
         return static::$storedConnection;
     }
 
@@ -83,7 +87,7 @@ class Connection
     {
         // Build a database connection if we don't have one connected
 
-        $pdo = $this->adapter->connect($this->adapterConfig);
+        $pdo = $this->getAdapter()->connect($this->getAdapterConfig());
         $this->setPdoInstance($pdo);
 
         // Preserve the first database connection with a static property
@@ -97,7 +101,7 @@ class Connection
      */
     public function getAdapter(): IConnectionAdapter
     {
-        return $this->adapter;
+        return static::$adapter;
     }
 
     /**
@@ -105,7 +109,7 @@ class Connection
      */
     public function getAdapterConfig(): array
     {
-        return $this->adapterConfig;
+        return static::$adapterConfig;
     }
 
     /**
@@ -140,9 +144,9 @@ class Connection
      *
      * @return static
      */
-    public function setAdapter(IConnectionAdapter $adapter): Connection
+    public function setAdapter(IConnectionAdapter $adapter): self
     {
-        $this->adapter = $adapter;
+        static::$adapter = $adapter;
 
         return $this;
     }
@@ -152,9 +156,9 @@ class Connection
      *
      * @return static
      */
-    public function setAdapterConfig(array $adapterConfig): Connection
+    public function setAdapterConfig(array $adapterConfig): self
     {
-        $this->adapterConfig = $adapterConfig;
+        static::$adapterConfig = $adapterConfig;
 
         return $this;
     }
@@ -164,7 +168,7 @@ class Connection
      *
      * @return static
      */
-    public function setPdoInstance(\PDO $pdo): Connection
+    public function setPdoInstance(\PDO $pdo): self
     {
         $this->pdoInstance = $pdo;
 
@@ -177,7 +181,7 @@ class Connection
      * @param QueryObject $query
      * @return static
      */
-    public function setLastQuery(QueryObject $query)
+    public function setLastQuery(QueryObject $query): self
     {
         $this->lastQuery = $query;
 
@@ -206,6 +210,20 @@ class Connection
     public function registerEvent($name, $table = null, \Closure $action)
     {
         $this->getEventHandler()->registerEvent($name, $table, $action);
+    }
+
+    /**
+     * Close PDO connection
+     */
+    public function close()
+    {
+        $this->pdoInstance = null;
+        static::$storedConnection = null;
+    }
+
+    public function __destruct()
+    {
+        $this->close();
     }
 
 }
