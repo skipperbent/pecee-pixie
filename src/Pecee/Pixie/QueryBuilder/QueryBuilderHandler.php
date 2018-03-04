@@ -6,7 +6,7 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
-use Pecee\Pixie\QueryException;
+use Pecee\Pixie\Exceptions\TransactionHaltException;
 
 /**
  * Class QueryBuilderHandler
@@ -1110,12 +1110,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return array PDOStatement and execution time as float
      * @throws \Pecee\Pixie\Exception
-     * @throws \Pecee\Pixie\QueryException
-     * @throws \Pecee\Pixie\QueryException\DuplicateColumnException
-     * @throws \Pecee\Pixie\QueryException\DuplicateEntryException
-     * @throws \Pecee\Pixie\QueryException\DuplicateKeyException
-     * @throws \Pecee\Pixie\QueryException\ForeignKeyException
-     * @throws \Pecee\Pixie\QueryException\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
      */
     public function statement(string $sql, array $bindings = []): array
     {
@@ -1140,7 +1139,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         try {
             $pdoStatement->execute();
         } catch (\PDOException $e) {
-            throw QueryException::create($e, $this->getLastQuery(), $this->getConnection()->getAdapter()->getQueryAdapterClass());
+            throw Exception::create($e, $this->adapter->getQueryAdapterClass(), $this->getLastQuery());
         }
 
         return [

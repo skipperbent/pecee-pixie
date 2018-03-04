@@ -43,7 +43,7 @@ class Pgsql extends BaseAdapter
             }
 
         } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), 0, $e->getPrevious());
+            throw Exception::create($e, $this->getQueryAdapterClass());
         }
 
         return $connection;
