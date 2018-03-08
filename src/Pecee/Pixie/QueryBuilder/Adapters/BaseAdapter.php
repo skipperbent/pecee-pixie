@@ -216,7 +216,7 @@ abstract class BaseAdapter
     {
         $sql = '';
 
-        if (\array_key_exists('joins', $statements) === false || \count($statements['joins']) === 0) {
+        if (isset($statements['joins']) === false) {
             return $sql;
         }
 
@@ -438,8 +438,21 @@ abstract class BaseAdapter
      */
     public function select(array $statements): array
     {
-        if (array_key_exists('selects', $statements) === false) {
-            $statements['selects'] = ['*'];
+        $hasDistincts = false;
+
+        if (isset($statements['distincts']) === true && \count($statements['distincts']) > 0) {
+            $hasDistincts = true;
+
+            if (isset($statements['selects']) === true && \count($statements['selects']) > 0) {
+                $statements['selects'] = array_merge($statements['distincts'], $statements['selects']);
+            } else {
+                $statements['selects'] = $statements['distincts'];
+            }
+
+        } else {
+            if (isset($statements['selects']) === false) {
+                $statements['selects'] = ['*'];
+            }
         }
 
         // From
@@ -504,7 +517,7 @@ abstract class BaseAdapter
         $joinString = $this->buildJoin($statements);
 
         $sqlArray = [
-            'SELECT' . (isset($statements['distinct']) === true ? ' DISTINCT' : ''),
+            'SELECT' . ($hasDistincts === true ? ' DISTINCT' : ''),
             $selects,
             $fromEnabled ? 'FROM' : '',
             $tables,
