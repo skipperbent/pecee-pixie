@@ -3,35 +3,44 @@
 use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
+use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 /**
  * Class ConnectionTest
  *
  * @package Pecee\Pixie
  */
-class ConnectionTest extends TestCase {
-	/**
-	 * @var \Mockery\Mock
-	 */
-	private $mysqlConnectionMock;
-	/**
-	 * @var \Pecee\Pixie\Connection
-	 */
-	private $connection;
+class ConnectionTest extends TestCase
+{
+    /**
+     * @var \Mockery\Mock
+     */
+    private $mysqlConnectionMock;
+    /**
+     * @var \Pecee\Pixie\Connection
+     */
+    private $connection;
 
-	public function setUp() {
-		parent::setUp();
+    /**
+     * @var QueryBuilderHandler
+     */
+    protected $builder;
 
-		$this->mysqlConnectionMock = m::mock(Mysql::class);
-		$this->mysqlConnectionMock->shouldReceive('connect')->andReturn($this->mockPdo);
+    public function setUp()
+    {
+        parent::setUp();
 
-		$this->connection = new Connection($this->mysqlConnectionMock, array('prefix' => 'cb_'));
-	}
+        $this->mysqlConnectionMock = m::mock(Mysql::class);
+        $this->mysqlConnectionMock->shouldReceive('connect')->andReturn($this->mockPdo);
 
-	public function testConnection() {
-		$this->assertEquals($this->mockPdo, $this->connection->getPdoInstance());
-		$this->assertInstanceOf(\PDO::class, $this->connection->getPdoInstance());
-		$this->assertInstanceOf(IConnectionAdapter::class, $this->connection->getAdapter());
-		$this->assertEquals(array('prefix' => 'cb_'), $this->connection->getAdapterConfig());
-	}
+        $this->connection = new Connection($this->mysqlConnectionMock, ['prefix' => 'cb_']);
+    }
+
+    public function testConnection()
+    {
+        $this->assertEquals($this->mockPdo, $this->connection->getPdoInstance());
+        $this->assertInstanceOf(\PDO::class, $this->connection->getPdoInstance());
+        $this->assertInstanceOf(IConnectionAdapter::class, $this->connection->getAdapter());
+        $this->assertEquals(['prefix' => 'cb_'], $this->connection->getAdapterConfig());
+    }
 }

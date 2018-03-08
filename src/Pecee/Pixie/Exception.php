@@ -51,7 +51,7 @@ class Exception extends \Exception
              * @var integer|null $errorCode
              * @var string|null $errorMsg
              */
-            list(, $errorCode, $errorMsg) = $e->errorInfo;
+            [, $errorCode, $errorMsg] = $e->errorInfo;
 
             $errorMsg = $errorMsg ?? $e->getMessage();
             $errorCode = (int)($errorCode ?? $e->getCode());
@@ -115,7 +115,7 @@ class Exception extends \Exception
      *
      * @return QueryObject|null
      */
-    public function getQuery()
+    public function getQuery() : ?QueryObject
     {
         return $this->query;
     }

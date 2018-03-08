@@ -71,7 +71,7 @@ class EventArguments
      *
      * @return string|null
      */
-    public function getInsertId()
+    public function getInsertId() : ?string
     {
         return $this->data['insert_id'] ?? null;
     }
@@ -81,7 +81,7 @@ class EventArguments
      *
      * @return float|null
      */
-    public function getExecutionTime()
+    public function getExecutionTime() : ?float
     {
         return $this->data['execution_time'] ?? null;
     }

@@ -8,7 +8,7 @@ The syntax is similar to Laravel's query builder "Eloquent", but with less overh
 This library is stable, maintained and are used by sites around the world (check credits).
 
 **Requirements:**
-- PHP version 7.0 or higher is required for pecee-pixie version 4.x and above.
+- PHP version 7.2 or higher is required for pecee-pixie version 4.x and above.
 
 Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
@@ -105,7 +105,12 @@ There are many advanced options which are documented below. Sold? Let's [install
     - [Select multiple fields](#select-multiple-fields)
     - [Get all](#get-all)
     - [Get first row](#get-first-row)
-    - [Get rows count](#get-rows-count)
+    - [**Aggregate methods**](#aggregate-methods)
+        - [Getting the row count](#getting-the-row-count)
+        - [Getting the sum](#getting-the-sum)
+        - [Getting the average](#getting-the-average)
+        - [Getting the minimum](#getting-the-minimum)
+        - [Getting the maximum](#getting-the-maximum)
     - [Selects with sub-queries](#select-with-sub-queries)
  - [**Where**](#where)
     - [Where in](#where-in)
@@ -380,14 +385,63 @@ $row = $queryBuilder
 ```
 Returns the first row, or null if there is no record. Using this method you can also make sure if a record exists. Access these like `echo $row->name`.
 
+#### Aggregate methods
 
-#### Get rows count
+##### Getting the row count
+
+This will return the count for the entire number of rows in the result.
+
+The default behavior will count `*` (all) fields. You can specify a custom field by changing the `field` parameter.
 
 ```php
 $queryBuilder
     ->table('my_table')
     ->where('name', '=', 'Sana')
     ->count();
+```
+
+##### Getting the sum
+
+This will return the sum for a field in the entire number of rows in the result.
+
+```php
+$queryBuilder
+    ->table('my_table')
+    ->where('name', '=', 'Sana')
+    ->sum('views');
+```
+
+##### Getting the average
+
+This will return the average for a field in the entire number of rows in the result.
+
+```php
+$queryBuilder
+    ->table('my_table')
+    ->where('name', '=', 'Sana')
+    ->average('views');
+```
+
+##### Getting the minimum
+
+This will return the minimum for a field in the entire number of rows in the result.
+
+```php
+$queryBuilder
+    ->table('my_table')
+    ->where('name', '=', 'Sana')
+    ->min('views');
+```
+
+##### Getting the maximum
+
+This will return the average for a field in the entire number of rows in the result.
+
+```php
+$queryBuilder
+    ->table('my_table')
+    ->where('name', '=', 'Sana')
+    ->max('views');
 ```
 
 #### Select with sub-queries

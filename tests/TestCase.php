@@ -5,6 +5,7 @@ namespace Pecee\Pixie;
 use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Pecee\Pixie\Event\EventHandler;
+use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 /**
  * Class TestCase
@@ -25,6 +26,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
      * @var \Mockery\Mock
      */
     protected $mockPdoStatement;
+
+    /**
+     * @var QueryBuilderHandler
+     */
+    protected $builder;
 
     /**
      * @return array
@@ -97,6 +103,22 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(['prefix' => 'cb_']);
         $this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);
         $this->mockConnection->shouldReceive('setLastQuery');
+        $this->builder = new QueryBuilderHandler($this->mockConnection);
+    }
+
+    public function getLiveConnection() {
+        $connection = new \Pecee\Pixie\Connection('mysql', [
+            'driver'    => 'mysql',
+            'host'      => '127.0.0.1',
+            'database'  => 'test',
+            'username'  => 'root',
+            'password'  => '',
+            'charset'   => 'utf8mb4', // Optional
+            'collation' => 'utf8mb4_unicode_ci', // Optional
+            'prefix'    => '', // Table prefix, optional
+        ]);
+
+        return $connection->getQueryBuilder();
     }
 
     public function tearDown()

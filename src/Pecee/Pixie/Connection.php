@@ -83,7 +83,7 @@ class Connection
     /**
      * Create the connection adapter
      */
-    public function connect()
+    public function connect() : void
     {
         // Build a database connection if we don't have one connected
 
@@ -193,7 +193,7 @@ class Connection
      *
      * @return QueryObject|null
      */
-    public function getLastQuery()
+    public function getLastQuery() : ?QueryObject
     {
         return $this->lastQuery;
     }
@@ -207,7 +207,7 @@ class Connection
      *
      * @return void
      */
-    public function registerEvent($name, $table = null, \Closure $action)
+    public function registerEvent($name, $table = null, \Closure $action) : void
     {
         $this->getEventHandler()->registerEvent($name, $table, $action);
     }
@@ -215,7 +215,7 @@ class Connection
     /**
      * Close PDO connection
      */
-    public function close()
+    public function close() : void
     {
         $this->pdoInstance = null;
         static::$storedConnection = null;
