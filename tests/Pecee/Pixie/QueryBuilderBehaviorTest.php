@@ -3,7 +3,6 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\Event\EventArguments;
-use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 /**
  * Class QueryBuilderTest
@@ -12,18 +11,6 @@ use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
  */
 class QueryBuilderTest extends TestCase
 {
-    /**
-     * @var QueryBuilderHandler
-     */
-    private $builder;
-
-    public function setUp()
-    {
-        parent::setUp();
-
-        $this->builder = new QueryBuilder\QueryBuilderHandler($this->mockConnection);
-    }
-
     /**
      * Test alias
      */

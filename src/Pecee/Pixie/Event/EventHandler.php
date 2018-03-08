@@ -19,89 +19,89 @@ class EventHandler
      *
      * @var string
      */
-    const EVENT_BEFORE_ALL = 'before-*';
+    public const EVENT_BEFORE_ALL = 'before-*';
 
     /**
      * Event-type that fires after each query
      *
      * @var string
      */
-    const EVENT_AFTER_ALL = 'after-*';
+    public const EVENT_AFTER_ALL = 'after-*';
 
     /**
      * This event fires before a custom query
      *
      * @var string
      */
-    const EVENT_BEFORE_QUERY = 'before-query';
+    public const EVENT_BEFORE_QUERY = 'before-query';
 
     /**
      * This event fires after a custom query
      *
      * @var string
      */
-    const EVENT_AFTER_QUERY = 'after-query';
+    public const EVENT_AFTER_QUERY = 'after-query';
 
     /**
      * Event-type that fires before select
      *
      * @var string
      */
-    const EVENT_BEFORE_SELECT = 'before-select';
+    public const EVENT_BEFORE_SELECT = 'before-select';
 
     /**
      * Event-type that fires after select
      *
      * @var string
      */
-    const EVENT_AFTER_SELECT = 'after-select';
+    public const EVENT_AFTER_SELECT = 'after-select';
 
     /**
      * Event-type that fires before insert
      *
      * @var string
      */
-    const EVENT_BEFORE_INSERT = 'before-insert';
+    public const EVENT_BEFORE_INSERT = 'before-insert';
 
     /**
      * Event-type that fires after insert
      *
      * @var string
      */
-    const EVENT_AFTER_INSERT = 'after-insert';
+    public const EVENT_AFTER_INSERT = 'after-insert';
 
     /**
      * Event-type that fires before update
      *
      * @var string
      */
-    const EVENT_BEFORE_UPDATE = 'before-update';
+    public const EVENT_BEFORE_UPDATE = 'before-update';
 
     /**
      * Event-type that fires after update
      *
      * @var string
      */
-    const EVENT_AFTER_UPDATE = 'after-update';
+    public const EVENT_AFTER_UPDATE = 'after-update';
 
     /**
      * Event-type that fires before delete
      *
      * @var string
      */
-    const EVENT_BEFORE_DELETE = 'before-delete';
+    public const EVENT_BEFORE_DELETE = 'before-delete';
 
     /**
      * Event-type that fires after delete
      *
      * @var string
      */
-    const EVENT_AFTER_DELETE = 'after-delete';
+    public const EVENT_AFTER_DELETE = 'after-delete';
 
     /**
      * Fake table name for any table events
      */
-    const TABLE_ANY = ':any';
+    public const TABLE_ANY = ':any';
     /**
      * @var array
      */
@@ -158,9 +158,9 @@ class EventHandler
      * @param string $event
      * @param string|Raw|null $table
      *
-     * @return \Closure|null
+     * @return callable|null
      */
-    public function getEvent(string $event, $table = null)
+    public function getEvent(string $event, $table = null) : ?callable
     {
         $table = $table ?? static::TABLE_ANY;
 
@@ -198,7 +198,7 @@ class EventHandler
      *
      * @return void
      */
-    public function registerEvent(string $event, string $table = null, \Closure $action)
+    public function registerEvent(string $event, string $table = null, \Closure $action) : void
     {
         $this->events[$table ?? static::TABLE_ANY][$event] = $action;
     }
@@ -209,7 +209,7 @@ class EventHandler
      *
      * @return void
      */
-    public function removeEvent($event, $table = null)
+    public function removeEvent($event, $table = null) : void
     {
         unset($this->events[$table ?? static::TABLE_ANY][$event]);
     }

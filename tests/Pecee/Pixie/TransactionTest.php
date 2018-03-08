@@ -2,7 +2,6 @@
 
 namespace Pecee\Pixie;
 
-use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 use Pecee\Pixie\QueryBuilder\Transaction;
 
 /**
@@ -10,30 +9,12 @@ use Pecee\Pixie\QueryBuilder\Transaction;
  *
  * @package Pecee\Pixie
  */
-class TransactionTest extends \PHPUnit\Framework\TestCase
+class TransactionTest extends TestCase
 {
-    /**
-     * @var QueryBuilderHandler
-     */
-    private $builder;
 
     public function setUp()
     {
-        // NOTE: This test will require a live PDO connection
-
-        $connection = new \Pecee\Pixie\Connection('mysql', [
-            'driver'    => 'mysql',
-            'host'      => '127.0.0.1',
-            'database'  => 'test',
-            'username'  => 'root',
-            'password'  => '',
-            'charset'   => 'utf8mb4', // Optional
-            'collation' => 'utf8mb4_unicode_ci', // Optional
-            'prefix'    => '', // Table prefix, optional
-        ]);
-
-        $this->builder = $connection->getQueryBuilder();
-
+        $this->builder = $this->getLiveConnection();
     }
 
     public function testTransactionResult()
@@ -194,7 +175,6 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(3, $ids[2]);
 
         $this->assertEquals($this->builder->table('people')->count(), 3);
-
     }
 
     public function testLastQuery()

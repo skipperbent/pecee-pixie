@@ -41,7 +41,7 @@ class Transaction extends QueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
-    public function commit()
+    public function commit() : void
     {
         try {
             $this->pdo()->commit();
@@ -66,7 +66,7 @@ class Transaction extends QueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
-    public function rollBack()
+    public function rollBack() : void
     {
         try {
             $this->pdo()->rollBack();
