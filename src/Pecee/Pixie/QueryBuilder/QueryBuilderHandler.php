@@ -6,6 +6,7 @@ use PDO;
 use Pecee\Pixie\Connection;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\Exception;
+use Pecee\Pixie\Exceptions\ColumnNotFoundException;
 use Pecee\Pixie\Exceptions\ConnectionException;
 use Pecee\Pixie\Exceptions\TransactionHaltException;
 
@@ -21,21 +22,21 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @var string
      */
-    const UNION_TYPE_NONE = '';
+    public const UNION_TYPE_NONE = '';
 
     /**
      * Union type distinct
      *
      * @var string
      */
-    const UNION_TYPE_DISTINCT = 'DISTINCT';
+    public const UNION_TYPE_DISTINCT = 'DISTINCT';
 
     /**
      * Union type all
      *
      * @var string
      */
-    const UNION_TYPE_ALL = 'ALL';
+    public const UNION_TYPE_ALL = 'ALL';
     /**
      * @var Connection
      */
@@ -105,7 +106,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return void
      */
-    protected function addStatement(string $key, $value)
+    protected function addStatement(string $key, $value): void
     {
         if (\array_key_exists($key, $this->statements) === false) {
             $this->statements[$key] = (array)$value;
@@ -167,42 +168,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Performs special queries like COUNT, SUM etc based on the current query.
-     *
-     * @param string $type
-     *
-     * @throws Exception
-     * @return int
-     */
-    protected function aggregate(string $type): int
-    {
-        // Get the current selects
-        $mainSelects = $this->statements['selects'] ?? null;
-
-        // Replace select with a scalar value like `count`
-        $this->statements['selects'] = [$this->raw($type . '(*) AS `field`')];
-        $row = $this->get();
-
-        // Set the select as it was
-        if ($mainSelects !== null) {
-            $this->statements['selects'] = $mainSelects;
-        } else {
-            unset($this->statements['selects']);
-        }
-
-        if (isset($row[0]) === true) {
-            if (\is_array($row[0]) === true) {
-                return (int)$row[0]['field'];
-            }
-            if (\is_object($row[0]) === true) {
-                return (int)$row[0]->field;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
      * Add or change table alias
      * Example: table AS alias
      *
@@ -238,22 +203,100 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get count of rows
+     * Performs special queries like COUNT, SUM etc based on the current query.
+     *
+     * @param string $type
+     * @param string $field
+     * @throws Exception
+     * @return float
+     */
+    protected function aggregate(string $type, string $field = '*'): float
+    {
+        // Verify that field exists
+        if ($field !== '*' && isset($this->statements['selects']) === true && \in_array($field, $this->statements['selects'], true) === false) {
+            throw new ColumnNotFoundException(sprintf('Failed to count query - the column %s hasn\'t been selected in the query.', $field));
+        }
+
+        if (isset($this->statements['tables']) === false) {
+            throw new Exception('No table selected');
+        }
+
+        $alias = $this->statements['aliases'] ?? $this->statements['tables'];
+        $alias = \is_string($alias) === true ? \array_slice($alias, 0, 1) . '_' : '';
+        $alias .= 'count';
+
+        $rows = $this
+            ->newQuery($this->connection)
+            ->table($this->subQuery($this, $alias))
+            ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
+            ->get();
+
+        return isset($rows[0]) === true ? (float)((array)$rows[0])['field'] : 0;
+    }
+
+    /**
+     * Get count of all the rows for the current query
+     *
+     * @param string $field
      *
      * @throws Exception
-     * @return int
+     * @return float
      */
-    public function count(): int
+    public function count($field = '*'): float
     {
-        // Get the current statements
-        $originalStatements = $this->statements;
+        return $this->aggregate('count', $field);
+    }
 
-        unset($this->statements['orderBys'], $this->statements['limit'], $this->statements['offset']);
+    /**
+     * Get the sum of all the rows for the current query
+     *
+     * @param string $field
+     *
+     * @throws Exception
+     * @return float
+     */
+    public function sum($field): float
+    {
+        return $this->aggregate('sum', $field);
+    }
 
-        $count = $this->aggregate('count');
-        $this->statements = $originalStatements;
+    /**
+     * Get the sum of all the rows for the current query
+     *
+     * @param string $field
+     *
+     * @throws Exception
+     * @return float
+     */
+    public function average($field): float
+    {
+        return $this->aggregate('avg', $field);
+    }
 
-        return $count;
+    /**
+     * Get the sum of all the rows for the current query
+     *
+     * @param string $field
+     *
+     * @throws Exception
+     * @return float
+     */
+    public function min($field): float
+    {
+        return $this->aggregate('min', $field);
+    }
+
+    /**
+     * Get the sum of all the rows for the current query
+     *
+     * @param string $field
+     *
+     * @throws Exception
+     * @return float
+     */
+    public function max($field): float
+    {
+        return $this->aggregate('max', $field);
     }
 
     /**
@@ -271,7 +314,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_DELETE, $queryObject);
 
-        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+        [$response, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
         $this->fireEvents(EventHandler::EVENT_AFTER_DELETE, $queryObject, [
             'execution_time' => $executionTime,
         ]);
@@ -302,7 +345,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
              * @var $result        \PDOStatement
              * @var $executionTime float
              */
-            list($result, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+            [$result, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
             $insertId = $result->rowCount() === 1 ? $this->pdo()->lastInsertId() : null;
             $this->fireEvents(EventHandler::EVENT_AFTER_INSERT, $queryObject, [
@@ -436,7 +479,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         if ($this->pdoStatement === null) {
 
-            list($this->pdoStatement, $executionTime) = $this->statement(
+            [$this->pdoStatement, $executionTime] = $this->statement(
                 $queryObject->getSql(),
                 $queryObject->getBindings()
             );
@@ -470,9 +513,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $name
      * @param string|null $table
      *
-     * @return \Closure|null
+     * @return callable|null
      */
-    public function getEvent(string $name, string $table = null)
+    public function getEvent(string $name, string $table = null): ?callable
     {
         return $this->connection->getEventHandler()->getEvent($name, $table);
     }
@@ -482,7 +525,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return QueryObject|null
      */
-    public function getLastQuery()
+    public function getLastQuery(): ?QueryObject
     {
         return $this->connection->getLastQuery();
     }
@@ -936,7 +979,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_QUERY, $queryObject);
 
-        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+        [$response, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
         $this->fireEvents(EventHandler::EVENT_AFTER_QUERY, $queryObject, [
             'execution_time' => $executionTime,
@@ -978,7 +1021,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return void
      */
-    public function registerEvent($name, $table = null, \Closure $action)
+    public function registerEvent($name, $table = null, \Closure $action): void
     {
         $this->connection->getEventHandler()->registerEvent($name, $table, $action);
     }
@@ -991,7 +1034,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return void
      */
-    public function removeEvent($name, $table = null)
+    public function removeEvent($name, $table = null): void
     {
         $this->connection->getEventHandler()->removeEvent($name, $table);
     }
@@ -1315,7 +1358,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_UPDATE, $queryObject);
 
-        list($response, $executionTime) = $this->statement($queryObject->getSql(), $queryObject->getBindings());
+        [$response, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
         $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, [
             'execution_time' => $executionTime,

@@ -18,7 +18,7 @@ abstract class BaseAdapter
     /**
      * @var string
      */
-    const SANITIZER = '`';
+    public const SANITIZER = '`';
 
     /**
      * @var \Pecee\Pixie\Connection
@@ -194,7 +194,7 @@ abstract class BaseAdapter
 
         if (isset($statements[$key]) === true) {
             // Get the generic/adapter agnostic criteria string from parent
-            list($criteria, $bindings) = $this->buildCriteria($statements[$key], $bindValues);
+            [$criteria, $bindings] = $this->buildCriteria($statements[$key], $bindValues);
 
             if ($criteria !== null) {
                 $criteria = $type . ' ' . $criteria;
@@ -222,7 +222,7 @@ abstract class BaseAdapter
 
         foreach ((array)$statements['joins'] as $joinArr) {
             if (\is_array($joinArr['table']) === true) {
-                list($mainTable, $aliasTable) = $joinArr['table'];
+                [$mainTable, $aliasTable] = $joinArr['table'];
                 $table = $this->wrapSanitizer($mainTable) . ' AS ' . $this->wrapSanitizer($aliasTable);
             } else {
                 $table = $joinArr['table'] instanceof Raw ? (string)$joinArr['table'] : $this->wrapSanitizer($joinArr['table']);
@@ -279,7 +279,7 @@ abstract class BaseAdapter
             return compact('sql', 'bindings');
         }
 
-        list($sql, $bindings) = $this->buildCriteria($statements['criteria'], $bindValues);
+        [$sql, $bindings] = $this->buildCriteria($statements['criteria'], $bindValues);
 
         return compact('sql', 'bindings');
     }
@@ -297,7 +297,7 @@ abstract class BaseAdapter
         $table = end($statements['tables']);
 
         // WHERE
-        list($whereCriteria, $whereBindings) = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         $sqlArray = ['DELETE FROM', $this->wrapSanitizer($table), $whereCriteria];
         $sql = $this->concatenateQuery($sqlArray);
@@ -346,7 +346,7 @@ abstract class BaseAdapter
                 throw new Exception('No data given.', 4);
             }
 
-            list($updateStatement, $updateBindings) = $this->getUpdateStatement($statements['onduplicate']);
+            [$updateStatement, $updateBindings] = $this->getUpdateStatement($statements['onduplicate']);
             $sqlArray[] = 'ON DUPLICATE KEY UPDATE ' . $updateStatement;
             $bindings = array_merge($bindings, $updateBindings);
 
@@ -473,7 +473,7 @@ abstract class BaseAdapter
         $selects = $this->arrayStr($statements['selects'], ', ');
 
         // WHERE
-        list($whereCriteria, $whereBindings) = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         // GROUP BY
         $groupBys = $this->arrayStr($statements['groupBys'], ', ');
@@ -498,7 +498,7 @@ abstract class BaseAdapter
         $offset = isset($statements['offset']) ? 'OFFSET ' . $statements['offset'] : '';
 
         // HAVING
-        list($havingCriteria, $havingBindings) = $this->buildCriteriaWithType($statements, 'havings', 'HAVING');
+        [$havingCriteria, $havingBindings] = $this->buildCriteriaWithType($statements, 'havings', 'HAVING');
 
         // JOINS
         $joinString = $this->buildJoin($statements);
@@ -576,10 +576,10 @@ abstract class BaseAdapter
         $table = end($statements['tables']);
 
         // UPDATE
-        list($updateStatement, $bindings) = $this->getUpdateStatement($data);
+        [$updateStatement, $bindings] = $this->getUpdateStatement($data);
 
         // WHERE
-        list($whereCriteria, $whereBindings) = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         // LIMIT
         $limit = isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';

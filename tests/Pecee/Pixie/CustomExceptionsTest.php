@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\Exceptions\ColumnNotFoundException;
@@ -6,9 +7,11 @@ use Pecee\Pixie\Exceptions\ConnectionException;
 use Pecee\Pixie\Exceptions\DuplicateEntryException;
 use Pecee\Pixie\Exceptions\TableNotFoundException;
 
-class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
+class CustomExceptionsTest extends TestCase
+{
 
-    public function getQueryBuilder() {
+    public function getQueryBuilder()
+    {
         $con = new \Pecee\Pixie\Connection('mysql', [
             'driver'    => 'mysql',
             'host'      => '127.0.0.1',
@@ -19,19 +22,22 @@ class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
             'collation' => 'utf8mb4_unicode_ci', // Optional
             'prefix'    => '', // Table prefix, optional
         ]);
+
         return $con->getQueryBuilder();
     }
 
-    protected function validateException(\Exception $exception, $class, $code = null) {
+    protected function validateException(\Exception $exception, $class, $code = null)
+    {
 
-        if($code !== null) {
+        if ($code !== null) {
             $this->assertEquals($code, $exception->getCode());
         }
 
         $this->assertEquals($class, \get_class($exception));
     }
 
-    public function testConnectionException() {
+    public function testConnectionException()
+    {
 
         // test error code 2002
         try {
@@ -45,7 +51,7 @@ class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
             ]);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 2002);
         }
 
@@ -61,7 +67,7 @@ class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
             ]);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 1045);
         }
 
@@ -77,37 +83,40 @@ class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
             ]);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 1044);
         }
 
     }
 
-    public function testTableNotFoundException() {
+    public function testTableNotFoundException()
+    {
 
         $builder = $this->getQueryBuilder();
 
         try {
             $builder->table('hello')->where('id', '=', 2)->get();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, TableNotFoundException::class, 1146);
         }
 
     }
 
-    public function testColumnNotFoundException() {
+    public function testColumnNotFoundException()
+    {
 
         $builder = $this->getQueryBuilder();
 
         try {
             $builder->table('animal')->where('nonexisting', '=', 2)->get();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, ColumnNotFoundException::class, 1054);
         }
 
     }
 
-    public function testDuplicateEntryException() {
+    public function testDuplicateEntryException()
+    {
 
         $builder = $this->getQueryBuilder();
 
@@ -115,11 +124,22 @@ class CustomExceptionsTest extends \PHPUnit\Framework\TestCase {
             $builder->table('animal')->insert([
                 'id' => 1,
             ]);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->validateException($e, DuplicateEntryException::class, 1062);
         }
 
     }
 
+    public function testQueryAggregateColumnNotFoundException()
+    {
+        $this->expectException(ColumnNotFoundException::class);
+
+        $this->builder
+            ->table('animal')
+            ->select(['column1', 'column2', 'column3'])
+            ->where('parent_id', 2)
+            ->count('column4');
+
+    }
 
 }

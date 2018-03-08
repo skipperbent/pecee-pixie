@@ -12,5 +12,5 @@ class Mysql extends BaseAdapter
     /**
      * @var string
      */
-    const SANITIZER = '`';
+    public const SANITIZER = '`';
 }
