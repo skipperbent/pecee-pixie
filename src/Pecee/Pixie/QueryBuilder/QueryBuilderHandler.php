@@ -1574,4 +1574,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         return $this;
     }
 
+    public function __destruct()
+    {
+        $this->pdoStatement = null;
+        $this->connection->close();
+    }
+
 }
