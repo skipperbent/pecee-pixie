@@ -234,13 +234,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $alias = sprintf('%s_count', $this->getAlias() ?? $this->getTable());
 
-        $rows = $this
-            ->newQuery($this->connection)
+        $count = $this
             ->table($this->subQuery($this, $alias))
             ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
-            ->get();
+            ->first();
 
-        return isset($rows[0]) === true ? (float)((array)$rows[0])['field'] : 0;
+        return isset($count->field) === true ? (float)$count->field : 0;
     }
 
     /**
@@ -736,10 +735,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function newQuery(Connection $connection = null): IQueryBuilderHandler
     {
-        if ($connection === null) {
-            $connection = $this->connection;
-        }
-
         return new static($connection);
     }
 
@@ -1256,6 +1251,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         if ($tables === null) {
             $this->statements['tables'] = null;
+
+            return $this;
         }
 
         if (\is_array($tables) === false) {
