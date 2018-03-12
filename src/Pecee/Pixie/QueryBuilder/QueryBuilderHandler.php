@@ -73,6 +73,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected $fetchParameters = [\PDO::FETCH_OBJ];
 
     /**
+     * If true calling from, select etc. will overwrite any existing values from previous calls in query.
+     *
+     * @var bool
+     */
+    protected $overwriteEnabled = false;
+
+    /**
      * @param \Pecee\Pixie\Connection|null $connection
      *
      * @throws \Pecee\Pixie\Exception
@@ -89,6 +96,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         if (isset($adapterConfig['prefix']) === true) {
             $this->tablePrefix = $adapterConfig['prefix'];
+        }
+
+        if (isset($adapterConfig['query_overwriting']) === true) {
+            $this->overwriteEnabled = (bool)$adapterConfig['query_overwriting'];
         }
 
         // Query builder adapter instance
@@ -221,9 +232,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception('No table selected');
         }
 
-        $alias = $this->statements['aliases'] ?? $this->statements['tables'];
-        $alias = \is_string($alias) === true ? \array_slice($alias, 0, 1) . '_' : '';
-        $alias .= 'count';
+        $alias = sprintf('%s_count', $this->getAlias() ?? $this->getTable());
 
         $rows = $this
             ->newQuery($this->connection)
@@ -248,7 +257,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get the sum of all the rows for the current query
+     * Get the sum for a field in the current query
      *
      * @param string $field
      *
@@ -261,7 +270,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get the sum of all the rows for the current query
+     * Get the average for a field in the current query
      *
      * @param string $field
      *
@@ -274,7 +283,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get the sum of all the rows for the current query
+     * Get the minimum for a field in the current query
      *
      * @param string $field
      *
@@ -287,7 +296,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
-     * Get the sum of all the rows for the current query
+     * Get the maximum for a field in the current query
      *
      * @param string $field
      *
@@ -433,25 +442,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $result = $this->limit(1)->get();
 
         return ($result !== null && \count($result) > 0) ? $result[0] : null;
-    }
-
-    /**
-     * Adds FROM statement to the current query.
-     *
-     * @param string|array $tables
-     *
-     * @return static
-     */
-    public function from($tables): IQueryBuilderHandler
-    {
-        if (\is_array($tables) === false) {
-            $tables = \func_get_args();
-        }
-
-        $tables = $this->addTablePrefix($tables, false);
-        $this->addStatement('tables', $tables);
-
-        return $this;
     }
 
     /**
@@ -1086,7 +1076,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         }
 
         $fields = $this->addTablePrefix($fields);
-        $this->addStatement('selects', $fields);
+
+        if ($this->overwriteEnabled === true) {
+            $this->statements['selects'] = $fields;
+        } else {
+            $this->addStatement('selects', $fields);
+        }
 
         return $this;
     }
@@ -1100,8 +1095,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function selectDistinct($fields)
     {
-        $this->select($fields);
-        $this->addStatement('distinct', true);
+        if ($this->overwriteEnabled === true) {
+            $this->statements['distincts'] = $fields;
+        } else {
+            $this->addStatement('distincts', $fields);
+        }
 
         return $this;
     }
@@ -1219,8 +1217,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string|array|null $tables Single table or multiple tables as an array or as multiple parameters
      *
-     * @throws Exception
      * @return static
+     * @throws Exception
      *
      * ```
      * Examples:
@@ -1236,32 +1234,50 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function table($tables = null): IQueryBuilderHandler
     {
         if ($tables === null) {
-            $this->statements['tables'] = null;
-
-            return $this;
+            return $this->from($tables);
         }
-
-        $tTables = [];
 
         if (\is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = \func_get_args();
         }
 
-        $instance = new static($this->connection);
+        return $this->newQuery($this->connection)->from($tables);
+    }
 
-        foreach ($tables as $key => $value) {
-            if (\is_string($key)) {
-                $instance->alias($value, $key);
-                $tTables[] = $key;
-            } else {
-                $tTables[] = $value;
-            }
+    /**
+     * Adds FROM statement to the current query.
+     *
+     * @param string|array|null $tables
+     *
+     * @return static
+     */
+    public function from($tables = null): IQueryBuilderHandler
+    {
+        if ($tables === null) {
+            $this->statements['tables'] = null;
         }
-        $tTables = $this->addTablePrefix($tTables, false);
-        $instance->addStatement('tables', $tTables);
 
-        return $instance;
+        if (\is_array($tables) === false) {
+            $tables = \func_get_args();
+        }
+
+        $tTables = [];
+
+        foreach ((array)$tables as $key => $value) {
+            if (\is_string($key) === true) {
+                $this->alias($value, $key);
+                $tTables[] = $key;
+                continue;
+            }
+
+            $tTables[] = $value;
+        }
+
+        $tTables = $this->addTablePrefix($tTables, false);
+        $this->statements['tables'] = $tTables;
+
+        return $this;
     }
 
     /**
@@ -1526,4 +1542,68 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
     }
+
+    /**
+     * Get the alias for the current query
+     *
+     * @return string|null
+     */
+    public function getAlias(): ?string
+    {
+        return isset($this->statements['aliases']) === true ? array_values($this->statements['aliases'])[0] : null;
+    }
+
+    /**
+     * Get the table-name for the current query
+     *
+     * @return string|null
+     */
+    public function getTable(): ?string
+    {
+        return isset($this->statements['tables']) === true ? array_values($this->statements['tables'])[0] : null;
+    }
+
+    /**
+     * Returns all columns in current query
+     *
+     * @return array
+     */
+    public function getColumns(): array
+    {
+        return isset($this->statements['selects']) === true ? array_values($this->statements['selects'])[0] : [];
+    }
+
+    /**
+     * If enabled calling from, select etc. will overwrite any existing values from previous calls in query.
+     *
+     * @param bool $enabled
+     * @return static
+     */
+    public function setOverwriteEnabled(bool $enabled)
+    {
+        $this->overwriteEnabled = $enabled;
+
+        return $this;
+    }
+
+    /**
+     * Returns boolean value indicating if overwriting is enabled or disabled in QueryBuilderHandler.
+     *
+     * @return bool
+     */
+    public function isOverwriteEnabled(): bool
+    {
+        return $this->overwriteEnabled;
+    }
+
+    public function close(): void
+    {
+        $this->pdoStatement = null;
+    }
+
+    public function __destruct()
+    {
+        $this->close();
+    }
+
 }

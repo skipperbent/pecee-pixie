@@ -146,31 +146,19 @@ class QueryBuilder extends TestCase
 
     }
 
-    public function testQueryCount()
+    public function testQueryOverwrite()
     {
-        $qb = $this->getLiveConnection();
+        $qb = $this->builder;
+        $first = $qb->table('people')->whereNull('name');
+        $second = $qb->table('people')->where('gender', '=', 'male')->union($first);
 
-        $count = $qb->from('animal')->groupBy('number_of_legs')->count();
+        $main = $qb->table($qb->subQuery($second, 'people'))->select(['id', 'name']);
 
-        $this->assertEquals(3, $count);
-    }
+        $this->assertEquals(
+            'SELECT `id`, `name` FROM ((SELECT * FROM `cb_people` WHERE `gender` = \'male\') UNION (SELECT * FROM `cb_people` WHERE `name` IS NULL)) AS `people`',
+            $main->getQuery()->getRawSql()
+        );
 
-    public function testQuerySum()
-    {
-        $qb = $this->getLiveConnection();
-
-        $count = $qb->from('animal')->groupBy('number_of_legs')->sum('number_of_legs');
-
-        $this->assertEquals(40, $count);
-    }
-
-    public function testQueryAverage()
-    {
-        $qb = $this->getLiveConnection();
-
-        $count = $qb->from('animal')->groupBy('number_of_legs')->average('number_of_legs');
-
-        $this->assertEquals(13.3333, $count);
     }
 
 }
