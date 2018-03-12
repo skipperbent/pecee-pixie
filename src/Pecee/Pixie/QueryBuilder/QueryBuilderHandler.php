@@ -1233,26 +1233,31 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function table($tables = null): IQueryBuilderHandler
     {
-        $newQuery = ($tables !== null);
+        if ($tables === null) {
+            return $this->from($tables);
+        }
+
         if (\is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = \func_get_args();
         }
 
-        $qb = ($newQuery === true) ? $this->newQuery() : $this;
-
-        return $qb->from($tables);
+        return $this->newQuery($this->connection)->from($tables);
     }
 
     /**
      * Adds FROM statement to the current query.
      *
-     * @param string|array $tables
+     * @param string|array|null $tables
      *
      * @return static
      */
-    public function from($tables): IQueryBuilderHandler
+    public function from($tables = null): IQueryBuilderHandler
     {
+        if ($tables === null) {
+            $this->statements['tables'] = null;
+        }
+
         if (\is_array($tables) === false) {
             $tables = \func_get_args();
         }
