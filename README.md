@@ -8,7 +8,7 @@ The syntax is similar to Laravel's query builder "Eloquent", but with less overh
 This library is stable, maintained and are used by sites around the world (check credits).
 
 **Requirements:**
-- PHP version 7.2 or higher is required for pecee-pixie version 4.x and above.
+- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above.
 
 Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
@@ -136,6 +136,8 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Sub-queries and nested queries](#sub-queries-and-nested-queries)
  - [Getting the PDO instance](#getting-the-pdo-instance)
  - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
+ - [Advanced](#advanced)
+     - [Enable query-overwriting](#enable-query-overwriting)
  - [Query events](#query-events)
     - [Available event](#available-event)
     - [Registering event](#registering-event)
@@ -275,8 +277,6 @@ $queryBuilder->alias('foo1', 'table1');
 $queryBuilder->table('table1')->alias('foo1');
 ```
 
-**Note:** If `$table` parameter is null - the querybuilder will use the table from latest call to `table($table)` method.
-
 Output:
 
 ```sql
@@ -286,7 +286,6 @@ INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
 **Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
-
 
 #### Get easily
 
@@ -636,23 +635,23 @@ You can easily create unions by calling the `union` method on the `QueryBuilderH
 Example:
 
 ```php
-$firstQuery = 
+$firstQuery =
     $queryBuilder
     ->table('people')
     ->whereNull('email');
 
-$secondQuery = 
+$secondQuery =
     $queryBuilder
     ->table('people')
     ->where('hair_color', '=', 'green')
     ->union($firstQuery);
 
-$thirdQuery = 
+$thirdQuery =
     $queryBuilder
     ->table('people')
     ->where('gender', '=', 'male')
     ->union($secondQuery);
-    
+
 $items = $thirdQuery->get();
 ```
 
@@ -661,26 +660,26 @@ The example above will create a sql-statement similar to this:
 ```sql
 (
 	SELECT *
-	FROM 
+	FROM
 		`cb_people`
-	WHERE 
+	WHERE
 		`gender` = 'male'
-) 
-UNION 
+)
+UNION
 (
 	SELECT *
-	FROM 
+	FROM
 		`cb_people`
-	WHERE 
-		`email` 
+	WHERE
+		`email`
 	IS NULL
-) 
-UNION 
+)
+UNION
 (
 	SELECT *
-	FROM 
+	FROM
 		`cb_people`
-	WHERE 
+	WHERE
 		`hair_color` = 'green'
 )
 ```
@@ -814,14 +813,14 @@ Here's a basic transaction:
 ```php
 $queryBuilder
     ->transaction(function (Transaction $transaction) {
-    
+
         $transaction
             ->table('my_table')
             ->insert(array(
                 'name' => 'Test',
                 'url' => 'example.com'
             );
-    
+
         $transaction
             ->table('my_table')
             ->insert(array(
@@ -1020,6 +1019,31 @@ $queryBuilder
     ->get();
 ```
 
+### Advanced
+
+#### Enable query-overwriting
+
+If enabled calling from, select etc. will overwrite any existing values from previous calls in query.
+
+You can enable or disable query-overwriting by calling the `setOverwriteEnabled` method on the `QueryBuilderHandler` object.
+
+The feature is disabled as default.
+
+**Example:**
+
+```php
+$queryBuilder
+    ->setOverwriteEnabled(true);
+```
+
+If you want this feature to be enabled on all `QueryBuilderHandler` object as default, you can add the following setting to the connection configuration:
+
+```php
+$adapterConfig = [
+    'query_overwriting' => false,
+];
+```
+
 ### Query events
 
 Pixie comes with powerful query events to supercharge your application. These events are like database triggers, you can perform some actions when an event occurs, for example you can hook `after-delete` event of a table and delete related data from another table.
@@ -1101,7 +1125,7 @@ After deleting from `my_table` delete the relations:
 $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(EventArguments $arguments)
 {
     $bindings = $arguments->getQuery()->getBindings();
-    
+
     $arguments
         ->getQueryBuilder()
         ->table('person_details')
@@ -1145,27 +1169,27 @@ Here are some cases where Query Events can be extremely helpful:
  - Query Events are set as per connection basis so multiple database connection don't create any problem, and creating new query builder instance preserves your events.
  - Query Events go recursively, for example after inserting into `table_a` your event inserts into `table_b`, now you can have another event registered with `table_b` which inserts into `table_c`.
  - Of course Query Events don't work with raw queries.
- 
+
 ### Exceptions
- 
- This is a list over exceptions thrown by pecee-pixie. 
- 
+
+ This is a list over exceptions thrown by pecee-pixie.
+
  All exceptions inherit from the base `Exception` class.
- 
- | Exception name             | 
- | :------------------------- | 
- | `ColumnNotFoundException`  | 
- | `ConnectionException`      | 
- | `DuplicateColumnException` | 
- | `DuplicateEntryException`  | 
- | `ForeignKeyException`      | 
- | `NotNullException`         | 
- | `TableNotFoundException`   | 
- | `Exception`                | 
- 
+
+ | Exception name             |
+ | :------------------------- |
+ | `ColumnNotFoundException`  |
+ | `ConnectionException`      |
+ | `DuplicateColumnException` |
+ | `DuplicateEntryException`  |
+ | `ForeignKeyException`      |
+ | `NotNullException`         |
+ | `TableNotFoundException`   |
+ | `Exception`                |
+
 #### Getting sql-query from exceptions
 
-If an error occurs and you want to debug your query - you can easily do so as all exceptions thrown by Pixie will 
+If an error occurs and you want to debug your query - you can easily do so as all exceptions thrown by Pixie will
 contain the last executed query.
 
 You can retrieve the `QueryObject` by calling

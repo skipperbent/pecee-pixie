@@ -196,7 +196,7 @@ class QueryBuilderTest extends TestCase
             'birthday',
             'address',
         ])->from('my_table');
-        $this->assertEquals("SELECT DISTINCT `name`, `surname`, `birthday`, `address` FROM `cb_my_table`", $query->getQuery()->getRawSql());
+        $this->assertEquals("SELECT DISTINCT `surname`, `name`, `birthday`, `address` FROM `cb_my_table`", $query->getQuery()->getRawSql());
     }
 
     public function testSelectDistinctWithSingleColumn()
