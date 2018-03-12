@@ -129,7 +129,7 @@ abstract class BaseAdapter
                     $bindings[] = [$subValue];
                 }
 
-                $valuePlaceholder = \trim($valuePlaceholder, ', ');
+                $valuePlaceholder = trim($valuePlaceholder, ', ');
                 $criteria .= ' (' . $valuePlaceholder . ') ';
 
                 continue;
@@ -171,9 +171,9 @@ abstract class BaseAdapter
         }
 
         // Clear all white spaces, and, or from beginning and white spaces from ending
-        $criteria = \preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
+        $criteria = preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
-        return [$criteria, \array_merge(...$bindings)];
+        return [$criteria, array_merge(...$bindings)];
     }
 
     /**
@@ -501,7 +501,7 @@ abstract class BaseAdapter
                 $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
             }
 
-            if ($orderBys = \trim($orderBys, ', ')) {
+            if ($orderBys = trim($orderBys, ', ')) {
                 $orderBys = 'ORDER BY ' . $orderBys;
             }
         }
@@ -582,7 +582,7 @@ abstract class BaseAdapter
      */
     public function update(array $statements, array $data): array
     {
-        if (\count($data) < 1) {
+        if (\count($data) === 0) {
             throw new Exception('No data given.', 4);
         }
 
