@@ -146,31 +146,4 @@ class QueryBuilder extends TestCase
 
     }
 
-    public function testQueryCount()
-    {
-        $qb = $this->getLiveConnection();
-
-        $count = $qb->from('animal')->groupBy('number_of_legs')->count();
-
-        $this->assertEquals(3, $count);
-    }
-
-    public function testQuerySum()
-    {
-        $qb = $this->getLiveConnection();
-
-        $count = $qb->from('animal')->groupBy('number_of_legs')->sum('number_of_legs');
-
-        $this->assertEquals(40, $count);
-    }
-
-    public function testQueryAverage()
-    {
-        $qb = $this->getLiveConnection();
-
-        $count = $qb->from('animal')->groupBy('number_of_legs')->average('number_of_legs');
-
-        $this->assertEquals(13.3333, $count);
-    }
-
 }

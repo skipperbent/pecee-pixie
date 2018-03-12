@@ -157,6 +157,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             }
 
             // If key is not integer, it is likely a alias mapping, so we need to change prefix target
+            // TODO: is this really necessary?
             $target = &$value;
 
             if (\is_int($key) === false) {
@@ -1073,7 +1074,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $fields = $this->addTablePrefix($fields);
 
-        if($this->overwriteEnabled === true) {
+        if ($this->overwriteEnabled === true) {
             $this->statements['selects'] = $fields;
         } else {
             $this->addStatement('selects', $fields);
@@ -1091,7 +1092,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function selectDistinct($fields)
     {
-        if($this->overwriteEnabled === true) {
+        if ($this->overwriteEnabled === true) {
             $this->statements['distincts'] = $fields;
         } else {
             $this->addStatement('distincts', $fields);
@@ -1240,9 +1241,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $tables = \func_get_args();
         }
 
-        $instance = new static($this->connection);
-
-        return $instance->from($tables);
+        return $this->newQuery()->from($tables);
     }
 
     /**
@@ -1261,12 +1260,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $tTables = [];
 
         foreach ((array)$tables as $key => $value) {
-            if (\is_string($key)) {
+            if (\is_string($key) === true) {
                 $this->alias($value, $key);
                 $tTables[] = $key;
-            } else {
-                $tTables[] = $value;
+                continue;
             }
+
+            $tTables[] = $value;
         }
 
         $tTables = $this->addTablePrefix($tTables, false);
@@ -1571,13 +1571,18 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function overwriteEnabled(bool $enabled)
     {
         $this->overwriteEnabled = $enabled;
+
         return $this;
+    }
+
+    public function close() : void
+    {
+        $this->pdoStatement = null;
     }
 
     public function __destruct()
     {
-        $this->pdoStatement = null;
-        $this->connection->close();
+        $this->close();
     }
 
 }
