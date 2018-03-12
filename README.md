@@ -136,6 +136,8 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Sub-queries and nested queries](#sub-queries-and-nested-queries)
  - [Getting the PDO instance](#getting-the-pdo-instance)
  - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
+ - [Advanced](#advanced)
+     - [Enable query-overwriting](#enable-query--overwrite)
  - [Query events](#query-events)
     - [Available event](#available-event)
     - [Registering event](#registering-event)
@@ -1018,6 +1020,31 @@ $queryBuilder
     ->table('my_table')
     ->setFetchMode(PDO::FETCH_COLUMN|PDO::FETCH_UNIQUE)
     ->get();
+```
+
+### Advanced
+
+#### Enable query-overwriting
+
+If enabled calling from, select etc. will overwrite any existing values from previous calls in query.
+
+You can enable or disable query-overwriting by calling the `setOverwriteEnabled` method on the `QueryBuilderHandler` object.
+
+The feature is disabled as default.
+
+**Example:**
+
+```php
+$queryBuilder
+    ->setOverwriteEnabled(true);
+```
+
+If you want this feature to be enabled on all `QueryBuilderHandler` object as default, you can add the following setting to the connection configuration:
+
+```php
+$adapterConfig = [
+    'query_overwriting' => false,
+];
 ```
 
 ### Query events

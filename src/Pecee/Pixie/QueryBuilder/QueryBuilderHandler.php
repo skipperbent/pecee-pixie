@@ -73,7 +73,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected $fetchParameters = [\PDO::FETCH_OBJ];
 
     /**
-     * If true calling select etc. will overwrite any existing settings in query.
+     * If true calling from, select etc. will overwrite any existing values from previous calls in query.
      *
      * @var bool
      */
@@ -96,6 +96,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         if (isset($adapterConfig['prefix']) === true) {
             $this->tablePrefix = $adapterConfig['prefix'];
+        }
+
+        if (isset($adapterConfig['query_overwriting']) === true) {
+            $this->overwriteEnabled = (bool)$adapterConfig['query_overwriting'];
         }
 
         // Query builder adapter instance
@@ -157,7 +161,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             }
 
             // If key is not integer, it is likely a alias mapping, so we need to change prefix target
-            // TODO: is this really necessary?
             $target = &$value;
 
             if (\is_int($key) === false) {
@@ -1230,13 +1233,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function table($tables = null): IQueryBuilderHandler
     {
-        if ($tables === null) {
-            $this->statements['tables'] = null;
-
-            return $this;
-        }
-
-        if (\is_array($tables) === false) {
+        if ($tables === null || \is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = \func_get_args();
         }
@@ -1568,14 +1565,30 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         return isset($this->statements['selects']) === true ? array_values($this->statements['selects'])[0] : [];
     }
 
-    public function overwriteEnabled(bool $enabled)
+    /**
+     * If enabled calling from, select etc. will overwrite any existing values from previous calls in query.
+     *
+     * @param bool $enabled
+     * @return static
+     */
+    public function setOverwriteEnabled(bool $enabled)
     {
         $this->overwriteEnabled = $enabled;
 
         return $this;
     }
 
-    public function close() : void
+    /**
+     * Returns boolean value indicating if overwriting is enabled or disabled in QueryBuilderHandler.
+     *
+     * @return bool
+     */
+    public function isOverwriteEnabled(): bool
+    {
+        return $this->overwriteEnabled;
+    }
+
+    public function close(): void
     {
         $this->pdoStatement = null;
     }

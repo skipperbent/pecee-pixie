@@ -14,6 +14,8 @@ class QueryBuilderAggregateTest extends TestCase
     {
         return parent::setUp();
 
+        $this->builder->query('TRUNCATE `animal`');
+
         $qb->from('animal')->insert([
             ['name' => 'mouse', 'number_of_legs' => 28],
             ['name' => 'horse', 'number_of_legs' => 4],
@@ -47,11 +49,6 @@ class QueryBuilderAggregateTest extends TestCase
         $count = $qb->from('animal')->groupBy('number_of_legs')->average('number_of_legs');
 
         $this->assertEquals(13.3333, $count);
-    }
-
-    public function __destruct()
-    {
-        $this->builder->query('TRUNCATE `animal`');
     }
 
 }
