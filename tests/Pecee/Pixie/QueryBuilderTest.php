@@ -146,4 +146,19 @@ class QueryBuilder extends TestCase
 
     }
 
+    public function testQueryOverwrite()
+    {
+        $qb = $this->builder;
+        $first = $qb->table('people')->whereNull('name');
+        $second = $qb->table('people')->where('gender', '=', 'male')->union($first);
+
+        $main = $qb->table($qb->subQuery($second, 'people'))->select(['id', 'name']);
+
+        $this->assertEquals(
+            'SELECT `id`, `name` FROM ((SELECT * FROM `cb_people` WHERE `gender` = \'male\') UNION (SELECT * FROM `cb_people` WHERE `name` IS NULL)) AS `people`',
+            $main->getQuery()->getRawSql()
+        );
+
+    }
+
 }

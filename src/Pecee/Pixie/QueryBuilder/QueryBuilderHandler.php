@@ -1217,8 +1217,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string|array|null $tables Single table or multiple tables as an array or as multiple parameters
      *
-     * @throws Exception
      * @return static
+     * @throws Exception
      *
      * ```
      * Examples:
@@ -1233,12 +1233,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function table($tables = null): IQueryBuilderHandler
     {
-        if ($tables === null || \is_array($tables) === false) {
+        $newQuery = ($tables !== null);
+        if (\is_array($tables) === false) {
             // Because a single table is converted to an array anyways, this makes sense.
             $tables = \func_get_args();
         }
 
-        return $this->newQuery()->from($tables);
+        $qb = ($newQuery === true) ? $this->newQuery() : $this;
+
+        return $qb->from($tables);
     }
 
     /**
