@@ -137,7 +137,7 @@ There are many advanced options which are documented below. Sold? Let's [install
  - [Getting the PDO instance](#getting-the-pdo-instance)
  - [Fetch results as objects of specified class](#fetch-results-as-objects-of-specified-class)
  - [Advanced](#advanced)
-     - [Enable query-overwriting](#enable-query--overwrite)
+     - [Enable query-overwriting](#enable-query--overwriting)
  - [Query events](#query-events)
     - [Available event](#available-event)
     - [Registering event](#registering-event)
