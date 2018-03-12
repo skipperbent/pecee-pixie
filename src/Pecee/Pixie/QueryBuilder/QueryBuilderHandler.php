@@ -113,13 +113,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Add new statement to statement-list
      *
      * @param string $key
-     * @param mixed $value
+     * @param string|array $value
      *
      * @return void
      */
     protected function addStatement(string $key, $value): void
     {
-        if (\array_key_exists($key, $this->statements) === false) {
+        if (array_key_exists($key, $this->statements) === false) {
             $this->statements[$key] = (array)$value;
         } else {
             $this->statements[$key] = array_merge($this->statements[$key], (array)$value);
@@ -187,7 +187,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function alias(string $alias, string $table = null): IQueryBuilderHandler
+    public function alias(string $alias, ?string $table = null): IQueryBuilderHandler
     {
         if ($table === null && isset($this->statements['tables'][0]) === true) {
             $table = $this->statements['tables'][0];
@@ -195,7 +195,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $table = $this->tablePrefix . $table;
         }
 
-        $this->statements['aliases'][$table] = strtolower($alias);
+        $this->statements['aliases'][$table] = \strtolower($alias);
 
         return $this;
     }
@@ -250,7 +250,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return float
      */
-    public function count($field = '*'): float
+    public function count(string $field = '*'): float
     {
         return $this->aggregate('count', $field);
     }
@@ -263,7 +263,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return float
      */
-    public function sum($field): float
+    public function sum(string $field): float
     {
         return $this->aggregate('sum', $field);
     }
@@ -276,7 +276,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return float
      */
-    public function average($field): float
+    public function average(string $field): float
     {
         return $this->aggregate('avg', $field);
     }
@@ -289,7 +289,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return float
      */
-    public function min($field): float
+    public function min(string $field): float
     {
         return $this->aggregate('min', $field);
     }
@@ -302,7 +302,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return float
      */
-    public function max($field): float
+    public function max(string $field): float
     {
         return $this->aggregate('max', $field);
     }
@@ -397,7 +397,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return \stdClass|string|null
      */
-    public function find($value, $fieldName = 'id')
+    public function find($value, string $fieldName = 'id')
     {
         return $this->where($fieldName, '=', $value)->first();
     }
@@ -423,11 +423,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param QueryObject $queryObject
      * @param array $eventArguments
      *
-     * @return array
+     * @return void
      */
-    public function fireEvents(string $name, QueryObject $queryObject, array $eventArguments = []): array
+    public function fireEvents(string $name, QueryObject $queryObject, array $eventArguments = []): void
     {
-        return $this->connection->getEventHandler()->fireEvents($name, $queryObject, $this, $eventArguments);
+        $this->connection->getEventHandler()->fireEvents($name, $queryObject, $this, $eventArguments);
     }
 
     /**
@@ -440,7 +440,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         $result = $this->limit(1)->get();
 
-        return ($result !== null && \count($result) > 0) ? $result[0] : null;
+        return ($result !== null && \count($result) !== 0) ? $result[0] : null;
     }
 
     /**
@@ -464,7 +464,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $this->fireEvents(EventHandler::EVENT_BEFORE_SELECT, $queryObject);
 
         $executionTime = 0;
-        $startTime = \microtime(true);
+        $startTime = microtime(true);
 
         if ($this->pdoStatement === null) {
 
@@ -477,7 +477,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $result = \call_user_func_array([$this->pdoStatement, 'fetchAll'], $this->fetchParameters);
         $this->pdoStatement = null;
 
-        $executionTime += \microtime(true) - $startTime;
+        $executionTime += microtime(true) - $startTime;
 
         $this->fireEvents(EventHandler::EVENT_AFTER_SELECT, $queryObject, [
             'execution_time' => $executionTime,
@@ -636,7 +636,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return array|string
      */
-    public function insertIgnore($data)
+    public function insertIgnore(array $data)
     {
         return $this->doInsert($data, 'insertignore');
     }
@@ -718,7 +718,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function limit($limit): IQueryBuilderHandler
+    public function limit(int $limit): IQueryBuilderHandler
     {
         $this->statements['limit'] = $limit;
 
@@ -728,14 +728,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Creates and returns new query.
      *
-     * @param \Pecee\Pixie\Connection|null $connection
-     *
      * @throws Exception
      * @return static
      */
-    public function newQuery(Connection $connection = null): IQueryBuilderHandler
+    public function newQuery(): IQueryBuilderHandler
     {
-        return new static($connection);
+        return new static($this->connection);
     }
 
     /**
@@ -745,7 +743,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function offset($offset): IQueryBuilderHandler
+    public function offset(int $offset): IQueryBuilderHandler
     {
         $this->statements['offset'] = $offset;
 
@@ -755,11 +753,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Add on duplicate key statement.
      *
-     * @param string|array $data
+     * @param array $data
      *
      * @return static
      */
-    public function onDuplicateKeyUpdate($data): IQueryBuilderHandler
+    public function onDuplicateKeyUpdate(array $data): IQueryBuilderHandler
     {
         $this->addStatement('onduplicate', $data);
 
@@ -888,11 +886,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds ORDER BY statement to the current query.
      *
      * @param string|Raw|\Closure|array $fields
-     * @param string $defaultDirection
+     * @param string $direction
      *
      * @return static
      */
-    public function orderBy($fields, $defaultDirection = 'ASC'): IQueryBuilderHandler
+    public function orderBy($fields, string $direction = 'ASC'): IQueryBuilderHandler
     {
         if (\is_array($fields) === false) {
             $fields = [$fields];
@@ -904,7 +902,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
             if (\is_int($key) === true) {
                 $field = $value;
-                $type = $defaultDirection;
+                $type = $direction;
             }
 
             if (($field instanceof Raw) === false) {
@@ -957,7 +955,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function query($sql, array $bindings = []): IQueryBuilderHandler
+    public function query(string $sql, array $bindings = []): IQueryBuilderHandler
     {
         $queryObject = new QueryObject($sql, $bindings, $this->getConnection());
         $this->connection->setLastQuery($queryObject);
@@ -987,7 +985,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return Raw
      */
-    public function raw($value, $bindings = null): Raw
+    public function raw(string $value, $bindings = null): Raw
     {
         if (\is_array($bindings) === false) {
             $bindings = \func_get_args();
@@ -1006,7 +1004,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return void
      */
-    public function registerEvent($name, $table = null, \Closure $action): void
+    public function registerEvent(string $name, ?string $table = null, \Closure $action): void
     {
         $this->connection->getEventHandler()->registerEvent($name, $table, $action);
     }
@@ -1019,7 +1017,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return void
      */
-    public function removeEvent($name, $table = null): void
+    public function removeEvent(string $name, ?string $table = null): void
     {
         $this->connection->getEventHandler()->removeEvent($name, $table);
     }
@@ -1032,7 +1030,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return array|string
      */
-    public function replace($data)
+    public function replace(array $data)
     {
         return $this->doInsert($data, 'replace');
     }
@@ -1048,7 +1046,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function rightJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
+    public function rightJoin($table, $key, ?string $operator = null, $value = null): IQueryBuilderHandler
     {
         return $this->join($table, $key, $operator, $value, 'right');
     }
@@ -1159,7 +1157,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function statement(string $sql, array $bindings = []): array
     {
         try {
-            $startTime = \microtime(true);
+            $startTime = microtime(true);
             $pdoStatement = $this->pdo()->prepare($sql);
 
             /**
@@ -1179,7 +1177,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
             return [
                 $pdoStatement,
-                \microtime(true) - $startTime,
+                microtime(true) - $startTime,
             ];
         } catch (\PDOException $e) {
             throw Exception::create($e, $this->getConnection()->getAdapter()->getQueryAdapterClass(), $this->getLastQuery());
@@ -1237,13 +1235,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $tables = \func_get_args();
         }
 
-        return $this->newQuery($this->connection)->from($tables);
+        return $this->newQuery()->from($tables);
     }
 
     /**
      * Adds FROM statement to the current query.
      *
-     * @param string|array|null $tables
+     * @param string|array|null $tables Single table or multiple tables as an array or as multiple parameters
      *
      * @return static
      */
@@ -1334,7 +1332,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function union(QueryBuilderHandler $query, $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
+    public function union(QueryBuilderHandler $query, ?string $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
     {
         $statements = $query->getStatements();
 
@@ -1360,7 +1358,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return \PDOStatement
      */
-    public function update($data): \PDOStatement
+    public function update(array $data): \PDOStatement
     {
         /**
          * @var $response \PDOStatement
@@ -1388,7 +1386,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return array|\PDOStatement|string
      * @throws Exception
      */
-    public function updateOrInsert($data)
+    public function updateOrInsert(array $data)
     {
         if ($this->first() !== null) {
             return $this->update($data);
@@ -1445,7 +1443,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    protected function whereHandler($key, string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
+    protected function whereHandler($key, ?string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
     {
         $key = $this->addTablePrefix($key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
@@ -1532,7 +1530,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    protected function whereNullHandler($key, $prefix = '', $operator = ''): IQueryBuilderHandler
+    protected function whereNullHandler($key, string $prefix = '', string $operator = ''): IQueryBuilderHandler
     {
         $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
@@ -1593,9 +1591,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         return $this->overwriteEnabled;
     }
 
+    /**
+     * Close connection
+     */
     public function close(): void
     {
         $this->pdoStatement = null;
+        $this->connection = null;
     }
 
     public function __destruct()

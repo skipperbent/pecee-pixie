@@ -108,50 +108,30 @@ class EventHandler
     protected $events = [];
 
     /**
-     * @var array
-     */
-    protected $firedEvents = [];
-
-    /**
-     * @param string $event
+     * @param string $name
      * @param QueryObject $queryObject
      * @param QueryBuilderHandler $queryBuilder
      * @param array $eventArguments
-     * @return array Event responses array
+     * @return void
      */
-    public function fireEvents(string $event, QueryObject $queryObject, QueryBuilderHandler $queryBuilder, array $eventArguments = []): array
+    public function fireEvents(string $name, QueryObject $queryObject, QueryBuilderHandler $queryBuilder, array $eventArguments = []): void
     {
         $statements = $queryBuilder->getStatements();
         $tables = $statements['tables'] ?? [];
 
-        // Events added with :any will be fired in case of any table,
-        // we are adding :any as a fake table at the beginning.
+        // Events added with :any will be fired in case of any table, we are adding :any as a fake table at the beginning.
         array_unshift($tables, static::TABLE_ANY);
-
-        $eventResponses = [];
 
         // Fire all events
         foreach ($tables as $table) {
             // Fire before events for :any table
-            $action = $this->getEvent($event, $table);
+            $action = $this->getEvent($name, $table);
             if ($action === null) {
                 continue;
             }
 
-            // Make an event id, with event type and table
-            $eventId = $event . $table;
-
-            // Fire event and add to fired list
-            $this->firedEvents[] = $eventId;
-
-            $result = $action(new EventArguments($event, $queryObject, $queryBuilder, $eventArguments));
-
-            if ($result !== null) {
-                $eventResponses[] = $result;
-            }
+            $action(new EventArguments($name, $queryObject, $queryBuilder, $eventArguments));
         }
-
-        return $eventResponses;
     }
 
     /**
@@ -160,12 +140,16 @@ class EventHandler
      *
      * @return callable|null
      */
-    public function getEvent(string $event, $table = null) : ?callable
+    public function getEvent(string $event, ?string $table = null): ?callable
     {
         $table = $table ?? static::TABLE_ANY;
 
         if ($table instanceof Raw) {
             return null;
+        }
+
+        if (isset($this->events[$table][$event]) === true) {
+            return $this->events[$table][$event];
         }
 
         // Find event with wildcard (*)
@@ -180,7 +164,7 @@ class EventHandler
             }
         }
 
-        return $this->events[$table][$event] ?? null;
+        return null;
     }
 
     /**
@@ -193,12 +177,12 @@ class EventHandler
 
     /**
      * @param string $event
-     * @param string $table
+     * @param string|null $table
      * @param \Closure $action
      *
      * @return void
      */
-    public function registerEvent(string $event, string $table = null, \Closure $action) : void
+    public function registerEvent(string $event, ?string $table = null, \Closure $action): void
     {
         $this->events[$table ?? static::TABLE_ANY][$event] = $action;
     }
@@ -209,7 +193,7 @@ class EventHandler
      *
      * @return void
      */
-    public function removeEvent($event, $table = null) : void
+    public function removeEvent($event, $table = null): void
     {
         unset($this->events[$table ?? static::TABLE_ANY][$event]);
     }
