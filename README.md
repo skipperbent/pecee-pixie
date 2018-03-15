@@ -5,12 +5,10 @@ Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitizat
 
 The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
-This library is stable, maintained and are used by sites around the world (check credits).
+This library is stable, maintained and are used by sites around the world (check the [credits](#credits)).
 
 **Requirements:**
-- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above.
-
-Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
+- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above. Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
 ### Features
 
@@ -19,6 +17,7 @@ Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie)
 - Support for not defining table and/or removing defined table.
 - Better handling of `Raw` objects in `where` statements.
 - Union queries.
+- Better connection handling.
 - Performance optimisations.
 - Tons of bug fixes.
 - Much more...
@@ -64,32 +63,35 @@ $config =
     ],
 ];
 
-$queryBuilder =
-    (new \Pecee\Pixie\Connection('mysql', $config))
-    ->getQueryBuilder();
+$queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 ```
 
 **Simple query:**
 
-The query below returns the row where id = 3, null if no rows.
-```PHP
-$row = $queryBuilder->table('my_table')->find(3);
+Get user id with id of `3`. Returns `null` when no match.
+
+```php
+$user = $queryBuilder
+            ->table('users')
+            ->find(3);
 ```
 
 **Full queries:**
 
-```PHP
-$query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
+Get all users with blue hair.
 
-// Get result
-$query->get();
+```php
+$users = $queryBuilder
+            ->table('users')
+            ->where('hair_color', '=', 'blue')
+            ->get();
 ```
 
 **Query events:**
 
 After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
 
-```PHP
+```php
 $queryBuilder->registerEvent('before-select', 'users', function(EventArguments $arguments)
 {
     $arguments
@@ -301,7 +303,7 @@ FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
-**Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
+**Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$queryBuilder->table()`.
 
 #### Get easily
 
@@ -950,7 +952,7 @@ You can also retrieve the query-object from the last executed query.
 **Example:**
 
 ```php
-$queryString = $qb->getLastQuery()->getRawSql();
+$queryString = $queryBuilder->getLastQuery()->getRawSql();
 ```
 
 ### Sub-queries and nested queries
