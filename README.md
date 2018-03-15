@@ -39,22 +39,34 @@ Most importantly this project is used on many live-sites and maintained.
 require 'vendor/autoload.php';
 
 // Create a connection, once only.
-$config = array(
-            'driver'    => 'mysql', // Db driver or IConnectionAdapter class
-            'host'      => 'localhost',
-            'database'  => 'your-database',
-            'username'  => 'root',
-            'password'  => 'your-password',
-            'charset'   => 'utf8', // Optional
-            'collation' => 'utf8_unicode_ci', // Optional
-            'prefix'    => 'cb_', // Table prefix, optional
-            'options'   => array( // PDO constructor options, optional
-                PDO::ATTR_TIMEOUT => 5,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ),
-        );
+$config =
+[
+    // Name of database driver or IConnectionAdapter class
+    'driver'    => 'mysql',
+    'host'      => 'localhost',
+    'database'  => 'your-database',
+    'username'  => 'root',
+    'password'  => 'your-password',
 
-$queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
+    // Optional
+    'charset'   => 'utf8',
+
+    // Optional
+    'collation' => 'utf8_unicode_ci',
+
+    // Table prefix, optional
+    'prefix'    => 'cb_',
+
+    // PDO constructor options, optional
+    'options'   => [
+        PDO::ATTR_TIMEOUT => 5,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ],
+];
+
+$queryBuilder =
+    (new \Pecee\Pixie\Connection('mysql', $config))
+    ->getQueryBuilder();
 ```
 
 **Simple query:**
@@ -194,20 +206,20 @@ You can specify the driver during connection and the associated configuration wh
 require 'vendor/autoload.php';
 
 $config = [
-    'driver'    => 'mysql', // Db driver
+    'driver'    => 'mysql',
     'host'      => 'localhost',
     'database'  => 'your-database',
     'username'  => 'root',
     'password'  => 'your-password',
-    'charset'   => 'utf8', // Optional
-    'collation' => 'utf8_unicode_ci', // Optional
-    'prefix'    => 'cb_', // Table prefix, optional
+    'charset'   => 'utf8',
+    'collation' => 'utf8_unicode_ci',
+    'prefix'    => '',
 ];
 
 // Creates new connection
 $connection = new \Pecee\Pixie\Connection('mysql', $config);
 
-// Get the query-builder object
+// Get the query-builder object which will initialize the database connection
 $queryBuilder = $connection->getQueryBuilder();
 
 // Run query
@@ -218,6 +230,10 @@ $person = $queryBuilder
 ```
 
 `$connection` here is optional, if not given it will always associate itself to the first connection, but it can be useful when you have multiple database connections.
+
+**NOTE:**
+Calling the `getQueryBuilder` method will automatically make a connection to the database, if none has already established.
+If you want to access the `Pdo` instance directly from the `Connection` class, make sure to call `$connection->connect();` to establish a connection to the database.
 
 ### SQLite and PostgreSQL config example
 

@@ -38,6 +38,7 @@ class ConnectionTest extends TestCase
 
     public function testConnection()
     {
+        $this->connection->connect();
         $this->assertEquals($this->mockPdo, $this->connection->getPdoInstance());
         $this->assertInstanceOf(\PDO::class, $this->connection->getPdoInstance());
         $this->assertInstanceOf(IConnectionAdapter::class, $this->connection->getAdapter());

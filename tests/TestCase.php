@@ -103,6 +103,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(['prefix' => 'cb_']);
         $this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);
         $this->mockConnection->shouldReceive('setLastQuery');
+        $this->mockConnection->shouldReceive('connect')->andReturn($this->mockConnection);
         $this->builder = new QueryBuilderHandler($this->mockConnection);
     }
 
