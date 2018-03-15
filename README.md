@@ -32,7 +32,7 @@ This library is stable, maintained and are used by sites around the world (check
 
 Most importantly this project is used on many live-sites and maintained.
 
-## Example
+### Examples
 ```php
 // Make sure you have Composer's autoload file included
 require 'vendor/autoload.php';
@@ -88,7 +88,9 @@ $users = $queryBuilder
             ->get();
 ```
 
-### Table of Contents
+___
+
+## Table of Contents
 
  - [Installation](#installation)
  - [Feedback and development](#feedback-and-development)
