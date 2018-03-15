@@ -65,6 +65,8 @@ class Connection
 
         // Create event dependency
         $this->eventHandler = new EventHandler();
+
+        static::$storedConnection = $this;
     }
 
     /**
@@ -90,13 +92,7 @@ class Connection
         }
 
         // Build a database connection if we don't have one connected
-        $pdo = $this->getAdapter()->connect($this->getAdapterConfig());
-        $this->setPdoInstance($pdo);
-
-        // Preserve the first database connection with a static property
-        if (static::$storedConnection === null) {
-            static::$storedConnection = $this;
-        }
+        $this->setPdoInstance($this->getAdapter()->connect($this->getAdapterConfig()));
 
         return $this;
     }
