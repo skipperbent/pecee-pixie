@@ -10,7 +10,7 @@ This library is stable, maintained and are used by sites around the world (check
 **Requirements:**
 - PHP version 7.1 or higher is required for pecee-pixie version 4.x and above. Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
-### Features
+**Features:**
 
 - Improved sub-queries.
 - Custom prefix/aliases for tables (prefix.`table`).
@@ -68,7 +68,7 @@ $queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder
 
 **Simple query:**
 
-Get user id with id of `3`. Returns `null` when no match.
+Get user with the id of `3`. Returns `null` when no match.
 
 ```php
 $user = $queryBuilder
@@ -78,28 +78,15 @@ $user = $queryBuilder
 
 **Full queries:**
 
-Get all users with blue hair.
+Get all users with blue or red hair.
 
 ```php
 $users = $queryBuilder
             ->table('users')
             ->where('hair_color', '=', 'blue')
+            ->orWhere('hair_color', '=', 'red')
             ->get();
 ```
-
-**Query events:**
-
-After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
-
-```php
-$queryBuilder->registerEvent('before-select', 'users', function(EventArguments $arguments)
-{
-    $arguments
-        ->getQueryBuilder()
-        ->where('status', '!=', 'banned');
-});
-```
-There are many advanced options which are documented below. Sold? Let's [install](#installation).
 
 ### Table of Contents
 
@@ -303,7 +290,8 @@ FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
-**Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$queryBuilder->table()`.
+**NOTE:**
+You can always remove a table from a query by calling the `table` method with no arguments like this `$queryBuilder->table()`.
 
 #### Get easily
 
