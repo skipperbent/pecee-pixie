@@ -5,20 +5,19 @@ Pixie supports MySQL, SQLite and PostgreSQL will handle all your query sanitizat
 
 The syntax is similar to Laravel's query builder "Eloquent", but with less overhead.
 
-This library is stable, maintained and are used by sites around the world (check credits).
+This library is stable, maintained and are used by sites around the world (check the [credits](#credits)).
 
 **Requirements:**
-- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above.
+- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above. Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
 
-Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie).
-
-### Features
+**Features:**
 
 - Improved sub-queries.
 - Custom prefix/aliases for tables (prefix.`table`).
 - Support for not defining table and/or removing defined table.
 - Better handling of `Raw` objects in `where` statements.
 - Union queries.
+- Better connection handling.
 - Performance optimisations.
 - Tons of bug fixes.
 - Much more...
@@ -33,61 +32,65 @@ Versions prior to 4.x are available [here](https://github.com/skipperbent/pixie)
 
 Most importantly this project is used on many live-sites and maintained.
 
-## Example
+### Examples
 ```php
 // Make sure you have Composer's autoload file included
 require 'vendor/autoload.php';
 
 // Create a connection, once only.
-$config = array(
-            'driver'    => 'mysql', // Db driver or IConnectionAdapter class
-            'host'      => 'localhost',
-            'database'  => 'your-database',
-            'username'  => 'root',
-            'password'  => 'your-password',
-            'charset'   => 'utf8', // Optional
-            'collation' => 'utf8_unicode_ci', // Optional
-            'prefix'    => 'cb_', // Table prefix, optional
-            'options'   => array( // PDO constructor options, optional
-                PDO::ATTR_TIMEOUT => 5,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ),
-        );
+$config =
+[
+    // Name of database driver or IConnectionAdapter class
+    'driver'    => 'mysql',
+    'host'      => 'localhost',
+    'database'  => 'your-database',
+    'username'  => 'root',
+    'password'  => 'your-password',
+
+    // Optional
+    'charset'   => 'utf8',
+
+    // Optional
+    'collation' => 'utf8_unicode_ci',
+
+    // Table prefix, optional
+    'prefix'    => 'cb_',
+
+    // PDO constructor options, optional
+    'options'   => [
+        PDO::ATTR_TIMEOUT => 5,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ],
+];
 
 $queryBuilder = (new \Pecee\Pixie\Connection('mysql', $config))->getQueryBuilder();
 ```
 
 **Simple query:**
 
-The query below returns the row where id = 3, null if no rows.
-```PHP
-$row = $queryBuilder->table('my_table')->find(3);
+Get user with the id of `3`. Returns `null` when no match.
+
+```php
+$user = $queryBuilder
+            ->table('users')
+            ->find(3);
 ```
 
 **Full queries:**
 
-```PHP
-$query = $queryBuilder->table('my_table')->where('name', '=', 'Sana');
+Get all users with blue or red hair.
 
-// Get result
-$query->get();
+```php
+$users = $queryBuilder
+            ->table('users')
+            ->where('hair_color', '=', 'blue')
+            ->orWhere('hair_color', '=', 'red')
+            ->get();
 ```
 
-**Query events:**
+___
 
-After the code below, every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
-
-```PHP
-$queryBuilder->registerEvent('before-select', 'users', function(EventArguments $arguments)
-{
-    $arguments
-        ->getQueryBuilder()
-        ->where('status', '!=', 'banned');
-});
-```
-There are many advanced options which are documented below. Sold? Let's [install](#installation).
-
-### Table of Contents
+## Table of Contents
 
  - [Installation](#installation)
  - [Feedback and development](#feedback-and-development)
@@ -194,20 +197,20 @@ You can specify the driver during connection and the associated configuration wh
 require 'vendor/autoload.php';
 
 $config = [
-    'driver'    => 'mysql', // Db driver
+    'driver'    => 'mysql',
     'host'      => 'localhost',
     'database'  => 'your-database',
     'username'  => 'root',
     'password'  => 'your-password',
-    'charset'   => 'utf8', // Optional
-    'collation' => 'utf8_unicode_ci', // Optional
-    'prefix'    => 'cb_', // Table prefix, optional
+    'charset'   => 'utf8',
+    'collation' => 'utf8_unicode_ci',
+    'prefix'    => '',
 ];
 
 // Creates new connection
 $connection = new \Pecee\Pixie\Connection('mysql', $config);
 
-// Get the query-builder object
+// Get the query-builder object which will initialize the database connection
 $queryBuilder = $connection->getQueryBuilder();
 
 // Run query
@@ -218,6 +221,10 @@ $person = $queryBuilder
 ```
 
 `$connection` here is optional, if not given it will always associate itself to the first connection, but it can be useful when you have multiple database connections.
+
+**NOTE:**
+Calling the `getQueryBuilder` method will automatically make a connection to the database, if none has already established.
+If you want to access the `Pdo` instance directly from the `Connection` class, make sure to call `$connection->connect();` to establish a connection to the database.
 
 ### SQLite and PostgreSQL config example
 
@@ -285,7 +292,8 @@ FROM `table1` AS `foo1`
 INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo1`.`id`
 ```
 
-**Note:** You can always remove a table from a query by calling the `table` method with no arguments like this `$qb->table()`.
+**NOTE:**
+You can always remove a table from a query by calling the `table` method with no arguments like this `$queryBuilder->table()`.
 
 #### Get easily
 
@@ -934,7 +942,7 @@ You can also retrieve the query-object from the last executed query.
 **Example:**
 
 ```php
-$queryString = $qb->getLastQuery()->getRawSql();
+$queryString = $queryBuilder->getLastQuery()->getRawSql();
 ```
 
 ### Sub-queries and nested queries

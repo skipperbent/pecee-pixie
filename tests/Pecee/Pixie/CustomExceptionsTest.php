@@ -41,7 +41,7 @@ class CustomExceptionsTest extends TestCase
 
         // test error code 2002
         try {
-            new \Pecee\Pixie\Connection('mysql', [
+            (new \Pecee\Pixie\Connection('mysql', [
                 'driver'    => 'mysql',
                 'host'      => '0.2.3.4',
                 'database'  => 'test',
@@ -50,14 +50,14 @@ class CustomExceptionsTest extends TestCase
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
-            ]);
+            ]))->connect();
         } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 2002);
         }
 
         // test error code 1045
         try {
-            new \Pecee\Pixie\Connection('mysql', [
+            (new \Pecee\Pixie\Connection('mysql', [
                 'driver'    => 'mysql',
                 'host'      => '127.0.0.1',
                 'database'  => 'test',
@@ -66,14 +66,14 @@ class CustomExceptionsTest extends TestCase
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
-            ]);
+            ]))->connect();
         } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 1045);
         }
 
         // test error code 1044
         try {
-            new \Pecee\Pixie\Connection('mysql', [
+            (new \Pecee\Pixie\Connection('mysql', [
                 'driver'    => 'mysql',
                 'host'      => '127.0.0.1',
                 'database'  => 'root',
@@ -82,7 +82,7 @@ class CustomExceptionsTest extends TestCase
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
-            ]);
+            ]))->connect();
         } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 1044);
         }
