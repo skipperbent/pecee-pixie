@@ -92,6 +92,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new ConnectionException('No database connection found.', 404);
         }
 
+        // Connect to database
+        $this->connection->connect();
+
         $adapterConfig = $this->connection->getAdapterConfig();
 
         if (isset($adapterConfig['prefix']) === true) {
