@@ -919,7 +919,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             'type'        => $type,
             'table'       => $table,
             'joinBuilder' => $joinBuilder,
-            'condition'   => 'ON',
         ];
 
         return $this;
@@ -988,7 +987,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         }
 
         // Otherwise insert one by one...
-
         foreach ($data as $subData) {
             $insertIds[] = $this->doInsert($subData, $type);
         }
@@ -1059,7 +1057,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         }
 
         $joinBuilder = new JoinBuilder($this->connection);
-        $joinBuilder->using($table, $fields);
+        $joinBuilder->using($fields);
 
         $table = $this->addTablePrefix($table, false);
 
@@ -1067,7 +1065,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             'type'        => $joinType,
             'table'       => $table,
             'joinBuilder' => $joinBuilder,
-            'condition'   => 'USING',
         ];
 
         return $this;

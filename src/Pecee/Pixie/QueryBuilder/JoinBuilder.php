@@ -22,10 +22,11 @@ class JoinBuilder extends QueryBuilderHandler
     public function on($key, $operator, $value, $joiner = 'AND'): self
     {
         $this->statements['criteria'][] = [
-            'key'      => $this->addTablePrefix($key),
-            'operator' => $operator,
-            'value'    => $this->addTablePrefix($value),
-            'joiner'   => $joiner,
+            'key'       => $this->addTablePrefix($key),
+            'operator'  => $operator,
+            'value'     => $this->addTablePrefix($value),
+            'joiner'    => $joiner,
+            'condition' => 'ON',
         ];
 
         return $this;
@@ -34,36 +35,17 @@ class JoinBuilder extends QueryBuilderHandler
     /**
      * Add join with USING syntax
      *
-     * @param string|Raw|\Closure $table
      * @param array $columns
-     * @param string $joiner
      * @return static
      */
-    public function using($table, array $columns, $joiner = 'AND'): self
+    public function using(array $columns): self
     {
         $this->statements['criteria'][] = [
-            'key'     => $this->addTablePrefix($table),
             'columns' => $this->addTablePrefix($columns),
-            'joiner'  => $joiner,
+            'joiner'  => 'AND USING',
         ];
 
         return $this;
-    }
-
-    /**
-     * Add OR join with USING syntax
-     *
-     * @param string|Raw|\Closure $table
-     * @param array $columns
-     * @return static
-     */
-    public function orUsing($table, array $columns): self
-    {
-        return $this->using(
-            $this->addTablePrefix($table),
-            $this->addTablePrefix($columns),
-            'OR'
-        );
     }
 
     /**

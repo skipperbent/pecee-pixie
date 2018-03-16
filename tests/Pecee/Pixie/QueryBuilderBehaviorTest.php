@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\Event\EventArguments;
+use Pecee\Pixie\QueryBuilder\JoinBuilder;
 
 /**
  * Class QueryBuilderTest
@@ -358,6 +359,17 @@ class QueryBuilderTest extends TestCase
     {
 
         $query = $this->builder->table('user')->joinUsing('user_data', ['user_id', 'image_id'])->where('user_id', '=', 1);
+
+        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
+
+    }
+
+    public function testJoinQueryBuilderUsing()
+    {
+
+        $query = $this->builder->table('user')->join('user_data', function (JoinBuilder $jb) {
+            $jb->using(['user_id', 'image_id']);
+        })->where('user_id', '=', 1);
 
         $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
 

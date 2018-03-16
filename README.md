@@ -654,8 +654,7 @@ $queryBuilder
         $table
             ->on('another_table.person_id', '=', 'my_table.id')
             ->on('another_table.person_id2', '=', 'my_table.id2')
-            ->orOn('another_table.age', '>', $queryBuilder->raw(1))
-            ->orUsing('another_table.gender', 'person_id');
+            ->orOn('another_table.age', '>', $queryBuilder->raw(1));
     })
 ```
 

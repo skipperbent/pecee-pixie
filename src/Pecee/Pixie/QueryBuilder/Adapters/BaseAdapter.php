@@ -79,12 +79,8 @@ abstract class BaseAdapter
 
         foreach ($statements as $i => $statement) {
 
-            $key = $statement['key'];
-
-            $key = $this->wrapSanitizer($key);
-
-            if ($statement['key'] instanceof Raw) {
-                $bindings[] = $statement['key']->getBindings();
+            if ($i === 0 && isset($statement['condition'])) {
+                $criteria[] = $statement['condition'];
             }
 
             $joiner = ($i === 0) ? trim(str_ireplace(['and', 'or'], '', $statement['joiner'])) : $statement['joiner'];
@@ -96,6 +92,14 @@ abstract class BaseAdapter
             if (isset($statement['columns']) === true) {
                 $criteria[] = sprintf('(%s)', $this->arrayStr((array)$statement['columns']));
                 continue;
+            }
+
+            $key = $statement['key'];
+
+            $key = $this->wrapSanitizer($key);
+
+            if ($statement['key'] instanceof Raw) {
+                $bindings[] = $statement['key']->getBindings();
             }
 
             $value = $statement['value'];
@@ -242,7 +246,7 @@ abstract class BaseAdapter
                 strtoupper($joinArr['type']),
                 'JOIN',
                 $table,
-                $joinArr['condition'],
+
                 $joinBuilder->getQuery('criteriaOnly', false)->getSql(),
             ];
 
