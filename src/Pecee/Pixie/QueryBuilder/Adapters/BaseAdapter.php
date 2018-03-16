@@ -45,7 +45,7 @@ abstract class BaseAdapter
      *
      * @return string
      */
-    protected function arrayStr(array $pieces, $glue = ',', $wrapSanitizer = true): string
+    protected function arrayStr(array $pieces, string $glue = ',', bool $wrapSanitizer = true): string
     {
         $str = '';
         foreach ($pieces as $key => $piece) {
@@ -72,21 +72,37 @@ abstract class BaseAdapter
      * @throws Exception
      * @return array
      */
-    protected function buildCriteria(array $statements, $bindValues = true): array
+    protected function buildCriteria(array $statements, bool $bindValues = true): array
     {
-        $criteria = '';
+        $criteria = [];
         $bindings = [[]];
 
-        foreach ($statements as $statement) {
+        foreach ($statements as $i => $statement) {
+
+            if ($i === 0 && isset($statement['condition'])) {
+                $criteria[] = $statement['condition'];
+            }
+
+            $joiner = ($i === 0) ? trim(str_ireplace(['and', 'or'], '', $statement['joiner'])) : $statement['joiner'];
+
+            if ($joiner !== '') {
+                $criteria[] = $joiner;
+            }
+
+            if (isset($statement['columns']) === true) {
+                $criteria[] = sprintf('(%s)', $this->arrayStr((array)$statement['columns']));
+                continue;
+            }
 
             $key = $statement['key'];
 
             $key = $this->wrapSanitizer($key);
-            $value = $statement['value'];
 
             if ($statement['key'] instanceof Raw) {
                 $bindings[] = $statement['key']->getBindings();
             }
+
+            $value = $statement['value'];
 
             if ($value === null && $key instanceof \Closure) {
 
@@ -107,7 +123,7 @@ abstract class BaseAdapter
                 $bindings[] = $queryObject->getBindings();
 
                 // Append the sql we get from the nestedCriteria object
-                $criteria .= $statement['joiner'] . ' (' . $queryObject->getSql() . ') ';
+                $criteria[] = "({$queryObject->getSql()})";
 
                 continue;
             }
@@ -115,65 +131,59 @@ abstract class BaseAdapter
             if (\is_array($value) === true) {
 
                 // Where in or between like query
-                $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'];
+                $criteria[] = "$key {$statement['operator']}";
 
                 if ($statement['operator'] === 'BETWEEN') {
                     $bindings[] = $statement['value'];
-                    $criteria .= ' ? AND ? ';
+                    $criteria[] = '? AND ?';
                     continue;
                 }
 
                 $valuePlaceholder = '';
+
                 foreach ((array)$statement['value'] as $subValue) {
                     $valuePlaceholder .= '?, ';
                     $bindings[] = [$subValue];
                 }
 
                 $valuePlaceholder = trim($valuePlaceholder, ', ');
-                $criteria .= ' (' . $valuePlaceholder . ') ';
+                $criteria[] = "($valuePlaceholder)";
 
                 continue;
             }
 
-            if ($value instanceof Raw) {
-                $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} $value ";
-                continue;
-            }
+            if ($bindValues === false || $value instanceof Raw) {
 
-            // Usual where like criteria
-            if ($bindValues === false) {
-
-                // Specially for joins - we are not binding values, lets sanitize then
-                $value = $this->wrapSanitizer($value);
-                $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $value . ' ';
-
+                // Usual where like criteria specially for joins - we are not binding values, lets sanitize then
+                $value = ($bindValues === false) ? $this->wrapSanitizer($value) : $value;
+                $criteria[] = "{$key} {$statement['operator']} $value";
                 continue;
             }
 
             if ($statement['key'] instanceof Raw) {
 
                 if ($statement['operator'] !== null) {
-                    $criteria .= "{$statement['joiner']} {$key} {$statement['operator']} ? ";
-
+                    $criteria[] = "{$key} {$statement['operator']} ?";
                     $bindings[] = [$value];
                     continue;
                 }
 
-                $criteria .= $statement['joiner'] . ' ' . $key . ' ';
+                $criteria[] = $key;
                 continue;
 
             }
 
             // WHERE
-            $valuePlaceholder = '?';
             $bindings[] = [$value];
-            $criteria .= $statement['joiner'] . ' ' . $key . ' ' . $statement['operator'] . ' ' . $valuePlaceholder . ' ';
+            $criteria[] = "$key {$statement['operator']} ?";
         }
 
         // Clear all white spaces, and, or from beginning and white spaces from ending
-        $criteria = preg_replace('/^(\s?AND ?|\s?OR ?)|\s$/i', '', $criteria);
 
-        return [$criteria, array_merge(...$bindings)];
+        return [
+            implode(' ', $criteria),
+            array_merge(...$bindings),
+        ];
     }
 
     /**
@@ -236,7 +246,7 @@ abstract class BaseAdapter
                 strtoupper($joinArr['type']),
                 'JOIN',
                 $table,
-                'ON',
+
                 $joinBuilder->getQuery('criteriaOnly', false)->getSql(),
             ];
 

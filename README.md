@@ -24,11 +24,11 @@ This library is stable, maintained and are used by sites around the world (check
 
 **Including all the original features like:**
 
-- Query Events
-- Nested Criteria
-- Sub Queries
-- Nested Queries
-- Multiple Database Connections.
+- Query events
+- Nested criteria
+- Sub queries
+- Nested queries
+- Multiple database connections.
 
 Most importantly this project is used on many live-sites and maintained.
 
@@ -124,6 +124,7 @@ ___
  - [Having](#having)
  - [Limit and offset](#limit-and-offset)
  - [Join](#join)
+    - [Join USING syntax](#join-using-syntax)
     - [Multiple join criteria](#multiple-join-criteria)
  - [Unions](#unions)
  - [Raw query](#raw-query)
@@ -622,7 +623,27 @@ $queryBuilder
     ->join('another_table', 'another_table.person_id', '=', 'my_table.id', 'FULL OUTER')
 ```
 
-#### Multiple Join Criteria
+#### Join USING syntax
+
+The `JOIN USING` syntax allows you to easily map two identical identifiers to one, which can be helpful on large queries.
+
+Example:
+
+```php
+$queryBuilder
+    ->table('user')
+    ->join('user_data', 'user_data.user_id', '=', 'user.user_id');
+```
+
+Can be simplified to:
+
+```php
+$queryBuilder
+    ->table('user')
+    ->joinUsing('user_data', 'user_id');
+```
+
+#### Multiple join criteria
 
 If you need more than one criterion to join a table then pass a closure as second parameter.
 
@@ -630,9 +651,10 @@ If you need more than one criterion to join a table then pass a closure as secon
 $queryBuilder
     ->join('another_table', function($table)
     {
-        $table->on('another_table.person_id', '=', 'my_table.id');
-        $table->on('another_table.person_id2', '=', 'my_table.id2');
-        $table->orOn('another_table.age', '>', $queryBuilder->raw(1));
+        $table
+            ->on('another_table.person_id', '=', 'my_table.id')
+            ->on('another_table.person_id2', '=', 'my_table.id2')
+            ->orOn('another_table.age', '>', $queryBuilder->raw(1));
     })
 ```
 
