@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\Event\EventArguments;
+use Pecee\Pixie\QueryBuilder\JoinBuilder;
 
 /**
  * Class QueryBuilderTest
@@ -19,7 +20,7 @@ class QueryBuilderTest extends TestCase
         $query = $this->builder
             ->table(['table1'])
             ->alias('t1')
-            ->join('table2', 'table2.person_id', '=', 'foo2.id');
+            ->innerJoin('table2', 'table2.person_id', '=', 'foo2.id');
 
         $this->assertEquals('SELECT * FROM `cb_table1` AS `t1` INNER JOIN `cb_table2` ON `cb_table2`.`person_id` = `cb_foo2`.`id`',
             $query->getQuery()->getRawSql());
@@ -239,7 +240,7 @@ class QueryBuilderTest extends TestCase
             ->having('tot', '<', 2)
             ->limit(1)
             ->offset(0)
-            ->join(
+            ->innerJoin(
                 'person_details',
                 'person_details.person_id',
                 '=',
@@ -265,7 +266,7 @@ class QueryBuilderTest extends TestCase
                     $q2->orWhere('value', 'LIKE', '%sana%');
                 });
             })
-            ->join(['person_details', 'a'], 'a.person_id', '=', 'my_table.id')
+            ->innerJoin(['person_details', 'a'], 'a.person_id', '=', 'my_table.id')
             ->leftJoin(['person_details', 'b'], function ($table) use ($builder) {
                 $table->on('b.person_id', '=', 'my_table.id');
                 $table->on('b.deleted', '=', $builder->raw(0));
@@ -351,6 +352,26 @@ class QueryBuilderTest extends TestCase
         $query = $this->builder->whereNull($this->builder->subQuery($subQuery));
 
         $this->assertEquals('SELECT * WHERE (SELECT * FROM `cb_persons` AS `staff`) IS NULL', $query->getQuery()->getRawSql());
+
+    }
+
+    public function testJoinUsing()
+    {
+
+        $query = $this->builder->table('user')->joinUsing('user_data', ['user_id', 'image_id'])->where('user_id', '=', 1);
+
+        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
+
+    }
+
+    public function testJoinQueryBuilderUsing()
+    {
+
+        $query = $this->builder->table('user')->join('user_data', function (JoinBuilder $jb) {
+            $jb->using(['user_id', 'image_id']);
+        })->where('user_id', '=', 1);
+
+        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
 
     }
 
