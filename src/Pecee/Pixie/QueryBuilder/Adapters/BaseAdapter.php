@@ -470,7 +470,7 @@ abstract class BaseAdapter
         $tables = '';
 
         if (isset($statements['tables']) === true) {
-            $tables = [];
+            $tablesFound = [];
 
             foreach ((array)$statements['tables'] as $table) {
                 if ($table instanceof Raw) {
@@ -485,10 +485,10 @@ abstract class BaseAdapter
                     }
                 }
 
-                $tables[] = $t;
+                $tablesFound[] = $t;
             }
 
-            $tables = implode(',', $tables);
+            $tables = implode(',', $tablesFound);
             $fromEnabled = true;
         }
 
