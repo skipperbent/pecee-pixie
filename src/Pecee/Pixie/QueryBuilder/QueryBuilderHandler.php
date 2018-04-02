@@ -172,7 +172,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         }
 
         $count = $this
-            ->table($this->subQuery($this, $this->getAlias() ?? $this->getTable() . '_count'))
+            ->table($this->subQuery($this, 'count'))
             ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
             ->first();
 
