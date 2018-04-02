@@ -171,10 +171,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception('No table selected');
         }
 
-        $alias = sprintf('%s_count', $this->getAlias() ?? $this->getTable());
-
         $count = $this
-            ->table($this->subQuery($this, $alias))
+            ->table($this->subQuery($this, 'test'))
             ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
             ->first();
 

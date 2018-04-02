@@ -6,6 +6,7 @@ use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
+use Pecee\Pixie\QueryBuilder\QueryObject;
 
 /**
  * Class TestCase
