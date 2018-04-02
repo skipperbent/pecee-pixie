@@ -171,10 +171,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             throw new Exception('No table selected');
         }
 
-        $alias = sprintf('%s_count', $this->getAlias() ?? $this->getTable());
-
         $count = $this
-            ->table($this->subQuery($this, $alias))
+            ->table($this->subQuery($this, 'count'))
             ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
             ->first();
 
@@ -198,7 +196,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function getTable(): ?string
     {
-        return isset($this->statements['tables']) === true ? array_values($this->statements['tables'])[0] : null;
+        if(isset($this->statements['tables']) === true) {
+            $table = array_values($this->statements['tables'])[0];
+            if($table instanceof Raw === false) {
+                return $table;
+            }
+        }
+
+        return null;
     }
 
     /**
