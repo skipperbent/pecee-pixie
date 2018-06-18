@@ -145,11 +145,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $field
      *
      * @throws Exception
-     * @return float
+     * @return integer
      */
-    public function count(string $field = '*'): float
+    public function count(string $field = '*'): int
     {
-        return $this->aggregate('count', $field);
+        return (int) $this->aggregate('count', $field);
     }
 
     /**
