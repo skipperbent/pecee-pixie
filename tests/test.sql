@@ -18,3 +18,5 @@ CREATE TABLE `animal` (
 )
 COLLATE='latin1_swedish_ci'
 ;
+
+CREATE USER 'nopermuser'@'%' identified by 'password'; FLUSH PRIVILEGES;
