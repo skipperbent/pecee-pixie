@@ -31,6 +31,7 @@ class QueryBuilderAggregateTest extends TestCase
         $count = $qb->from('animal')->groupBy('number_of_legs')->count();
 
         $this->assertEquals(3, $count);
+        $this->assertEquals('integer', \gettype($count));
     }
 
     public function testQuerySum()

@@ -1,3 +1,5 @@
+CREATE USER 'nopermuser'@'%' identified by 'password'; FLUSH PRIVILEGES;
+
 CREATE TABLE `people` (
 	`id` INT NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(255) NOT NULL DEFAULT '0',
@@ -18,7 +20,6 @@ CREATE TABLE `animal` (
 )
 COLLATE='latin1_swedish_ci'
 ;
-
 
 INSERT INTO `people` (`id`,`name`,`nickname`,`age`,`awesome`) VALUES
 (1,'Simon','ponylover94',12,1),

@@ -55,7 +55,7 @@ class CustomExceptionsTest extends TestCase
             $this->validateException($e, ConnectionException::class, 2002);
         }
 
-        // test error code 1045
+        // test error code 1045 - access denied do server
         try {
             (new \Pecee\Pixie\Connection('mysql', [
                 'driver'    => 'mysql',
@@ -71,7 +71,7 @@ class CustomExceptionsTest extends TestCase
             $this->validateException($e, ConnectionException::class, 1045);
         }
 
-        // test error code 1044
+        // test error code 1045 - access denied do server
         try {
             (new \Pecee\Pixie\Connection('mysql', [
                 'driver'    => 'mysql',
@@ -79,6 +79,22 @@ class CustomExceptionsTest extends TestCase
                 'database'  => 'root',
                 'username'  => 'nonexisting',
                 'password'  => '',
+                'charset'   => 'utf8mb4', // Optional
+                'collation' => 'utf8mb4_unicode_ci', // Optional
+                'prefix'    => '', // Table prefix, optional
+            ]))->connect();
+        } catch (\Exception $e) {
+            $this->validateException($e, ConnectionException::class, 1045);
+        }
+
+        // test error code 1044 - access to specific DB denied
+        try {
+            (new \Pecee\Pixie\Connection('mysql', [
+                'driver'    => 'mysql',
+                'host'      => '127.0.0.1',
+                'database'  => 'test',
+                'username'  => 'nopermuser',
+                'password'  => 'password',
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
