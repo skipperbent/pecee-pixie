@@ -161,13 +161,4 @@ class QueryBuilder extends TestCase
 
     }
 
-    public function testCountQuery() {
-        $subquery = $this->builder
-            ->newQuery()
-            ->table('foo_table');
-        $oCall = $this->builder->newQuery()->table($this->builder->subQuery($subquery,'q1'))->count();
-
-        die(var_dump($subquery->getLastQuery()->getRawSql()));
-    }
-
 }
