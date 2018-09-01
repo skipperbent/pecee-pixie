@@ -6,7 +6,6 @@ use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
-use Pecee\Pixie\QueryBuilder\QueryObject;
 
 /**
  * Class TestCase
@@ -103,7 +102,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->mockConnection->shouldReceive('getAdapter')->andReturn(new Mysql());
         $this->mockConnection->shouldReceive('getAdapterConfig')->andReturn(['prefix' => 'cb_']);
         $this->mockConnection->shouldReceive('getEventHandler')->andReturn($eventHandler);
-        $this->mockConnection->shouldReceive('setLastQuery');
+        $this->mockConnection->shouldReceive('setLastQuery')->passthru();
+        $this->mockConnection->shouldReceive('getLastQuery')->passthru();
         $this->mockConnection->shouldReceive('connect')->andReturn($this->mockConnection);
         $this->builder = new QueryBuilderHandler($this->mockConnection);
     }
