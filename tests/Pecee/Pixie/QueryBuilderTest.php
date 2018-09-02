@@ -161,6 +161,29 @@ class QueryBuilder extends TestCase
 
     }
 
+    /**
+     * @throws \Pecee\Pixie\Exception
+     */
+    public function testGetColumns(){
+        $query = $this->builder
+            ->newQuery()
+            ->table(['foo_table','foo'])
+            ->leftJoin(['bar_table','bar'],'foo._barId','=','bar.id')
+            ->leftJoin(['baz_table','baz'],'bar._bazId','=','baz.id')
+            ->select([
+                'foo.*',
+                'bar.id'=>'barId',
+                'name',
+                $this->builder->raw('baz.name as bazName')
+            ])
+        ;
+        $this->assertEquals([
+            'barId' =>  'cb_bar.id',
+            'name'  =>  'name'
+        ],$query->getColumns());
+    }
+
+
     public function testCountQuery() {
         $subquery = $this->builder
             ->newQuery()
