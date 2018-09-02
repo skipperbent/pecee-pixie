@@ -149,7 +149,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function count(string $field = '*'): int
     {
-        return (int) $this->aggregate('count', $field);
+        return (int)$this->aggregate('count', $field);
     }
 
     /**
@@ -196,9 +196,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function getTable(): ?string
     {
-        if(isset($this->statements['tables']) === true) {
+        if (isset($this->statements['tables']) === true) {
             $table = array_values($this->statements['tables'])[0];
-            if($table instanceof Raw === false) {
+            if ($table instanceof Raw === false) {
                 return $table;
             }
         }
@@ -730,13 +730,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Forms delete on the current query.
      *
+     * @var array|null $columns
      * @return \PDOStatement
      * @throws Exception
      */
-    public function delete(): \PDOStatement
+    public function delete(array $columns = null): \PDOStatement
     {
         /* @var $response \PDOStatement */
-        $queryObject = $this->getQuery('delete');
+        $queryObject = $this->getQuery('delete', $columns);
 
         $this->connection->setLastQuery($queryObject);
 
@@ -875,7 +876,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Adds new JOIN statement to the current query.
      *
      * @param string|Raw|\Closure|array $table
-     * @param string|JoinBuilder|Raw|\Closure $key
+     * @param string|JoinBuilder|Raw|\Closure|null $key
      * @param string|null $operator
      * @param string|Raw|\Closure $value
      * @param string $type
@@ -900,23 +901,27 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * })
      * ```
      */
-    public function join($table, $key, $operator = null, $value = null, $type = ''): IQueryBuilderHandler
+    public function join($table, $key = null, $operator = null, $value = null, $type = ''): IQueryBuilderHandler
     {
-        if (($key instanceof \Closure) === false) {
-            $key = function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
-                $joinBuilder->on($key, $operator, $value);
-            };
+        $joinBuilder = null;
+
+        if ($key !== null) {
+            $joinBuilder = new JoinBuilder($this->connection);
+
+            /**
+             * Build a new JoinBuilder class, keep it by reference so any changes made
+             * in the closure should reflect here
+             */
+            if ($key instanceof \Closure === false) {
+                $key = function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
+                    $joinBuilder->on($key, $operator, $value);
+                };
+            }
+
+            // Call the closure with our new joinBuilder object
+            $key($joinBuilder);
         }
 
-        /**
-         * Build a new JoinBuilder class, keep it by reference so any changes made
-         * in the closure should reflect here
-         */
-
-        $joinBuilder = new JoinBuilder($this->connection);
-
-        // Call the closure with our new joinBuilder object
-        $key($joinBuilder);
         $table = $this->addTablePrefix($table, false);
 
         // Get the criteria only query from the joinBuilder object

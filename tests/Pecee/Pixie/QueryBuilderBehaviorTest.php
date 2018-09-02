@@ -326,6 +326,54 @@ class QueryBuilderTest extends TestCase
             , $builder->getQuery('update', $data)->getRawSql());
     }
 
+    /**
+     * Test delete query with all statements.
+     * Note: the statement might not be valid as some statements can't be used together.
+     *
+     * @throws Exception
+     */
+    public function testDeleteAdvancedQuery()
+    {
+
+        $this->builder
+            ->table('foo')
+            ->leftJoin('bar', 'foo.id', '=', 'bar.id')
+            ->where('bar.id', 1)
+            ->groupBy(['foo.id'])
+            ->orderBy('foo.id')
+            ->limit(1)
+            ->offset(1)
+            ->delete(['foo.status']);
+
+        $this->assertEquals(
+            'DELETE `foo`.`status` FROM `cb_foo` LEFT JOIN `cb_bar` ON `cb_foo`.`id` = `cb_bar`.`id` WHERE `cb_bar`.`id` = 1 GROUP BY `cb_foo`.`id` ORDER BY `cb_foo`.`id` ASC LIMIT 1 OFFSET 1',
+            $this->builder->getConnection()->getLastQuery()->getRawSql());
+    }
+
+    /**
+     * Test update query with all statements.
+     * Note: the statement might not be valid as some statements can't be used together.
+     *
+     * @throws Exception
+     */
+    public function testUpdateAdvancedQuery()
+    {
+
+        $this->builder
+            ->table('foo')
+            ->leftJoin('bar', 'foo.id', '=', 'bar.id')
+            ->where('bar.id', 1)
+            ->groupBy(['foo.id'])
+            ->orderBy('foo.id')
+            ->limit(1)
+            ->offset(1)
+            ->update(['foo.status' => 1]);
+
+        $this->assertEquals(
+            'UPDATE `cb_foo` LEFT JOIN `cb_bar` ON `cb_foo`.`id` = `cb_bar`.`id` SET `foo`.`status`=1 WHERE `cb_bar`.`id` = 1 GROUP BY `cb_foo`.`id` ORDER BY `cb_foo`.`id` ASC LIMIT 1 OFFSET 1',
+            $this->builder->getConnection()->getLastQuery()->getRawSql());
+    }
+
     public function testFromSubQuery()
     {
 
