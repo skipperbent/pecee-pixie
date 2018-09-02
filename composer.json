@@ -34,7 +34,8 @@
     }
   ],
   "require": {
-    "php": ">=7.1"
+    "php": ">=7.1",
+    "ext-pdo": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0",

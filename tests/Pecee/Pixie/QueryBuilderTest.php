@@ -160,7 +160,7 @@ class QueryBuilder extends TestCase
         );
 
     }
-
+  
     /**
      * @throws \Pecee\Pixie\Exception
      */
@@ -181,16 +181,6 @@ class QueryBuilder extends TestCase
             'barId' =>  'cb_bar.id',
             'name'  =>  'name'
         ],$query->getColumns());
-    }
-
-
-    public function testCountQuery() {
-        $subquery = $this->builder
-            ->newQuery()
-            ->table('foo_table');
-        $oCall = $this->builder->newQuery()->table($this->builder->subQuery($subquery,'q1'))->count();
-
-        die(var_dump($subquery->getLastQuery()->getRawSql()));
     }
 
 }
