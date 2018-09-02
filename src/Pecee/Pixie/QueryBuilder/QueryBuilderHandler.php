@@ -1603,7 +1603,21 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function getColumns(): array
     {
-        return isset($this->statements['selects']) === true ? array_values($this->statements['selects'])[0] : [];
+        $tSelects = isset($this->statements['selects']) === true ? $this->statements['selects'] : [];
+        $tColumns = [];
+        foreach ($tSelects as $key => $value) {
+            if (\is_string($value)) {
+                if (\is_int($key)) {
+                    $tElements = explode('.', $value);
+                    if (!\in_array('*', $tElements, true)) {
+                        $tColumns[$tElements[1] ?? $tElements[0]] = $value;
+                    }
+                } elseif (\is_string($key)) {
+                    $tColumns[$value] = $key;
+                }
+            }
+        }
+        return $tColumns;
     }
 
     /**
