@@ -44,4 +44,45 @@ class ConnectionTest extends TestCase
         $this->assertInstanceOf(IConnectionAdapter::class, $this->connection->getAdapter());
         $this->assertEquals(['prefix' => 'cb_'], $this->connection->getAdapterConfig());
     }
+
+    /**
+     * Test multiple connections
+     * @throws Exception
+     */
+    public function testMultiConnection()
+    {
+        $mysqlMock = m::mock(Mysql::class);
+        $mysqlMock->shouldReceive('connect')->andReturn($this->mockPdo);
+        $mysqlMock->shouldReceive('getQueryAdapterClass')->andReturn(\Pecee\Pixie\QueryBuilder\Adapters\Mysql::class);
+
+        $connectionOneHost = 'google.com';
+        $connectionTwoHost = 'yahoo.com';
+
+        $connectionOne = new Connection($mysqlMock, [
+            'database' => 'db',
+            'username' => 'username',
+            'password' => 'password',
+            'host'     => $connectionOneHost,
+        ]);
+
+        $connectionTwo = new Connection($mysqlMock, [
+            'database' => 'db',
+            'username' => 'username',
+            'password' => 'password',
+            'host'     => $connectionTwoHost,
+        ]);
+
+        $adapterConfigOne = $connectionOne
+            ->getQueryBuilder()
+            ->getConnection()
+            ->getAdapterConfig();
+
+        $adapterConfigTwo = $connectionTwo
+            ->getQueryBuilder()
+            ->getConnection()
+            ->getAdapterConfig();
+
+        $this->assertEquals($adapterConfigOne['host'], $connectionOneHost);
+        $this->assertEquals($adapterConfigTwo['host'], $connectionTwoHost);
+    }
 }
