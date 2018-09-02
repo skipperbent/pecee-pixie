@@ -504,10 +504,8 @@ abstract class BaseAdapter
                 $statements['selects'] = $statements['distincts'];
             }
 
-        } else {
-            if (isset($statements['selects']) === false) {
-                $statements['selects'] = ['*'];
-            }
+        } else if (isset($statements['selects']) === false) {
+            $statements['selects'] = ['*'];
         }
 
         // From

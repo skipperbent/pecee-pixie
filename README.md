@@ -9,7 +9,8 @@ This library is stable, maintained and are used by sites around the world (check
 
 **Requirements:**
 - PHP version 7.1 or higher is required for pecee-pixie version 4.x and above (versions prior to 4.x are available [here](https://github.com/skipperbent/pixie)).
-- PDO extension enabled.
+- PDO extension.
+- PDO sql-lite extension.
 
 **Features:**
 

@@ -74,10 +74,6 @@ class Connection
      */
     public static function getStoredConnection(): self
     {
-        if (static::$storedConnection === null && static::$adapter !== null && static::$adapterConfig !== null) {
-            static::$storedConnection = new static(static::$adapter, static::$adapterConfig);
-        }
-
         return static::$storedConnection;
     }
 
