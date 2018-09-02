@@ -26,11 +26,11 @@ class CustomExceptionsTest extends TestCase
         return $con->getQueryBuilder();
     }
 
-    protected function validateException(\Exception $exception, $class, $code = null)
+    protected function validateException(\Exception $exception, $class, ...$codes)
     {
 
-        if ($code !== null) {
-            $this->assertEquals($code, $exception->getCode());
+        if ($codes !== null) {
+            $this->assertContains($exception->getCode(), $codes, sprintf('Failed asserting exception- expected "%s" got "%s"', implode(' or ', $codes), $exception->getCode()));
         }
 
         $this->assertEquals($class, \get_class($exception));
@@ -78,13 +78,15 @@ class CustomExceptionsTest extends TestCase
                 'host'      => '127.0.0.1',
                 'database'  => 'test',
                 'username'  => 'nopermuser',
-                'password'  => '',
+                'password'  => 'password',
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
             ]))->connect();
         } catch (\Exception $e) {
-            $this->validateException($e, ConnectionException::class, 1044);
+
+            // Note: seems like some MySQL instances returns 1044 other 1045.
+            $this->validateException($e, ConnectionException::class, 1044, 1045);
         }
 
     }
