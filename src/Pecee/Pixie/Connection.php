@@ -25,12 +25,12 @@ class Connection
      *
      * @var IConnectionAdapter
      */
-    protected static $adapter;
+    protected $adapter;
 
     /**
      * @var array
      */
-    protected static $adapterConfig;
+    protected $adapterConfig;
 
     /**
      * @var \PDO
@@ -74,10 +74,6 @@ class Connection
      */
     public static function getStoredConnection(): self
     {
-        if (static::$storedConnection === null && static::$adapter !== null && static::$adapterConfig !== null) {
-            static::$storedConnection = new static(static::$adapter, static::$adapterConfig);
-        }
-
         return static::$storedConnection;
     }
 
@@ -102,7 +98,7 @@ class Connection
      */
     public function getAdapter(): IConnectionAdapter
     {
-        return static::$adapter;
+        return $this->adapter;
     }
 
     /**
@@ -110,7 +106,7 @@ class Connection
      */
     public function getAdapterConfig(): array
     {
-        return static::$adapterConfig;
+        return $this->adapterConfig;
     }
 
     /**
@@ -147,7 +143,7 @@ class Connection
      */
     public function setAdapter(IConnectionAdapter $adapter): self
     {
-        static::$adapter = $adapter;
+        $this->adapter = $adapter;
 
         return $this;
     }
@@ -159,7 +155,7 @@ class Connection
      */
     public function setAdapterConfig(array $adapterConfig): self
     {
-        static::$adapterConfig = $adapterConfig;
+        $this->adapterConfig = $adapterConfig;
 
         return $this;
     }

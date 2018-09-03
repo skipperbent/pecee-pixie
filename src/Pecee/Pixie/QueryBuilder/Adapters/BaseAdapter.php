@@ -21,6 +21,31 @@ abstract class BaseAdapter
     public const SANITIZER = '`';
 
     /**
+     * @var string
+     */
+    protected const QUERY_PART_JOIN = 'JOIN';
+
+    /**
+     * @var string
+     */
+    protected const QUERY_PART_ORDERBY = 'ORDERBY';
+
+    /**
+     * @var string
+     */
+    protected const QUERY_PART_LIMIT = 'LIMIT';
+
+    /**
+     * @var string
+     */
+    protected const QUERY_PART_OFFSET = 'OFFSET';
+
+    /**
+     * @var string
+     */
+    protected const QUERY_PART_GROUPBY = 'GROUPBY';
+
+    /**
      * @var \Pecee\Pixie\Connection
      */
     protected $connection;
@@ -246,8 +271,7 @@ abstract class BaseAdapter
                 strtoupper($joinArr['type']),
                 'JOIN',
                 $table,
-
-                $joinBuilder->getQuery('criteriaOnly', false)->getSql(),
+                $joinBuilder instanceof QueryBuilderHandler ? $joinBuilder->getQuery('criteriaOnly', false)->getSql() : '',
             ];
 
             $sql = $this->concatenateQuery($sqlArr);
@@ -298,19 +322,40 @@ abstract class BaseAdapter
      * Build delete query
      *
      * @param array $statements
+     * @param array|null $columns
      *
      * @return array
      * @throws Exception
      */
-    public function delete(array $statements): array
+    public function delete(array $statements, array $columns = null): array
     {
         $table = end($statements['tables']);
+
+        $columnsQuery = '';
+
+        if($columns !== null) {
+            foreach($columns as $key => $column) {
+                $columns[$key] = $this->wrapSanitizer($column);
+            }
+
+            $columnsQuery = implode(', ', $columns);
+        }
 
         // WHERE
         [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
-        $sqlArray = ['DELETE FROM', $this->wrapSanitizer($table), $whereCriteria];
-        $sql = $this->concatenateQuery($sqlArray);
+        $sql = $this->concatenateQuery([
+            'DELETE ',
+            $columnsQuery,
+            ' FROM',
+            $this->wrapSanitizer($table),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $whereCriteria,
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+        ]);
         $bindings = $whereBindings;
 
         return compact('sql', 'bindings');
@@ -459,10 +504,8 @@ abstract class BaseAdapter
                 $statements['selects'] = $statements['distincts'];
             }
 
-        } else {
-            if (isset($statements['selects']) === false) {
-                $statements['selects'] = ['*'];
-            }
+        } else if (isset($statements['selects']) === false) {
+            $statements['selects'] = ['*'];
         }
 
         // From
@@ -492,55 +535,25 @@ abstract class BaseAdapter
             $fromEnabled = true;
         }
 
-        // SELECT
-        $selects = $this->arrayStr($statements['selects'], ', ');
-
         // WHERE
         [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
-
-        // GROUP BY
-        $groupBys = $this->arrayStr($statements['groupBys'], ', ');
-        if ($groupBys !== '' && isset($statements['groupBys']) === true) {
-            $groupBys = 'GROUP BY ' . $groupBys;
-        }
-
-        // ORDER BY
-        $orderBys = '';
-        if (isset($statements['orderBys']) === true && \is_array($statements['orderBys']) === true) {
-            foreach ($statements['orderBys'] as $orderBy) {
-                $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
-            }
-
-            if ($orderBys = trim($orderBys, ', ')) {
-                $orderBys = 'ORDER BY ' . $orderBys;
-            }
-        }
-
-        // LIMIT AND OFFSET
-        $limit = isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
-        $offset = isset($statements['offset']) ? 'OFFSET ' . $statements['offset'] : '';
 
         // HAVING
         [$havingCriteria, $havingBindings] = $this->buildCriteriaWithType($statements, 'havings', 'HAVING');
 
-        // JOINS
-        $joinString = $this->buildJoin($statements);
-
-        $sqlArray = [
+        $sql = $this->concatenateQuery([
             'SELECT' . ($hasDistincts === true ? ' DISTINCT' : ''),
-            $selects,
+            $this->arrayStr($statements['selects'], ', '),
             $fromEnabled ? 'FROM' : '',
             $tables,
-            $joinString,
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             $whereCriteria,
-            $groupBys,
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
             $havingCriteria,
-            $orderBys,
-            $limit,
-            $offset,
-        ];
-
-        $sql = $this->concatenateQuery($sqlArray);
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+        ]);
 
         $sql = $this->buildUnion($statements, $sql);
 
@@ -550,6 +563,48 @@ abstract class BaseAdapter
         );
 
         return compact('sql', 'bindings');
+    }
+
+    /**
+     * Returns specific part of a query like JOIN, LIMIT, OFFSET etc.
+     *
+     * @param string $section
+     * @param array $statements
+     * @return string
+     * @throws Exception
+     */
+    protected function buildQueryPart(string $section, array $statements): string
+    {
+        switch ($section) {
+            case static::QUERY_PART_JOIN:
+                return $this->buildJoin($statements);
+            case static::QUERY_PART_LIMIT:
+                return isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
+            case static::QUERY_PART_OFFSET:
+                return isset($statements['offset']) ? 'OFFSET ' . $statements['offset'] : '';
+            case static::QUERY_PART_ORDERBY:
+                $orderBys = '';
+                if (isset($statements['orderBys']) === true && \is_array($statements['orderBys']) === true) {
+                    foreach ($statements['orderBys'] as $orderBy) {
+                        $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
+                    }
+
+                    if ($orderBys = trim($orderBys, ', ')) {
+                        $orderBys = 'ORDER BY ' . $orderBys;
+                    }
+                }
+
+                return $orderBys;
+            case static::QUERY_PART_GROUPBY:
+                $groupBys = $this->arrayStr($statements['groupBys'], ', ');
+                if ($groupBys !== '' && isset($statements['groupBys']) === true) {
+                    $groupBys = 'GROUP BY ' . $groupBys;
+                }
+
+                return $groupBys;
+        }
+
+        return '';
     }
 
     /**
@@ -604,15 +659,16 @@ abstract class BaseAdapter
         // WHERE
         [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
-        // LIMIT
-        $limit = isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
-
         $sqlArray = [
             'UPDATE',
             $this->wrapSanitizer($table),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             'SET ' . $updateStatement,
             $whereCriteria,
-            $limit,
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
         ];
 
         $sql = $this->concatenateQuery($sqlArray);
