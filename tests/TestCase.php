@@ -123,6 +123,19 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $connection->getQueryBuilder();
     }
 
+    public function getLiveConnectionSqlite() {
+        $connection = new \Pecee\Pixie\Connection('sqlite', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => '',
+        ]);
+
+        $qb = $connection->getQueryBuilder();
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/test_sqlite.sql'));
+        return $qb->newQuery();
+
+    }
+
     public function tearDown()
     {
         m::close();
