@@ -108,6 +108,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->builder = new QueryBuilderHandler($this->mockConnection);
     }
 
+    /**
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @throws \Pecee\Pixie\Exception
+     */
     public function getLiveConnection() {
         $connection = new \Pecee\Pixie\Connection('mysql', [
             'driver'    => 'mysql',
@@ -134,6 +138,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $connection = new \Pecee\Pixie\Connection('sqlite', [
             'driver'   => 'sqlite',
             'database' => ':memory:',
+            //'database' => __DIR__.'/db_sqlite.sqlite',
             'prefix'   => '',
         ]);
 

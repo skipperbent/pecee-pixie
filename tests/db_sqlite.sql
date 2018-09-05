@@ -33,3 +33,7 @@ CREATE TABLE `tbl_users` (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
+
+--  Note: foreign key support will be enabled
+--  https://www.sqlite.org/pragma.html#pragma_foreign_keys
+PRAGMA foreign_keys = ON;

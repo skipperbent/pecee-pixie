@@ -107,27 +107,29 @@ class Exception extends \Exception
                     switch ($errorSqlState) {
                         case null;
                             if ($errorCode === 14) {
-                                return new ConnectionException($errorMsg, $errorCode, $e->getPrevious(), $query);
+                                return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             break;
                         case 'HY000':
                         case '23000':
                             if (preg_match('/no such column:/', $errorMsg) === 1) {
-                                return new ColumnNotFoundException($errorMsg, $errorCode, $e->getPrevious(), $query);
+                                return new ColumnNotFoundException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             if (preg_match('/no such table:/', $errorMsg) === 1) {
-                                return new TableNotFoundException($errorMsg, $errorCode, $e->getPrevious(), $query);
+                                return new TableNotFoundException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             if (preg_match('/NOT NULL constraint failed:/', $errorMsg) === 1) {
-                                return new NotNullException($errorMsg, $errorCode, $e->getPrevious(), $query);
+                                return new NotNullException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             if (preg_match('/UNIQUE constraint failed:/', $errorMsg) === 1) {
-                                return new DuplicateKeyException($errorMsg, $errorCode, $e->getPrevious(), $query);
+                                return new DuplicateEntryException($errorMsg, 1, $e->getPrevious(), $query);
+                            }
+                            if (preg_match('/FOREIGN KEY constraint failed/', $errorMsg) === 1) {
+                                return new ForeignKeyException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             break;
-                        default:
-                            break;
                     }
+                    break;
             }
         }
 
