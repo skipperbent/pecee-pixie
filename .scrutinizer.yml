@@ -5,9 +5,9 @@ build:
             version: "7.2"
     dependencies:
         before:
-            - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-            - mysql test < ./tests/db_mysql.sql
-            - mysql test < ./tests/db_values.sql
+            - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS test;'
+            - mysql -uroot test < ./tests/db_mysql.sql
+            - mysql -uroot test < ./tests/db_values.sql
     tests:
         override:
             -
