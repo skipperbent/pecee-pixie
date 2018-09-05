@@ -6,6 +6,7 @@ use Pecee\Pixie\Exceptions\ColumnNotFoundException;
 use Pecee\Pixie\Exceptions\ConnectionException;
 use Pecee\Pixie\Exceptions\DuplicateEntryException;
 use Pecee\Pixie\Exceptions\ForeignKeyException;
+use Pecee\Pixie\Exceptions\NotNullException;
 use Pecee\Pixie\Exceptions\TableNotFoundException;
 
 class CustomExceptionsTest extends TestCase
@@ -200,7 +201,7 @@ class CustomExceptionsTest extends TestCase
         }
     }
 
-    public function testQForeignKeyException()
+    public function testForeignKeyException()
     {
         $builder = $this->getQueryBuilder();
 
@@ -223,6 +224,30 @@ class CustomExceptionsTest extends TestCase
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
             $this->validateException($e, ForeignKeyException::class, 1);
+        }
+    }
+
+    public function testNotNullException()
+    {
+        $builder = $this->getQueryBuilder();
+
+        try {
+            $builder
+                ->table('tbl_eyes')
+                ->insert(['color'=>null]);
+            throw new \RuntimeException('check');
+        } catch (\Exception $e) {
+            $this->validateException($e, NotNullException::class, 1048);
+        }
+
+        $sqliteBuilder = $this->getLiveConnectionSqlite();
+        try {
+            $sqliteBuilder
+                ->table('tbl_eyes')
+                ->insert(['color'=>null]);
+            throw new \RuntimeException('check');
+        } catch (\Exception $e) {
+            $this->validateException($e, NotNullException::class, 1);
         }
     }
 
