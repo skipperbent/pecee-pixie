@@ -1,3 +1,6 @@
+-- Note: only for mysql 5.7 option IF EXISTS is available, for older mysql
+-- solution: https://stackoverflow.com/questions/598190/mysql-check-if-the-user-exists-and-drop-it
+GRANT USAGE ON *.* TO 'nopermuser'@'localhost' identified by 'password';
 DROP USER 'nopermuser'@'localhost';
 CREATE USER 'nopermuser'@'localhost'
   identified by 'password';
