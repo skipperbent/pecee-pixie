@@ -123,6 +123,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return $connection->getQueryBuilder();
     }
 
+    /**
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @throws \Pecee\Pixie\Exception
+     */
     public function getLiveConnectionSqlite() {
         $connection = new \Pecee\Pixie\Connection('sqlite', [
             'driver'   => 'sqlite',
