@@ -1,12 +1,12 @@
 build:
     environment:
         mysql: 5.7
-    nodes:
-        functional-tests:
-            project_setup:
-                before:
-                    - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-                    - mysql test < ./tests/test.sql
+        php:
+            - version: 7.2
+    dependencies:
+        before:
+            - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
+            - mysql test < ./tests/test.sql
     tests:
         override:
             -
