@@ -6,7 +6,8 @@ build:
     dependencies:
         before:
             - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-            - mysql test < ./tests/test.sql
+            - mysql test < ./tests/db_mysql.sql
+            - mysql test < ./tests/db_values.sql
     tests:
         override:
             -

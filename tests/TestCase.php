@@ -135,7 +135,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         ]);
 
         $qb = $connection->getQueryBuilder();
-        $qb->pdo()->exec(file_get_contents(__DIR__.'/test_sqlite.sql'));
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_sqlite.sql'));
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
         return $qb->newQuery();
 
     }

@@ -19,7 +19,8 @@ services:
 before_install:
   - mysql_upgrade --force -uroot
   - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-  - mysql test < ./tests/test.sql
+  - mysql test < ./tests/db_mysql.sql
+  - mysql test < ./tests/db_values.sql
 
 before_script:
   - mkdir -p _clover
