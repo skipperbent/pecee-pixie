@@ -120,7 +120,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'prefix'    => '', // Table prefix, optional
         ]);
 
-        return $connection->getQueryBuilder();
+        $qb = $connection->getQueryBuilder();
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_mysql.sql'));
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
+        return $qb->newQuery();
     }
 
     /**

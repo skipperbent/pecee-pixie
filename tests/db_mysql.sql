@@ -1,4 +1,5 @@
-CREATE USER 'nopermuser'@'%'
+DROP USER 'nopermuser'@'localhost';
+CREATE USER 'nopermuser'@'localhost'
   identified by 'password';
 FLUSH PRIVILEGES;
 
