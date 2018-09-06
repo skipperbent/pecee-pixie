@@ -12,7 +12,6 @@ use Pecee\Pixie\Exceptions\NotNullException;
 use Pecee\Pixie\Exceptions\TableNotFoundException;
 use Pecee\Pixie\QueryBuilder\Adapters\Mysql;
 use Pecee\Pixie\QueryBuilder\Adapters\Pgsql;
-use Pecee\Pixie\QueryBuilder\Adapters\Sqlite;
 use Pecee\Pixie\QueryBuilder\QueryObject;
 use Throwable;
 
