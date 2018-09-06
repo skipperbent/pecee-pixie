@@ -108,6 +108,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->builder = new QueryBuilderHandler($this->mockConnection);
     }
 
+    /**
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @throws \Pecee\Pixie\Exception
+     */
     public function getLiveConnection() {
         $connection = new \Pecee\Pixie\Connection('mysql', [
             'driver'    => 'mysql',
@@ -120,7 +124,29 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'prefix'    => '', // Table prefix, optional
         ]);
 
-        return $connection->getQueryBuilder();
+        $qb = $connection->getQueryBuilder();
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_mysql.sql'));
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
+        return $qb->newQuery();
+    }
+
+    /**
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
+     * @throws \Pecee\Pixie\Exception
+     */
+    public function getLiveConnectionSqlite() {
+        $connection = new \Pecee\Pixie\Connection('sqlite', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            //'database' => __DIR__.'/db_sqlite.sqlite',
+            'prefix'   => '',
+        ]);
+
+        $qb = $connection->getQueryBuilder();
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_sqlite.sql'));
+        $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
+        return $qb->newQuery();
+
     }
 
     public function tearDown()

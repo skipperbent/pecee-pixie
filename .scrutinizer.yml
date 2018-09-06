@@ -1,4 +1,13 @@
 build:
+    environment:
+        mysql: 5.7
+        php:
+            version: "7.2"
+    dependencies:
+        before:
+            - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS test;'
+            - mysql -uroot test < ./tests/db_mysql.sql
+            - mysql -uroot test < ./tests/db_values.sql
     tests:
         override:
             -
