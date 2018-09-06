@@ -12,7 +12,6 @@ use Pecee\Pixie\Exceptions\NotNullException;
 use Pecee\Pixie\Exceptions\TableNotFoundException;
 use Pecee\Pixie\QueryBuilder\Adapters\Mysql;
 use Pecee\Pixie\QueryBuilder\Adapters\Pgsql;
-use Pecee\Pixie\QueryBuilder\Adapters\Sqlite;
 use Pecee\Pixie\QueryBuilder\QueryObject;
 use Throwable;
 
@@ -95,13 +94,6 @@ class Exception extends \Exception
                             return new DuplicateEntryException($e->getMessage(), $errorCode, $e->getPrevious(), $query);
                         case 23502: // not_null_violation
                             return new NotNullException($e->getMessage(), $errorCode, $e->getPrevious(), $query);
-                    }
-                    break;
-                case Sqlite::class:
-                    // https://sqlite.org/c3ref/c_abort.html
-                    switch ($errorCode) {
-                        case \SQLITE_CONSTRAINT: // Abort due to constraint violation
-                            return new NotNullException($errorMsg, $errorCode, $e->getPrevious(), $query);
                     }
                     break;
             }
