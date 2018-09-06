@@ -12,5 +12,5 @@ class Sqlite extends BaseAdapter
     /**
      * @var string
      */
-    public const SANITIZER = '"';
+    public const SANITIZER = '`';
 }

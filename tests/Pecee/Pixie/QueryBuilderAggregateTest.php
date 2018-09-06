@@ -28,7 +28,17 @@ class QueryBuilderAggregateTest extends TestCase
     {
         $qb = $this->getLiveConnection();
 
-        $count = $qb->from('animal')->groupBy('number_of_legs')->count();
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->count();
+
+        $this->assertEquals(3, $count);
+        $this->assertEquals('integer', \gettype($count));
+    }
+
+    public function testSqliteQueryCount()
+    {
+        $qb = $this->getLiveConnectionSqlite();
+
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->count();
 
         $this->assertEquals(3, $count);
         $this->assertEquals('integer', \gettype($count));
@@ -38,7 +48,16 @@ class QueryBuilderAggregateTest extends TestCase
     {
         $qb = $this->getLiveConnection();
 
-        $count = $qb->from('animal')->groupBy('number_of_legs')->sum('number_of_legs');
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->sum('number_of_legs');
+
+        $this->assertEquals(40, $count);
+    }
+
+    public function testSqliteQuerySum()
+    {
+        $qb = $this->getLiveConnectionSqlite();
+
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->sum('number_of_legs');
 
         $this->assertEquals(40, $count);
     }
@@ -47,9 +66,18 @@ class QueryBuilderAggregateTest extends TestCase
     {
         $qb = $this->getLiveConnection();
 
-        $count = $qb->from('animal')->groupBy('number_of_legs')->average('number_of_legs');
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->average('number_of_legs');
 
         $this->assertEquals(13.3333, $count);
+    }
+
+    public function testSqliteQueryAverage()
+    {
+        $qb = $this->getLiveConnectionSqlite();
+
+        $count = $qb->from('animal')->select('number_of_legs')->groupBy('number_of_legs')->average('number_of_legs');
+
+        $this->assertEquals(13.3333333333333, $count);
     }
 
 }

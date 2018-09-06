@@ -2,6 +2,14 @@ sudo: false
 
 language: php
 
+addons:
+  apt:
+    sources:
+    - mysql-5.7-trusty
+    packages:
+    - mysql-server
+    - mysql-client
+
 php:
   - 7.2
 
@@ -9,8 +17,10 @@ services:
   - mysql
 
 before_install:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-  - mysql test < ./tests/test.sql
+  - mysql_upgrade --force -uroot
+  - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS test;'
+  - mysql -uroot test < ./tests/db_mysql.sql
+  - mysql -uroot test < ./tests/db_values.sql
 
 before_script:
   - mkdir -p _clover

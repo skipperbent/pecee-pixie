@@ -35,12 +35,15 @@
   ],
   "require": {
     "php": ">=7.1",
-    "ext-pdo": "*",
-    "ext-sqlite": "*"
+    "ext-pdo": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0",
-    "mockery/mockery": "^1"
+    "mockery/mockery": "^1",
+    "ext-pdo_sqlite": "*"
+  },
+  "suggest": {
+    "ext-pdo_sqlite": "Add extension for SQLite support"
   },
   "autoload": {
     "psr-4": {
