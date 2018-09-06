@@ -64,7 +64,7 @@ class CustomExceptionsTest extends TestCase
             ]))->connect();
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
-            $this->validateException($e, ConnectionException::class, 1045);
+            $this->validateException($e, ConnectionException::class, 1045, 2002);
         }
 
         // test error code 1044 - access to specific DB denied for user
@@ -74,7 +74,7 @@ class CustomExceptionsTest extends TestCase
                 'host'      => '127.0.0.1',
                 'database'  => 'test',
                 'username'  => 'nopermuser',
-                'password'  => 'password',
+                'password'  => 'nope',
                 'charset'   => 'utf8mb4', // Optional
                 'collation' => 'utf8mb4_unicode_ci', // Optional
                 'prefix'    => '', // Table prefix, optional
@@ -83,14 +83,14 @@ class CustomExceptionsTest extends TestCase
         } catch (\Exception $e) {
 
             // Note: seems like some MySQL instances returns 1044 other 1045.
-            $this->validateException($e, ConnectionException::class, 1044, 1045);
+            $this->validateException($e, ConnectionException::class, 1044, 1045, 2002);
         }
 
         try {
             (new \Pecee\Pixie\Connection('sqlite', [
-                'driver'    => 'sqlite',
-                'database'  => '/d/c/f',
-                'prefix'    => '', // Table prefix, optional
+                'driver'   => 'sqlite',
+                'database' => '/d/c/f',
+                'prefix'   => '', // Table prefix, optional
             ]))->connect();
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
@@ -117,7 +117,7 @@ class CustomExceptionsTest extends TestCase
             $sqliteBuilder->table('non_existing_table')->where('id', '=', 2)->get();
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
-            $this->validateException($e, TableNotFoundException::class,1);
+            $this->validateException($e, TableNotFoundException::class, 1);
         }
 
     }
@@ -219,7 +219,7 @@ class CustomExceptionsTest extends TestCase
         try {
             $sqliteBuilder
                 ->table('tbl_eyes')
-                ->where('id',1)
+                ->where('id', 1)
                 ->delete();
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
@@ -234,7 +234,7 @@ class CustomExceptionsTest extends TestCase
         try {
             $builder
                 ->table('tbl_eyes')
-                ->insert(['color'=>null]);
+                ->insert(['color' => null]);
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
             $this->validateException($e, NotNullException::class, 1048);
@@ -244,7 +244,7 @@ class CustomExceptionsTest extends TestCase
         try {
             $sqliteBuilder
                 ->table('tbl_eyes')
-                ->insert(['color'=>null]);
+                ->insert(['color' => null]);
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
             $this->validateException($e, NotNullException::class, 1);

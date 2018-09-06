@@ -12,6 +12,7 @@ use Pecee\Pixie\Exceptions\NotNullException;
 use Pecee\Pixie\Exceptions\TableNotFoundException;
 use Pecee\Pixie\QueryBuilder\Adapters\Mysql;
 use Pecee\Pixie\QueryBuilder\Adapters\Pgsql;
+use Pecee\Pixie\QueryBuilder\Adapters\Sqlite;
 use Pecee\Pixie\QueryBuilder\QueryObject;
 use Throwable;
 
@@ -31,8 +32,8 @@ class Exception extends \Exception
     }
 
     /**
-     * @param \Exception                                 $e
-     * @param string|null                                $adapterName
+     * @param \Exception $e
+     * @param string|null $adapterName
      * @param \Pecee\Pixie\QueryBuilder\QueryObject|null $query
      *
      * @return static|ColumnNotFoundException|ConnectionException|DuplicateColumnException|DuplicateEntryException|DuplicateKeyException|ForeignKeyException|NotNullException|TableNotFoundException
@@ -47,13 +48,13 @@ class Exception extends \Exception
         if ($e instanceof \PDOException) {
 
             /**
-             * @var string|null  $errorSqlState
+             * @var string|null $errorSqlState
              * @var integer|null $errorCode
-             * @var string|null  $errorMsg
+             * @var string|null $errorMsg
              */
             [$errorSqlState, $errorCode, $errorMsg] = $e->errorInfo;
 
-            $errorMsg  = $errorMsg ?? $e->getMessage();
+            $errorMsg = $errorMsg ?? $e->getMessage();
             $errorCode = (int)($errorCode ?? $e->getCode());
 
             switch ($adapterName) {
