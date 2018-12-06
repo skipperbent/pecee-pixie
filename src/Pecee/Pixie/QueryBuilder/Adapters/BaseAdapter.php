@@ -522,9 +522,9 @@ abstract class BaseAdapter
                     $prefix = $statements['aliases'][$table] ?? null;
 
                     if ($prefix !== null) {
-                        $t = sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+                        $t = sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
                     } else {
-                        $t = sprintf('`%s`', $table);
+                        $t = sprintf('%s', $this->wrapSanitizer($table));
                     }
                 }
 
