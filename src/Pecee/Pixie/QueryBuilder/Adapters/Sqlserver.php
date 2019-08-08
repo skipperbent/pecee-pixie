@@ -7,8 +7,5 @@ namespace Pecee\Pixie\QueryBuilder\Adapters;
  */
 class Sqlserver extends BaseAdapter
 {
-    /**
-     * @var string
-     */
-    public const SANITIZER = '\';
+    
 }
