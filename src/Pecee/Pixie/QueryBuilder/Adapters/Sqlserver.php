@@ -18,6 +18,30 @@ class Sqlserver extends BaseAdapter
     public const SANITIZER = '';
 
     /**
+     * @var string
+     */
+    protected const QUERY_PART_FETCH_NEXT = 'FETCH NEXT';
+
+    /**
+     * Overriden method for SQL SERVER corret usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
+     * @param string $section
+     * @param array $statements
+     * @return string
+     * @throws Exception
+     */
+    protected function buildQueryPart(string $section, array $statements): string
+    {
+        switch ($section) {
+            case static::QUERY_PART_OFFSET:
+                return isset($statements['offset']) ? 'OFFSET '.$statements['offset'].' ROWS' : '';
+            case static::QUERY_PART_FETCH_NEXT:
+                return isset($statements['offset']) ? 'FETCH NEXT '.$statements['limit'].' ROWS ONLY' : '';
+            default:
+                return parent::buildQueryPart($section, $statements);
+        }
+    }
+
+    /**
      * Build select query string and bindings
      *
      * @param array $statements
@@ -87,6 +111,7 @@ class Sqlserver extends BaseAdapter
             $havingCriteria,
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_FETCH_NEXT, $statements),
         ]);
 
         $sql = $this->buildUnion($statements, $sql);
@@ -137,47 +162,6 @@ class Sqlserver extends BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
         ]);
         $bindings = $whereBindings;
-
-        return compact('sql', 'bindings');
-    }
-
-    /**
-     * Build update query
-     *
-     * @param array $statements
-     * @param array $data
-     *
-     * @return array
-     * @throws Exception
-     */
-    public function update(array $statements, array $data): array
-    {
-        if (\count($data) === 0) {
-            throw new Exception('No data given.', 4);
-        }
-
-        $table = end($statements['tables']);
-
-        // UPDATE
-        [$updateStatement, $bindings] = $this->getUpdateStatement($data);
-
-        // WHERE
-        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
-
-        $sqlArray = [
-            'UPDATE',
-            $this->wrapSanitizer($table),
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
-            'SET ' . $updateStatement,
-            $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
-        ];
-
-        $sql = $this->concatenateQuery($sqlArray);
-
-        $bindings = array_merge($bindings, $whereBindings);
 
         return compact('sql', 'bindings');
     }
