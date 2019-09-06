@@ -23,7 +23,7 @@ class Sqlserver extends BaseAdapter
     protected const QUERY_PART_FETCH_NEXT = 'FETCH NEXT';
 
     /**
-     * Overriden method for SQL SERVER corret usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
+     * Overridden method for SQL SERVER correct usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
      * @param string $section
      * @param array $statements
      * @return string
