@@ -433,6 +433,20 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Adds FETCH NEXT statement to the current query.
+     *
+     * @param int $fetchNext
+     *
+     * @return static $this
+     */
+    public function fetchNext(int $fetchNext): IQueryBuilderHandler
+    {
+        $this->statements['fetch_next'] = $fetchNext;
+
+        return $this;
+    }
+
+    /**
      * Adds fields to select on the current query (defaults is all).
      * You can use key/value array to create alias.
      * Sub-queries and raw-objects are also supported.

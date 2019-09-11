@@ -23,6 +23,11 @@ class Sqlserver extends BaseAdapter
     protected const QUERY_PART_FETCH_NEXT = 'FETCH NEXT';
 
     /**
+     * @var string
+     */
+    protected const QUERY_PART_TOP = 'TOP';
+
+    /**
      * Overridden method for SQL SERVER correct usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
      * @param string $section
      * @param array $statements
@@ -32,10 +37,12 @@ class Sqlserver extends BaseAdapter
     protected function buildQueryPart(string $section, array $statements): string
     {
         switch ($section) {
+            case static::QUERY_PART_TOP:
+                return isset($statements['limit']) ? 'TOP ' . $statements['limit'] : '';
             case static::QUERY_PART_OFFSET:
                 return isset($statements['offset']) ? 'OFFSET '.$statements['offset'].' ROWS' : '';
             case static::QUERY_PART_FETCH_NEXT:
-                return isset($statements['offset']) ? 'FETCH NEXT '.$statements['limit'].' ROWS ONLY' : '';
+                return isset($statements['fetch_next']) ? 'FETCH NEXT '.$statements['fetch_next'].' ROWS ONLY' : '';
             default:
                 return parent::buildQueryPart($section, $statements);
         }

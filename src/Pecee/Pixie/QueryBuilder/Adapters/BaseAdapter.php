@@ -38,11 +38,6 @@ abstract class BaseAdapter
     /**
      * @var string
      */
-    protected const QUERY_PART_TOP = 'TOP';
-
-    /**
-     * @var string
-     */
     protected const QUERY_PART_OFFSET = 'OFFSET';
 
     /**
