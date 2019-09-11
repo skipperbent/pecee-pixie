@@ -584,7 +584,7 @@ abstract class BaseAdapter
             case static::QUERY_PART_JOIN:
                 return $this->buildJoin($statements);
             case static::QUERY_PART_TOP:
-                return isset($statements['top']) ? 'TOP ' . $statements['top'] : '';
+                return isset($statements['limit']) ? 'TOP ' . $statements['limit'] : '';
             case static::QUERY_PART_LIMIT:
                 return isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
             case static::QUERY_PART_OFFSET:
