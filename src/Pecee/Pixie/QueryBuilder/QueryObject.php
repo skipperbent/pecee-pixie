@@ -87,7 +87,8 @@ class QueryObject
         foreach ($params as $key => $value) {
             $keys[] = '/' . (\is_string($key) ? ':' . $key : '[?]') . '/';
 
-            if (\is_string($value) === true) {
+            // If object or string we ensure quotes.
+            if (\is_object($value) === true || \is_string($value) === true) {
                 $values[$key] = $this->connection->getPdoInstance()->quote($value);
                 continue;
             }
