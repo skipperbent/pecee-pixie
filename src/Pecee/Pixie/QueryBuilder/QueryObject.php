@@ -87,8 +87,34 @@ class QueryObject
         foreach ($params as $key => $value) {
             $keys[] = '/' . (\is_string($key) ? ':' . $key : '[?]') . '/';
 
-            // If object or string we ensure quotes.
-            if (\is_object($value) === true || \is_string($value) === true) {
+            if($value instanceof Raw) {
+                continue;
+            }
+
+            // Try to parse object-types
+            if(\is_object($value) === true) {
+                $value = (string)$value;
+
+                // Test if value is nummeric
+                if(\is_numeric($value) === true) {
+
+                    // Parse integer values
+                    if(\is_int($value) === true) {
+                        $value = (int)$value;
+                        continue;
+                    }
+
+                    // Parse float values
+                    if(\is_float($value) === true) {
+                        $value = (float)$value;
+                        continue;
+                    }
+
+                    // Otherwise continue
+                }
+            }
+
+            if (\is_string($value) === true) {
                 $values[$key] = $this->connection->getPdoInstance()->quote($value);
                 continue;
             }
