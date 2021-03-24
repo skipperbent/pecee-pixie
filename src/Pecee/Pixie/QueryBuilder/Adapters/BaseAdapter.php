@@ -198,6 +198,11 @@ abstract class BaseAdapter
 
             }
 
+            // Check for objects that implement the __toString() magic method
+            if(\is_object($value) === true && \method_exists($value, '__toString') === true) {
+                $value = $value->__toString();
+            }
+
             // WHERE
             $bindings[] = [$value];
             $criteria[] = "$key {$statement['operator']} ?";
