@@ -334,9 +334,9 @@ abstract class BaseAdapter
      */
     protected function buildAliasedTableName(string $table, array $statements): string
     {
-        $prefix = $statements['aliases'][$table] ?? null;
-        if ($prefix !== null) {
-            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
+        $this->prefix = $statements['aliases'][$table] ?? null;
+        if ($this->prefix !== null) {
+            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($this->prefix)));
         }
 
         return sprintf('%s', $this->wrapSanitizer($table));
