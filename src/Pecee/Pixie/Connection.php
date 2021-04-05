@@ -66,7 +66,9 @@ class Connection
         // Create event dependency
         $this->eventHandler = new EventHandler();
 
-        static::$storedConnection = $this;
+        if (!static::$storedConnection) {
+            static::$storedConnection = $this;
+        }
     }
 
     /**
