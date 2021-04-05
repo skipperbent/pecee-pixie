@@ -43,6 +43,11 @@ abstract class BaseAdapter
     /**
      * @var string
      */
+    protected const QUERY_PART_FOR = 'FOR';
+
+    /**
+     * @var string
+     */
     protected const QUERY_PART_GROUPBY = 'GROUPBY';
 
     /**
@@ -51,7 +56,7 @@ abstract class BaseAdapter
     protected const QUERY_PART_TOP = 'TOP';
 
     /**
-     * @var \Pecee\Pixie\Connection
+     * @var Connection
      */
     protected $connection;
 
@@ -64,7 +69,7 @@ abstract class BaseAdapter
     /**
      * BaseAdapter constructor.
      *
-     * @param \Pecee\Pixie\Connection $connection
+     * @param Connection $connection
      */
     public function __construct(Connection $connection)
     {
@@ -284,7 +289,7 @@ abstract class BaseAdapter
                 $table = $joinArr['table'] instanceof Raw ? (string)$joinArr['table'] : $this->wrapSanitizer($joinArr['table']);
             }
 
-            /* @var $joinBuilder \Pecee\Pixie\QueryBuilder\QueryBuilderHandler */
+            /* @var $joinBuilder QueryBuilderHandler */
             $joinBuilder = $joinArr['joinBuilder'];
 
             $sqlArr = [
@@ -394,7 +399,7 @@ abstract class BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements)
         ]);
         $bindings = $whereBindings;
 
@@ -559,7 +564,6 @@ abstract class BaseAdapter
                 if ($table instanceof Raw) {
                     $t = $table;
                 } else {
-                    $prefix = $statements['aliases'][$table] ?? null;
                     $t = $this->buildAliasedTableName($table, $statements);
                 }
 
@@ -588,6 +592,7 @@ abstract class BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
             $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_FOR, $statements),
         ]);
 
         $sql = $this->buildUnion($statements, $sql);
@@ -639,6 +644,8 @@ abstract class BaseAdapter
                 }
 
                 return $groupBys;
+            case static::QUERY_PART_FOR:
+                return isset($statements['for']) ? ' FOR ' . $statements['for'][0] : '';
         }
 
         return '';

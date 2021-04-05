@@ -34,7 +34,7 @@ class Exception extends \Exception
     /**
      * @param \Exception $e
      * @param string|null $adapterName
-     * @param \Pecee\Pixie\QueryBuilder\QueryObject|null $query
+     * @param QueryObject|null $query
      *
      * @return static|ColumnNotFoundException|ConnectionException|DuplicateColumnException|DuplicateEntryException|DuplicateKeyException|ForeignKeyException|NotNullException|TableNotFoundException
      *
@@ -115,6 +115,7 @@ class Exception extends \Exception
                             if ($errorCode === 14) {
                                 return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
                             }
+                            break;
                         case 'HY000':
                         case '23000':
                             if (preg_match('/no such column:/', $errorMsg) === 1) {

@@ -70,7 +70,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @var array
      */
-    protected $fetchParameters = [\PDO::FETCH_OBJ];
+    protected $fetchParameters = [PDO::FETCH_OBJ];
 
     /**
      * If true calling from, select etc. will overwrite any existing values from previous calls in query.
@@ -80,9 +80,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected $overwriteEnabled = false;
 
     /**
-     * @param \Pecee\Pixie\Connection|null $connection
+     * @param Connection|null $connection
      *
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      */
     public function __construct(Connection $connection = null)
     {
@@ -228,7 +228,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function get(): array
     {
         /**
-         * @var $queryObject   \Pecee\Pixie\QueryBuilder\QueryObject
+         * @var $queryObject   QueryObject
          * @var $executionTime float
          * @var $start         float
          * @var $result        array
@@ -340,7 +340,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @throws \Pecee\Pixie\Exceptions\ConnectionException
      * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
      * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
@@ -453,7 +453,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * Example: ['field' => 'alias'] will become `field` AS `alias`
      *
-     * @param string|array $fields,...
+     * @param string|array|Raw $fields,...
      *
      * @return static
      */
@@ -661,7 +661,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         $sql = '(' . $queryBuilder->getQuery()->getRawSql() . ')';
         if ($alias !== null) {
-            $sql = $sql . ' AS ' . $this->adapterInstance->wrapSanitizer($alias);
+            $sql .= ' AS ' . $this->adapterInstance->wrapSanitizer($alias);
         }
 
         return $queryBuilder->raw($sql);
@@ -927,7 +927,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
              * in the closure should reflect here
              */
             if ($key instanceof \Closure === false) {
-                $key = function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
+                $key = static function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
                     $joinBuilder->on($key, $operator, $value);
                 };
             }
@@ -1028,12 +1028,6 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function transaction(\Closure $callback): Transaction
     {
-        /**
-         * Get the Transaction class
-         *
-         * @var \Pecee\Pixie\QueryBuilder\Transaction $queryTransaction
-         * @throws \Exception
-         */
         $queryTransaction = new Transaction($this->connection);
         $queryTransaction->statements = $this->statements;
 
@@ -1074,7 +1068,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function joinUsing($table, $fields, $joinType = '')
+    public function joinUsing($table, $fields, $joinType = ''): IQueryBuilderHandler
     {
         if (\is_array($fields) === false) {
             $fields = [$fields];
@@ -1414,7 +1408,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function selectDistinct($fields)
+    public function selectDistinct($fields): IQueryBuilderHandler
     {
         if ($this->overwriteEnabled === true) {
             $this->statements['distincts'] = $fields;
@@ -1466,7 +1460,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function setStatements(array $statements)
+    public function setStatements(array $statements): IQueryBuilderHandler
     {
         $this->statements = $statements;
 
@@ -1616,6 +1610,17 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Will add FOR statement to the end of the SELECT statement, like FOR UPDATE, FOR SHARE etc.
+     * @param $statement string
+     * @return static
+     */
+    public function for(string $statement): IQueryBuilderHandler
+    {
+        $this->addStatement('for', $statement);
+        return $this;
+    }
+
+    /**
      * Returns all columns in current query
      *
      * @return array
@@ -1655,7 +1660,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param bool $enabled
      * @return static
      */
-    public function setOverwriteEnabled(bool $enabled)
+    public function setOverwriteEnabled(bool $enabled): IQueryBuilderHandler
     {
         $this->overwriteEnabled = $enabled;
 

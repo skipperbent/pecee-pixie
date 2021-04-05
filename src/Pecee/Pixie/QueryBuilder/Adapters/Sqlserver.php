@@ -3,7 +3,6 @@ namespace Pecee\Pixie\QueryBuilder\Adapters;
 
 use Pecee\Pixie\Exception;
 use Pecee\Pixie\QueryBuilder\Raw;
-use Pecee\Pixie\QueryBuilder\Adapters\BaseAdapter;
 
 /**
  * Class Sqlserver

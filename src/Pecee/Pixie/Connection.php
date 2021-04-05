@@ -131,7 +131,7 @@ class Connection
      * Returns an instance of Query Builder
      *
      * @return QueryBuilderHandler
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      */
     public function getQueryBuilder(): QueryBuilderHandler
     {
