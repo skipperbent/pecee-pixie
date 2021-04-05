@@ -43,17 +43,33 @@ abstract class BaseAdapter
     /**
      * @var string
      */
+    protected const QUERY_PART_FOR = 'FOR';
+
+    /**
+     * @var string
+     */
     protected const QUERY_PART_GROUPBY = 'GROUPBY';
 
     /**
-     * @var \Pecee\Pixie\Connection
+     * @var string
+     */
+    protected const QUERY_PART_TOP = 'TOP';
+
+    /**
+     * @var Connection
      */
     protected $connection;
 
     /**
+     * Alias prefix
+     * @var string|null
+     */
+    protected $prefix;
+
+    /**
      * BaseAdapter constructor.
      *
-     * @param \Pecee\Pixie\Connection $connection
+     * @param Connection $connection
      */
     public function __construct(Connection $connection)
     {
@@ -120,6 +136,11 @@ abstract class BaseAdapter
             }
 
             $key = $statement['key'];
+
+            // Add alias non-existing
+            if($this->prefix !== null && strpos($key, '.') === false) {
+                $key = $this->prefix . '.' . $key;
+            }
 
             $key = $this->wrapSanitizer($key);
 
@@ -198,6 +219,11 @@ abstract class BaseAdapter
 
             }
 
+            // Check for objects that implement the __toString() magic method
+            if(\is_object($value) === true && \method_exists($value, '__toString') === true) {
+                $value = $value->__toString();
+            }
+
             // WHERE
             $bindings[] = [$value];
             $criteria[] = "$key {$statement['operator']} ?";
@@ -263,7 +289,7 @@ abstract class BaseAdapter
                 $table = $joinArr['table'] instanceof Raw ? (string)$joinArr['table'] : $this->wrapSanitizer($joinArr['table']);
             }
 
-            /* @var $joinBuilder \Pecee\Pixie\QueryBuilder\QueryBuilderHandler */
+            /* @var $joinBuilder QueryBuilderHandler */
             $joinBuilder = $joinArr['joinBuilder'];
 
             $sqlArr = [
@@ -295,6 +321,25 @@ abstract class BaseAdapter
         }
 
         return trim($str);
+    }
+
+    /**
+     * Return table name with alias
+     * eg. foo as f
+     *
+     * @param string $table
+     * @param array  $statements
+     *
+     * @return string
+     */
+    protected function buildAliasedTableName(string $table, array $statements): string
+    {
+        $prefix = $statements['aliases'][$table] ?? null;
+        if ($prefix !== null) {
+            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
+        }
+
+        return sprintf('%s', $this->wrapSanitizer($table));
     }
 
     /**
@@ -354,7 +399,7 @@ abstract class BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements)
         ]);
         $bindings = $whereBindings;
 
@@ -519,13 +564,7 @@ abstract class BaseAdapter
                 if ($table instanceof Raw) {
                     $t = $table;
                 } else {
-                    $prefix = $statements['aliases'][$table] ?? null;
-
-                    if ($prefix !== null) {
-                        $t = sprintf('`%s` AS `%s`', $table, strtolower($prefix));
-                    } else {
-                        $t = sprintf('`%s`', $table);
-                    }
+                    $t = $this->buildAliasedTableName($table, $statements);
                 }
 
                 $tablesFound[] = $t;
@@ -553,6 +592,7 @@ abstract class BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
             $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_FOR, $statements),
         ]);
 
         $sql = $this->buildUnion($statements, $sql);
@@ -578,6 +618,8 @@ abstract class BaseAdapter
         switch ($section) {
             case static::QUERY_PART_JOIN:
                 return $this->buildJoin($statements);
+            case static::QUERY_PART_TOP:
+                return isset($statements['limit']) ? 'TOP ' . $statements['limit'] : '';
             case static::QUERY_PART_LIMIT:
                 return isset($statements['limit']) ? 'LIMIT ' . $statements['limit'] : '';
             case static::QUERY_PART_OFFSET:
@@ -602,6 +644,8 @@ abstract class BaseAdapter
                 }
 
                 return $groupBys;
+            case static::QUERY_PART_FOR:
+                return isset($statements['for']) ? ' FOR ' . $statements['for'][0] : '';
         }
 
         return '';
@@ -661,7 +705,7 @@ abstract class BaseAdapter
 
         $sqlArray = [
             'UPDATE',
-            $this->wrapSanitizer($table),
+            $this->buildAliasedTableName($table,$statements),
             $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             'SET ' . $updateStatement,
             $whereCriteria,

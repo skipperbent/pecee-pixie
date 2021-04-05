@@ -66,13 +66,15 @@ class Connection
         // Create event dependency
         $this->eventHandler = new EventHandler();
 
-        static::$storedConnection = $this;
+        if (static::$storedConnection === null) {
+            static::$storedConnection = $this;
+        }
     }
 
     /**
      * @return Connection
      */
-    public static function getStoredConnection(): self
+    public static function getStoredConnection(): ?self
     {
         return static::$storedConnection;
     }
@@ -129,7 +131,7 @@ class Connection
      * Returns an instance of Query Builder
      *
      * @return QueryBuilderHandler
-     * @throws \Pecee\Pixie\Exception
+     * @throws Exception
      */
     public function getQueryBuilder(): QueryBuilderHandler
     {

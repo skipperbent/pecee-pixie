@@ -34,7 +34,7 @@ class Exception extends \Exception
     /**
      * @param \Exception $e
      * @param string|null $adapterName
-     * @param \Pecee\Pixie\QueryBuilder\QueryObject|null $query
+     * @param QueryObject|null $query
      *
      * @return static|ColumnNotFoundException|ConnectionException|DuplicateColumnException|DuplicateEntryException|DuplicateKeyException|ForeignKeyException|NotNullException|TableNotFoundException
      *
@@ -104,6 +104,12 @@ class Exception extends \Exception
                      * Hack for SQLite3 exceptions.
                      * Error messages from source code: https://www.sqlite.org/download.html
                      */
+
+                    switch($errorCode) {
+                        case 14:
+                            return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
+                    }
+
                     switch ($errorSqlState) {
                         case null;
                             if ($errorCode === 14) {
@@ -127,7 +133,6 @@ class Exception extends \Exception
                             if (preg_match('/FOREIGN KEY constraint failed/', $errorMsg) === 1) {
                                 return new ForeignKeyException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            break;
                     }
                     break;
             }

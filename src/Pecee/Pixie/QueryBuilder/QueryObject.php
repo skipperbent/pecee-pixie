@@ -87,6 +87,15 @@ class QueryObject
         foreach ($params as $key => $value) {
             $keys[] = '/' . (\is_string($key) ? ':' . $key : '[?]') . '/';
 
+            if($value instanceof Raw) {
+                continue;
+            }
+
+            // Try to parse object-types
+            if(\is_object($value) === true) {
+                $value = (string)$value;
+            }
+
             if (\is_string($value) === true) {
                 $values[$key] = $this->connection->getPdoInstance()->quote($value);
                 continue;

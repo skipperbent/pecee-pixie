@@ -96,12 +96,10 @@ class QueryBuilder extends TestCase
 
     public function testWhereBetween()
     {
-
         $qb = $this->builder;
         $query = $qb->table('animals')->whereBetween('created_date', $qb->raw('NOW()'), '27-05-2017');
 
         $this->assertEquals('SELECT * FROM `cb_animals` WHERE `created_date` BETWEEN NOW() AND \'27-05-2017\'', $query->getQuery()->getRawSql());
-
     }
 
     public function testUnion()
@@ -181,6 +179,13 @@ class QueryBuilder extends TestCase
             'barId' =>  'cb_bar.id',
             'name'  =>  'name'
         ],$query->getColumns());
+    }
+
+    public function testQueryPartFor()
+    {
+        $query = $this->builder->newQuery()->select(['id'])->table('users')->for('UPDATE');
+
+        $this->assertEquals('SELECT * FROM `cb_users` FOR UPDATE', $query->getQuery()->getRawSql());
     }
 
 }
