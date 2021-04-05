@@ -326,10 +326,10 @@ abstract class BaseAdapter
     {
         $prefix = $statements['aliases'][$table] ?? null;
         if ($prefix !== null) {
-            return sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
         }
 
-        return sprintf('`%s`', $table);
+        return sprintf('%s', $this->wrapSanitizer($table));
     }
 
     /**
@@ -554,7 +554,8 @@ abstract class BaseAdapter
                 if ($table instanceof Raw) {
                     $t = $table;
                 } else {
-                    $t = $this->buildAliasedTableName($table,$statements);
+                    $prefix = $statements['aliases'][$table] ?? null;
+                    $t = $this->buildAliasedTableName($table, $statements);
                 }
 
                 $tablesFound[] = $t;
