@@ -314,6 +314,25 @@ abstract class BaseAdapter
     }
 
     /**
+     * Return table name with alias
+     * eg. foo as f
+     *
+     * @param string $table
+     * @param array  $statements
+     *
+     * @return string
+     */
+    protected function buildAliasedTableName(string $table, array $statements): string
+    {
+        $prefix = $statements['aliases'][$table] ?? null;
+        if ($prefix !== null) {
+            return sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+        }
+
+        return sprintf('`%s`', $table);
+    }
+
+    /**
      * Build just criteria part of the query
      *
      * @param array $statements
@@ -535,14 +554,7 @@ abstract class BaseAdapter
                 if ($table instanceof Raw) {
                     $t = $table;
                 } else {
-
-                    $this->prefix = $statements['aliases'][$table] ?? null;
-
-                    if ($this->prefix !== null) {
-                        $t = sprintf('`%s` AS `%s`', $table, strtolower($this->prefix));
-                    } else {
-                        $t = sprintf('`%s`', $table);
-                    }
+                    $t = $this->buildAliasedTableName($table,$statements);
                 }
 
                 $tablesFound[] = $t;
@@ -678,7 +690,7 @@ abstract class BaseAdapter
 
         $sqlArray = [
             'UPDATE',
-            $this->wrapSanitizer($table),
+            $this->buildAliasedTableName($table,$statements),
             $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             'SET ' . $updateStatement,
             $whereCriteria,
