@@ -118,7 +118,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'host'      => '127.0.0.1',
             'database'  => 'test',
             'username'  => 'root',
-            'password'  => '',
+            'password'  => 'root',
             'charset'   => 'utf8mb4', // Optional
             'collation' => 'utf8mb4_unicode_ci', // Optional
             'prefix'    => '', // Table prefix, optional
