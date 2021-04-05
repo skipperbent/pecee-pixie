@@ -64,7 +64,7 @@ abstract class BaseAdapter
      * Alias prefix
      * @var string|null
      */
-    protected $prefix;
+    protected $aliasPrefix;
 
     /**
      * BaseAdapter constructor.
@@ -138,8 +138,8 @@ abstract class BaseAdapter
             $key = $statement['key'];
 
             // Add alias non-existing
-            if($this->prefix !== null && strpos($key, '.') === false) {
-                $key = $this->prefix . '.' . $key;
+            if($this->aliasPrefix !== null && strpos($key, '.') === false) {
+                $key = $this->aliasPrefix . '.' . $key;
             }
 
             $key = $this->wrapSanitizer($key);
@@ -334,9 +334,9 @@ abstract class BaseAdapter
      */
     protected function buildAliasedTableName(string $table, array $statements): string
     {
-        $prefix = $statements['aliases'][$table] ?? null;
-        if ($prefix !== null) {
-            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
+        $this->aliasPrefix = $statements['aliases'][$table] ?? null;
+        if ($this->aliasPrefix !== null) {
+            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($this->aliasPrefix)));
         }
 
         return sprintf('%s', $this->wrapSanitizer($table));
