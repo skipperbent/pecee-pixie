@@ -46,6 +46,11 @@ abstract class BaseAdapter
     protected const QUERY_PART_GROUPBY = 'GROUPBY';
 
     /**
+     * @var string
+     */
+    protected const QUERY_PART_TOP = 'TOP';
+
+    /**
      * @var \Pecee\Pixie\Connection
      */
     protected $connection;
