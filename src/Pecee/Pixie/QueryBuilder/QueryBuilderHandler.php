@@ -132,7 +132,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setFetchMode($parameters = null): IQueryBuilderHandler
+    public function setFetchMode($parameters = null): self
     {
         $this->fetchParameters = \func_get_args();
 
@@ -309,7 +309,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function setConnection(Connection $connection): IQueryBuilderHandler
+    public function setConnection(Connection $connection): self
     {
         $this->connection = $connection;
 
@@ -425,7 +425,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function limit(int $limit): IQueryBuilderHandler
+    public function limit(int $limit): self
     {
         $this->statements['limit'] = $limit;
 
@@ -439,7 +439,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function fetchNext(int $fetchNext): IQueryBuilderHandler
+    public function fetchNext(int $fetchNext): self
     {
         $this->statements['fetch_next'] = $fetchNext;
 
@@ -457,7 +457,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function select($fields): IQueryBuilderHandler
+    public function select($fields): self
     {
         if (\is_array($fields) === false) {
             $fields = \func_get_args();
@@ -563,7 +563,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * ->table($qb->raw('table_one as one'))
      * ```
      */
-    public function table($tables = null): IQueryBuilderHandler
+    public function table($tables = null): self
     {
         if ($tables === null) {
             return $this->from($tables);
@@ -584,7 +584,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function from($tables = null): IQueryBuilderHandler
+    public function from($tables = null): self
     {
         if ($tables === null) {
             $this->statements['tables'] = null;
@@ -623,7 +623,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function alias(string $alias, ?string $table = null): IQueryBuilderHandler
+    public function alias(string $alias, ?string $table = null): self
     {
         if ($table === null && isset($this->statements['tables'][0]) === true) {
             $table = $this->statements['tables'][0];
@@ -642,7 +642,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws Exception
      * @return static
      */
-    public function newQuery(): IQueryBuilderHandler
+    public function newQuery(): self
     {
         return new static($this->connection);
     }
@@ -788,7 +788,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function where($key, $operator = null, $value = null): IQueryBuilderHandler
+    public function where($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -813,7 +813,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    protected function whereHandler($key, ?string $operator = null, $value = null, $joiner = 'AND'): IQueryBuilderHandler
+    protected function whereHandler($key, ?string $operator = null, $value = null, $joiner = 'AND'): self
     {
         $key = $this->addTablePrefix($key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
@@ -855,7 +855,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function groupBy($field): IQueryBuilderHandler
+    public function groupBy($field): self
     {
         if (($field instanceof Raw) === false) {
             $field = $this->addTablePrefix($field);
@@ -881,7 +881,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function innerJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
+    public function innerJoin($table, $key, $operator = null, $value = null): self
     {
         return $this->join($table, $key, $operator, $value, 'inner');
     }
@@ -915,7 +915,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * })
      * ```
      */
-    public function join($table, $key = null, $operator = null, $value = null, $type = ''): IQueryBuilderHandler
+    public function join($table, $key = null, $operator = null, $value = null, $type = ''): self
     {
         $joinBuilder = null;
 
@@ -1068,7 +1068,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function joinUsing($table, $fields, $joinType = ''): IQueryBuilderHandler
+    public function joinUsing($table, $fields, $joinType = ''): self
     {
         if (\is_array($fields) === false) {
             $fields = [$fields];
@@ -1099,7 +1099,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function leftJoin($table, $key, $operator = null, $value = null): IQueryBuilderHandler
+    public function leftJoin($table, $key, $operator = null, $value = null): self
     {
         return $this->join($table, $key, $operator, $value, 'left');
     }
@@ -1111,7 +1111,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function offset(int $offset): IQueryBuilderHandler
+    public function offset(int $offset): self
     {
         $this->statements['offset'] = $offset;
 
@@ -1125,7 +1125,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function onDuplicateKeyUpdate(array $data): IQueryBuilderHandler
+    public function onDuplicateKeyUpdate(array $data): self
     {
         $this->addStatement('onduplicate', $data);
 
@@ -1141,7 +1141,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orHaving($key, $operator, $value): IQueryBuilderHandler
+    public function orHaving($key, $operator, $value): self
     {
         return $this->having($key, $operator, $value, 'OR');
     }
@@ -1156,7 +1156,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function having($key, $operator, $value, $joiner = 'AND'): IQueryBuilderHandler
+    public function having($key, $operator, $value, $joiner = 'AND'): self
     {
         $key = $this->addTablePrefix($key);
         $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
@@ -1173,7 +1173,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhere($key, $operator = null, $value = null): IQueryBuilderHandler
+    public function orWhere($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -1193,7 +1193,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereBetween($key, $valueFrom, $valueTo): IQueryBuilderHandler
+    public function orWhereBetween($key, $valueFrom, $valueTo): self
     {
         return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo], 'OR');
     }
@@ -1206,7 +1206,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereIn($key, $values): IQueryBuilderHandler
+    public function orWhereIn($key, $values): self
     {
         return $this->whereHandler($key, 'IN', $values, 'OR');
     }
@@ -1220,7 +1220,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNot($key, $operator = null, $value = null): IQueryBuilderHandler
+    public function orWhereNot($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -1239,7 +1239,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNotIn($key, $values): IQueryBuilderHandler
+    public function orWhereNotIn($key, $values): self
     {
         return $this->whereHandler($key, 'NOT IN', $values, 'OR');
     }
@@ -1251,7 +1251,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNotNull($key): IQueryBuilderHandler
+    public function orWhereNotNull($key): self
     {
         return $this->whereNullHandler($key, 'NOT', 'or');
     }
@@ -1265,7 +1265,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    protected function whereNullHandler($key, string $prefix = '', string $operator = ''): IQueryBuilderHandler
+    protected function whereNullHandler($key, string $prefix = '', string $operator = ''): self
     {
         $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
         $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
@@ -1280,7 +1280,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orWhereNull($key): IQueryBuilderHandler
+    public function orWhereNull($key): self
     {
         return $this->whereNullHandler($key, '', 'or');
     }
@@ -1293,7 +1293,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function orderBy($fields, string $direction = 'ASC'): IQueryBuilderHandler
+    public function orderBy($fields, string $direction = 'ASC'): self
     {
         if (\is_array($fields) === false) {
             $fields = [$fields];
@@ -1327,7 +1327,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function query(string $sql, array $bindings = []): IQueryBuilderHandler
+    public function query(string $sql, array $bindings = []): self
     {
         $queryObject = new QueryObject($sql, $bindings, $this->getConnection());
         $this->connection->setLastQuery($queryObject);
@@ -1396,7 +1396,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return static
      * @throws Exception
      */
-    public function rightJoin($table, $key, ?string $operator = null, $value = null): IQueryBuilderHandler
+    public function rightJoin($table, $key, ?string $operator = null, $value = null): self
     {
         return $this->join($table, $key, $operator, $value, 'right');
     }
@@ -1408,7 +1408,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function selectDistinct($fields): IQueryBuilderHandler
+    public function selectDistinct($fields): self
     {
         if ($this->overwriteEnabled === true) {
             $this->statements['distincts'] = $fields;
@@ -1427,7 +1427,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function union(QueryBuilderHandler $query, ?string $unionType = self::UNION_TYPE_NONE): IQueryBuilderHandler
+    public function union(QueryBuilderHandler $query, ?string $unionType = self::UNION_TYPE_NONE): self
     {
         $statements = $query->getStatements();
 
@@ -1460,7 +1460,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static $this
      */
-    public function setStatements(array $statements): IQueryBuilderHandler
+    public function setStatements(array $statements): self
     {
         $this->statements = $statements;
 
@@ -1534,7 +1534,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereBetween($key, $valueFrom, $valueTo): IQueryBuilderHandler
+    public function whereBetween($key, $valueFrom, $valueTo): self
     {
         return $this->whereHandler($key, 'BETWEEN', [$valueFrom, $valueTo]);
     }
@@ -1547,7 +1547,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereIn($key, $values): IQueryBuilderHandler
+    public function whereIn($key, $values): self
     {
         return $this->whereHandler($key, 'IN', $values);
     }
@@ -1561,7 +1561,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereNot($key, $operator = null, $value = null): IQueryBuilderHandler
+    public function whereNot($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
         if (\func_num_args() === 2) {
@@ -1580,7 +1580,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereNotIn($key, $values): IQueryBuilderHandler
+    public function whereNotIn($key, $values): self
     {
         return $this->whereHandler($key, 'NOT IN', $values);
     }
@@ -1592,7 +1592,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereNotNull($key): IQueryBuilderHandler
+    public function whereNotNull($key): self
     {
         return $this->whereNullHandler($key, 'NOT');
     }
@@ -1604,7 +1604,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @return static
      */
-    public function whereNull($key): IQueryBuilderHandler
+    public function whereNull($key): self
     {
         return $this->whereNullHandler($key);
     }
@@ -1614,7 +1614,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param $statement string
      * @return static
      */
-    public function for(string $statement): IQueryBuilderHandler
+    public function for(string $statement): self
     {
         $this->addStatement('for', $statement);
         return $this;
@@ -1660,7 +1660,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param bool $enabled
      * @return static
      */
-    public function setOverwriteEnabled(bool $enabled): IQueryBuilderHandler
+    public function setOverwriteEnabled(bool $enabled): self
     {
         $this->overwriteEnabled = $enabled;
 
