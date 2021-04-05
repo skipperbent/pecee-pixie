@@ -51,6 +51,12 @@ abstract class BaseAdapter
     protected $connection;
 
     /**
+     * Alias prefix
+     * @var string|null
+     */
+    protected $prefix;
+
+    /**
      * BaseAdapter constructor.
      *
      * @param \Pecee\Pixie\Connection $connection
@@ -120,6 +126,11 @@ abstract class BaseAdapter
             }
 
             $key = $statement['key'];
+
+            // Add alias non-existing
+            if($this->prefix !== null && strpos($key, '.') === false) {
+                $key = $this->prefix . '.' . $key;
+            }
 
             $key = $this->wrapSanitizer($key);
 
@@ -524,10 +535,11 @@ abstract class BaseAdapter
                 if ($table instanceof Raw) {
                     $t = $table;
                 } else {
-                    $prefix = $statements['aliases'][$table] ?? null;
 
-                    if ($prefix !== null) {
-                        $t = sprintf('`%s` AS `%s`', $table, strtolower($prefix));
+                    $this->prefix = $statements['aliases'][$table] ?? null;
+
+                    if ($this->prefix !== null) {
+                        $t = sprintf('`%s` AS `%s`', $table, strtolower($this->prefix));
                     } else {
                         $t = sprintf('`%s`', $table);
                     }
