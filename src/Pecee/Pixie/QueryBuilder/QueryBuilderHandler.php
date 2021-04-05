@@ -173,7 +173,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $count = $this
             ->table($this->subQuery($this, 'count'))
-            ->select([$this->raw(sprintf('%s(%s) AS `field`', strtoupper($type), $field))])
+            ->select([$this->raw(sprintf('%s(%s) AS ' . $this->adapterInstance->wrapSanitizer('field'), strtoupper($type), $field))])
             ->first();
 
         return isset($count->field) === true ? (float)$count->field : 0;
@@ -428,6 +428,20 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function limit(int $limit): IQueryBuilderHandler
     {
         $this->statements['limit'] = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Adds FETCH NEXT statement to the current query.
+     *
+     * @param int $fetchNext
+     *
+     * @return static $this
+     */
+    public function fetchNext(int $fetchNext): IQueryBuilderHandler
+    {
+        $this->statements['fetch_next'] = $fetchNext;
 
         return $this;
     }
