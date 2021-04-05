@@ -66,7 +66,7 @@ class Connection
         // Create event dependency
         $this->eventHandler = new EventHandler();
 
-        if (!static::$storedConnection) {
+        if (static::$storedConnection === null) {
             static::$storedConnection = $this;
         }
     }
@@ -74,7 +74,7 @@ class Connection
     /**
      * @return Connection
      */
-    public static function getStoredConnection(): self
+    public static function getStoredConnection(): ?self
     {
         return static::$storedConnection;
     }
