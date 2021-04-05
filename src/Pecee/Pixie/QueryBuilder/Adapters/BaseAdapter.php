@@ -51,6 +51,12 @@ abstract class BaseAdapter
     protected $connection;
 
     /**
+     * Alias prefix
+     * @var string|null
+     */
+    protected $prefix;
+
+    /**
      * BaseAdapter constructor.
      *
      * @param \Pecee\Pixie\Connection $connection
@@ -120,6 +126,11 @@ abstract class BaseAdapter
             }
 
             $key = $statement['key'];
+
+            // Add alias non-existing
+            if($this->prefix !== null && strpos($key, '.') === false) {
+                $key = $this->prefix . '.' . $key;
+            }
 
             $key = $this->wrapSanitizer($key);
 
@@ -196,6 +207,11 @@ abstract class BaseAdapter
                 $criteria[] = $key;
                 continue;
 
+            }
+
+            // Check for objects that implement the __toString() magic method
+            if(\is_object($value) === true && \method_exists($value, '__toString') === true) {
+                $value = $value->__toString();
             }
 
             // WHERE
@@ -295,6 +311,25 @@ abstract class BaseAdapter
         }
 
         return trim($str);
+    }
+
+    /**
+     * Return table name with alias
+     * eg. foo as f
+     *
+     * @param string $table
+     * @param array  $statements
+     *
+     * @return string
+     */
+    protected function buildAliasedTableName(string $table, array $statements): string
+    {
+        $prefix = $statements['aliases'][$table] ?? null;
+        if ($prefix !== null) {
+            return sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
+        }
+
+        return sprintf('%s', $this->wrapSanitizer($table));
     }
 
     /**
@@ -520,12 +555,7 @@ abstract class BaseAdapter
                     $t = $table;
                 } else {
                     $prefix = $statements['aliases'][$table] ?? null;
-
-                    if ($prefix !== null) {
-                        $t = sprintf('%s AS %s', $this->wrapSanitizer($table), $this->wrapSanitizer(strtolower($prefix)));
-                    } else {
-                        $t = sprintf('%s', $this->wrapSanitizer($table));
-                    }
+                    $t = $this->buildAliasedTableName($table, $statements);
                 }
 
                 $tablesFound[] = $t;
@@ -661,7 +691,7 @@ abstract class BaseAdapter
 
         $sqlArray = [
             'UPDATE',
-            $this->wrapSanitizer($table),
+            $this->buildAliasedTableName($table,$statements),
             $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             'SET ' . $updateStatement,
             $whereCriteria,

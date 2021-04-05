@@ -104,12 +104,17 @@ class Exception extends \Exception
                      * Hack for SQLite3 exceptions.
                      * Error messages from source code: https://www.sqlite.org/download.html
                      */
+
+                    switch($errorCode) {
+                        case 14:
+                            return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
+                    }
+
                     switch ($errorSqlState) {
                         case null;
                             if ($errorCode === 14) {
                                 return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            break;
                         case 'HY000':
                         case '23000':
                             if (preg_match('/no such column:/', $errorMsg) === 1) {
@@ -127,7 +132,6 @@ class Exception extends \Exception
                             if (preg_match('/FOREIGN KEY constraint failed/', $errorMsg) === 1) {
                                 return new ForeignKeyException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            break;
                     }
                     break;
             }
