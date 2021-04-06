@@ -8,12 +8,9 @@ use Pecee\Pixie\QueryBuilder\Raw;
 
 /**
  * Class EventHandler
- *
- * @package Pecee\Pixie
  */
 class EventHandler
 {
-
     /**
      * Event-type that fires before each query
      *
@@ -108,16 +105,17 @@ class EventHandler
     protected $events = [];
 
     /**
-     * @param string $name
-     * @param QueryObject $queryObject
+     * @param string              $name
+     * @param QueryObject         $queryObject
      * @param QueryBuilderHandler $queryBuilder
-     * @param array $eventArguments
+     * @param array               $eventArguments
+     *
      * @return void
      */
     public function fireEvents(string $name, QueryObject $queryObject, QueryBuilderHandler $queryBuilder, array $eventArguments = []): void
     {
         $statements = $queryBuilder->getStatements();
-        $tables = $statements['tables'] ?? [];
+        $tables     = $statements['tables'] ?? [];
 
         // Events added with :any will be fired in case of any table, we are adding :any as a fake table at the beginning.
         array_unshift($tables, static::TABLE_ANY);
@@ -126,7 +124,7 @@ class EventHandler
         foreach ($tables as $table) {
             // Fire before events for :any table
             $action = $this->getEvent($name, $table);
-            if ($action === null) {
+            if (null === $action) {
                 continue;
             }
 
@@ -135,7 +133,7 @@ class EventHandler
     }
 
     /**
-     * @param string $event
+     * @param string          $event
      * @param string|Raw|null $table
      *
      * @return callable|null
@@ -148,16 +146,16 @@ class EventHandler
             return null;
         }
 
-        if (isset($this->events[$table][$event]) === true) {
+        if (true === isset($this->events[$table][$event])) {
             return $this->events[$table][$event];
         }
 
         // Find event with wildcard (*)
-        if (isset($this->events[$table]) === true) {
+        if (true === isset($this->events[$table])) {
             foreach ((array)$this->events[$table] as $name => $e) {
-                if (strpos($name, '*') !== false) {
+                if (false !== strpos($name, '*')) {
                     $name = substr($name, 0, strpos($name, '*'));
-                    if (strpos($event, $name) !== false) {
+                    if (false !== strpos($event, $name)) {
                         return $e;
                     }
                 }
@@ -176,9 +174,9 @@ class EventHandler
     }
 
     /**
-     * @param string $event
+     * @param string      $event
      * @param string|null $table
-     * @param \Closure $action
+     * @param \Closure    $action
      *
      * @return void
      */

@@ -40,7 +40,8 @@
   "require-dev": {
     "phpunit/phpunit": "^6.0",
     "mockery/mockery": "^1",
-    "ext-pdo_sqlite": "*"
+    "ext-pdo_sqlite": "*",
+    "friendsofphp/php-cs-fixer": "^2"
   },
   "suggest": {
     "ext-pdo_sqlite": "Add extension for SQLite support"
@@ -49,5 +50,12 @@
     "psr-4": {
       "Pecee\\Pixie\\": "src/Pecee/Pixie/"
     }
+  },
+  "scripts": {
+    "test": [
+      "@lint"
+    ],
+    "fixer": "php-cs-fixer fix --diff --show-progress=dots",
+    "lint": "php-cs-fixer fix --diff --dry-run"
   }
 }

@@ -9,6 +9,7 @@ class EventArguments
 {
     /**
      * Event name
+     *
      * @var string
      */
     private $name;
@@ -30,10 +31,10 @@ class EventArguments
 
     public function __construct($name, QueryObject $qo, QueryBuilderHandler $qb, array $arguments)
     {
-        $this->name = $name;
-        $this->queryObject = $qo;
+        $this->name         = $name;
+        $this->queryObject  = $qo;
         $this->queryBuilder = $qb;
-        $this->arguments = $arguments;
+        $this->arguments    = $arguments;
     }
 
     /**
@@ -71,7 +72,7 @@ class EventArguments
      *
      * @return string|null
      */
-    public function getInsertId() : ?string
+    public function getInsertId(): ?string
     {
         return $this->arguments['insert_id'] ?? null;
     }
@@ -81,7 +82,7 @@ class EventArguments
      *
      * @return float|null
      */
-    public function getExecutionTime() : ?float
+    public function getExecutionTime(): ?float
     {
         return $this->arguments['execution_time'] ?? null;
     }
@@ -95,5 +96,4 @@ class EventArguments
     {
         return $this->arguments;
     }
-
 }

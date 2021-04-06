@@ -6,8 +6,6 @@ use Pecee\Pixie\Connection;
 
 /**
  * Class QueryObject
- *
- * @package Pecee\Pixie\QueryBuilder
  */
 class QueryObject
 {
@@ -29,14 +27,14 @@ class QueryObject
     /**
      * QueryObject constructor.
      *
-     * @param string $sql
-     * @param array $bindings
+     * @param string     $sql
+     * @param array      $bindings
      * @param Connection $connection
      */
     public function __construct(string $sql, array $bindings, Connection $connection)
     {
-        $this->sql = $sql;
-        $this->bindings = $bindings;
+        $this->sql        = $sql;
+        $this->bindings   = $bindings;
         $this->connection = $connection;
     }
 
@@ -73,40 +71,40 @@ class QueryObject
      *
      * Reference: http://stackoverflow.com/a/1376838/656489
      *
-     * @param string $query The sql query with parameter placeholders
-     * @param array $params The array of substitution parameters
+     * @param string $query  The sql query with parameter placeholders
+     * @param array  $params The array of substitution parameters
      *
      * @return string The interpolated query
      */
     protected function interpolateQuery($query, $params): string
     {
-        $keys = [];
+        $keys   = [];
         $values = $params;
 
         // build a regular expression for each parameter
         foreach ($params as $key => $value) {
             $keys[] = '/' . (\is_string($key) ? ':' . $key : '[?]') . '/';
 
-            if($value instanceof Raw) {
+            if ($value instanceof Raw) {
                 continue;
             }
 
             // Try to parse object-types
-            if(\is_object($value) === true) {
+            if (true === \is_object($value)) {
                 $value = (string)$value;
             }
 
-            if (\is_string($value) === true) {
+            if (true === \is_string($value)) {
                 $values[$key] = $this->connection->getPdoInstance()->quote($value);
                 continue;
             }
 
-            if (\is_array($value) === true) {
+            if (true === \is_array($value)) {
                 $values[$key] = $this->connection->getPdoInstance()->quote(implode(',', $value));
                 continue;
             }
 
-            if ($value === null) {
+            if (null === $value) {
                 $values[$key] = 'NULL';
                 continue;
             }
@@ -122,5 +120,4 @@ class QueryObject
     {
         return $this->connection;
     }
-
 }

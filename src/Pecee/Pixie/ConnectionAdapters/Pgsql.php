@@ -7,15 +7,12 @@ use Pecee\Pixie\Exception;
 
 /**
  * Class Pgsql
- *
- * @package Pecee\Pixie\ConnectionAdapters
  */
 class Pgsql extends BaseAdapter
 {
     /**
      * @param array $config
      *
-     * @return PDO
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @throws \Pecee\Pixie\Exceptions\ConnectionException
      * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
@@ -25,31 +22,31 @@ class Pgsql extends BaseAdapter
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
      * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
      * @throws \Pecee\Pixie\Exceptions\NotNullException
+     *
+     * @return PDO
      */
     protected function doConnect(array $config): PDO
     {
-        if (\extension_loaded('pdo_pgsql') === false) {
+        if (false === \extension_loaded('pdo_pgsql')) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_pgsql'));
         }
 
         $connectionString = "pgsql:host={$config['host']};dbname={$config['database']}";
 
-        if (isset($config['port']) === true) {
+        if (true === isset($config['port'])) {
             $connectionString .= ";port={$config['port']}";
         }
 
         try {
-
             $connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
-            if (isset($config['charset']) === true) {
+            if (true === isset($config['charset'])) {
                 $connection->prepare("SET NAMES '{$config['charset']}'")->execute();
             }
 
-            if (isset($config['schema']) === true) {
+            if (true === isset($config['schema'])) {
                 $connection->prepare("SET search_path TO '{$config['schema']}'")->execute();
             }
-
         } catch (\PDOException $e) {
             throw Exception::create($e, $this->getQueryAdapterClass());
         }
@@ -59,6 +56,7 @@ class Pgsql extends BaseAdapter
 
     /**
      * Get query adapter class
+     *
      * @return string
      */
     public function getQueryAdapterClass(): string

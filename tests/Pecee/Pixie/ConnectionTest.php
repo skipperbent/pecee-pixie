@@ -1,4 +1,6 @@
-<?php namespace Pecee\Pixie;
+<?php
+
+namespace Pecee\Pixie;
 
 use Mockery as m;
 use Pecee\Pixie\ConnectionAdapters\IConnectionAdapter;
@@ -7,8 +9,6 @@ use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 /**
  * Class ConnectionTest
- *
- * @package Pecee\Pixie
  */
 class ConnectionTest extends TestCase
 {
@@ -47,6 +47,7 @@ class ConnectionTest extends TestCase
 
     /**
      * Test multiple connections
+     *
      * @throws Exception
      */
     public function testMultiConnection()

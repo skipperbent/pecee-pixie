@@ -2,6 +2,6 @@
 
 namespace Pecee\Pixie\QueryBuilder;
 
-interface IQueryBuilderHandler {
-
+interface IQueryBuilderHandler
+{
 }

@@ -18,8 +18,6 @@ use Throwable;
 
 /**
  * Class Exception
- *
- * @package Pecee\Pixie
  */
 class Exception extends \Exception
 {
@@ -32,8 +30,8 @@ class Exception extends \Exception
     }
 
     /**
-     * @param \Exception $e
-     * @param string|null $adapterName
+     * @param \Exception       $e
+     * @param string|null      $adapterName
      * @param QueryObject|null $query
      *
      * @return static|ColumnNotFoundException|ConnectionException|DuplicateColumnException|DuplicateEntryException|DuplicateKeyException|ForeignKeyException|NotNullException|TableNotFoundException
@@ -44,17 +42,15 @@ class Exception extends \Exception
      */
     public static function create(\Exception $e, string $adapterName = null, QueryObject $query = null)
     {
-
         if ($e instanceof \PDOException) {
-
             /**
              * @var string|null $errorSqlState
-             * @var integer|null $errorCode
+             * @var int|null    $errorCode
              * @var string|null $errorMsg
              */
             [$errorSqlState, $errorCode, $errorMsg] = $e->errorInfo;
 
-            $errorMsg = $errorMsg ?? $e->getMessage();
+            $errorMsg  = $errorMsg ?? $e->getMessage();
             $errorCode = (int)($errorCode ?? $e->getCode());
 
             switch ($adapterName) {
@@ -100,37 +96,37 @@ class Exception extends \Exception
                     break;
                 case Sqlite::class:
                     // https://sqlite.org/c3ref/c_abort.html
-                    /**
+                    /*
                      * Hack for SQLite3 exceptions.
                      * Error messages from source code: https://www.sqlite.org/download.html
                      */
 
-                    switch($errorCode) {
+                    switch ($errorCode) {
                         case 14:
                             return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
                     }
 
                     switch ($errorSqlState) {
-                        case null;
-                            if ($errorCode === 14) {
+                        case null:
+                            if (14 === $errorCode) {
                                 return new ConnectionException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                             break;
                         case 'HY000':
                         case '23000':
-                            if (preg_match('/no such column:/', $errorMsg) === 1) {
+                            if (1 === preg_match('/no such column:/', $errorMsg)) {
                                 return new ColumnNotFoundException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            if (preg_match('/no such table:/', $errorMsg) === 1) {
+                            if (1 === preg_match('/no such table:/', $errorMsg)) {
                                 return new TableNotFoundException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            if (preg_match('/NOT NULL constraint failed:/', $errorMsg) === 1) {
+                            if (1 === preg_match('/NOT NULL constraint failed:/', $errorMsg)) {
                                 return new NotNullException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            if (preg_match('/UNIQUE constraint failed:/', $errorMsg) === 1) {
+                            if (1 === preg_match('/UNIQUE constraint failed:/', $errorMsg)) {
                                 return new DuplicateEntryException($errorMsg, 1, $e->getPrevious(), $query);
                             }
-                            if (preg_match('/FOREIGN KEY constraint failed/', $errorMsg) === 1) {
+                            if (1 === preg_match('/FOREIGN KEY constraint failed/', $errorMsg)) {
                                 return new ForeignKeyException($errorMsg, 1, $e->getPrevious(), $query);
                             }
                     }

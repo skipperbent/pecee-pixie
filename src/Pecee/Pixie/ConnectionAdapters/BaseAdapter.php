@@ -6,8 +6,6 @@ use PDO;
 
 /**
  * Class BaseAdapter
- *
- * @package Pecee\Pixie\ConnectionAdapters
  */
 abstract class BaseAdapter implements IConnectionAdapter
 {
@@ -18,7 +16,7 @@ abstract class BaseAdapter implements IConnectionAdapter
      */
     public function connect(array $config): PDO
     {
-        if (isset($config['options']) === false) {
+        if (false === isset($config['options'])) {
             $config['options'] = [];
         }
 
