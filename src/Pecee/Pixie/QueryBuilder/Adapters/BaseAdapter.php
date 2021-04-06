@@ -137,12 +137,12 @@ abstract class BaseAdapter
 
             $key = $statement['key'];
 
+            $key = $this->wrapSanitizer($key);
+
             // Add alias non-existing
-            if($this->aliasPrefix !== null && strpos($key, '.') === false) {
+            if(is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
                 $key = $this->aliasPrefix . '.' . $key;
             }
-
-            $key = $this->wrapSanitizer($key);
 
             if ($statement['key'] instanceof Raw) {
                 $bindings[] = $statement['key']->getBindings();
