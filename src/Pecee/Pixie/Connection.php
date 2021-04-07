@@ -9,12 +9,9 @@ use Pecee\Pixie\QueryBuilder\QueryObject;
 
 /**
  * Class Connection
- *
- * @package Pecee\Pixie
  */
 class Connection
 {
-
     /**
      * @var Connection
      */
@@ -48,8 +45,8 @@ class Connection
     protected $lastQuery;
 
     /**
-     * @param string $adapter Adapter name or class
-     * @param array $adapterConfig
+     * @param string $adapter       Adapter name or class
+     * @param array  $adapterConfig
      */
     public function __construct($adapter, array $adapterConfig)
     {
@@ -66,7 +63,7 @@ class Connection
         // Create event dependency
         $this->eventHandler = new EventHandler();
 
-        if (static::$storedConnection === null) {
+        if (null === static::$storedConnection) {
             static::$storedConnection = $this;
         }
     }
@@ -81,11 +78,12 @@ class Connection
 
     /**
      * Create the connection adapter and connect to database
+     *
      * @return static
      */
     public function connect(): self
     {
-        if ($this->pdoInstance !== null) {
+        if (null !== $this->pdoInstance) {
             return $this;
         }
 
@@ -130,8 +128,9 @@ class Connection
     /**
      * Returns an instance of Query Builder
      *
-     * @return QueryBuilderHandler
      * @throws Exception
+     *
+     * @return QueryBuilderHandler
      */
     public function getQueryBuilder(): QueryBuilderHandler
     {
@@ -178,6 +177,7 @@ class Connection
      * Set query-object for last executed query.
      *
      * @param QueryObject $query
+     *
      * @return static
      */
     public function setLastQuery(QueryObject $query): self
@@ -200,9 +200,9 @@ class Connection
     /**
      * Register new event
      *
-     * @param string $name
+     * @param string      $name
      * @param string|null $table
-     * @param \Closure $action
+     * @param \Closure    $action
      *
      * @return void
      */
@@ -216,7 +216,7 @@ class Connection
      */
     public function close(): void
     {
-        $this->pdoInstance = null;
+        $this->pdoInstance        = null;
         static::$storedConnection = null;
     }
 
@@ -224,5 +224,4 @@ class Connection
     {
         $this->close();
     }
-
 }

@@ -7,15 +7,12 @@ use Pecee\Pixie\Exception;
 
 /**
  * Class Mysql
- *
- * @package Pecee\Pixie\ConnectionAdapters
  */
 class Mysql extends BaseAdapter
 {
     /**
      * @param array $config
      *
-     * @return PDO
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @throws \Pecee\Pixie\Exceptions\ConnectionException
      * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
@@ -25,35 +22,35 @@ class Mysql extends BaseAdapter
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
      * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
      * @throws \Pecee\Pixie\Exceptions\NotNullException
+     *
+     * @return PDO
      */
     protected function doConnect(array $config): PDO
     {
-        if (\extension_loaded('pdo_mysql') === false) {
+        if (false === \extension_loaded('pdo_mysql')) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_mysql'));
         }
 
         $connectionString = "mysql:dbname={$config['database']}";
 
-        if (isset($config['host']) === true) {
+        if (true === isset($config['host'])) {
             $connectionString .= ";host={$config['host']}";
         }
 
-        if (isset($config['port']) === true) {
+        if (true === isset($config['port'])) {
             $connectionString .= ";port={$config['port']}";
         }
 
-        if (isset($config['unix_socket']) === true) {
+        if (true === isset($config['unix_socket'])) {
             $connectionString .= ";unix_socket={$config['unix_socket']}";
         }
 
         try {
-
             $connection = new PDO($connectionString, $config['username'], $config['password'], $config['options']);
 
-            if (isset($config['charset']) === true) {
+            if (true === isset($config['charset'])) {
                 $connection->prepare("SET NAMES '{$config['charset']}'")->execute();
             }
-
         } catch (\PDOException $e) {
             throw Exception::create($e, $this->getQueryAdapterClass());
         }
@@ -63,6 +60,7 @@ class Mysql extends BaseAdapter
 
     /**
      * Get query adapter class
+     *
      * @return string
      */
     public function getQueryAdapterClass(): string

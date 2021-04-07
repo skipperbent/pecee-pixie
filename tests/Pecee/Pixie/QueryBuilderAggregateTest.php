@@ -4,12 +4,9 @@ namespace Pecee\Pixie;
 
 /**
  * Class QueryBuilder
- *
- * @package Pecee\Pixie
  */
 class QueryBuilderAggregateTest extends TestCase
 {
-
     public function setUp()
     {
         return parent::setUp();
@@ -21,7 +18,6 @@ class QueryBuilderAggregateTest extends TestCase
             ['name' => 'horse', 'number_of_legs' => 4],
             ['name' => 'cat', 'number_of_legs' => 8],
         ]);
-
     }
 
     public function testQueryCount()
@@ -79,5 +75,4 @@ class QueryBuilderAggregateTest extends TestCase
 
         $this->assertEquals(13.3333333333333, $count);
     }
-
 }

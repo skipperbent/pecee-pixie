@@ -9,8 +9,6 @@ use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
 
 /**
  * Class TestCase
- *
- * @package Pecee\Pixie
  */
 class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -39,12 +37,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         $args = func_get_args();
 
-        return count($args) == 1 ? $args[0] : $args;
+        return 1 == count($args) ? $args[0] : $args;
     }
 
     public function setUp()
     {
-
         $this->mockPdoStatement = $this->getMockBuilder(\PDOStatement::class)->getMock();
 
         $mockPdoStatement = &$this->mockPdoStatement;
@@ -109,10 +106,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      * @throws \Pecee\Pixie\Exception
+     *
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      */
-    public function getLiveConnection() {
+    public function getLiveConnection()
+    {
         $connection = new \Pecee\Pixie\Connection('mysql', [
             'driver'    => 'mysql',
             'host'      => '127.0.0.1',
@@ -127,14 +126,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $qb = $connection->getQueryBuilder();
         $qb->pdo()->exec(file_get_contents(__DIR__.'/db_mysql.sql'));
         $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
+
         return $qb->newQuery();
     }
 
     /**
-     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      * @throws \Pecee\Pixie\Exception
+     *
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      */
-    public function getLiveConnectionSqlite() {
+    public function getLiveConnectionSqlite()
+    {
         $connection = new \Pecee\Pixie\Connection('sqlite', [
             'driver'   => 'sqlite',
             'database' => ':memory:',
@@ -145,8 +147,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $qb = $connection->getQueryBuilder();
         $qb->pdo()->exec(file_get_contents(__DIR__.'/db_sqlite.sql'));
         $qb->pdo()->exec(file_get_contents(__DIR__.'/db_values.sql'));
-        return $qb->newQuery();
 
+        return $qb->newQuery();
     }
 
     public function tearDown()
@@ -157,8 +159,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
 /**
  * Class MockPdo
- *
- * @package Pecee\Pixie
  */
 class MockPdo extends \PDO
 {
@@ -167,6 +167,5 @@ class MockPdo extends \PDO
      */
     public function __construct()
     {
-
     }
 }

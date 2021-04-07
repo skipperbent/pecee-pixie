@@ -6,7 +6,6 @@ use PDO;
 
 interface IConnectionAdapter
 {
-
     /**
      * Connect to database
      *
@@ -18,8 +17,8 @@ interface IConnectionAdapter
 
     /**
      * Get query adapter class
+     *
      * @return string
      */
     public function getQueryAdapterClass(): string;
-
 }

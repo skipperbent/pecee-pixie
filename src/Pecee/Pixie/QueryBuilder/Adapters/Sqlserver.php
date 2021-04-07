@@ -1,4 +1,5 @@
 <?php
+
 namespace Pecee\Pixie\QueryBuilder\Adapters;
 
 use Pecee\Pixie\Exception;
@@ -6,8 +7,6 @@ use Pecee\Pixie\QueryBuilder\Raw;
 
 /**
  * Class Sqlserver
- *
- * @package Pecee\Pixie\QueryBuilder\Adapters
  */
 class Sqlserver extends BaseAdapter
 {
@@ -28,10 +27,13 @@ class Sqlserver extends BaseAdapter
 
     /**
      * Overridden method for SQL SERVER correct usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
+     *
      * @param string $section
-     * @param array $statements
-     * @return string
+     * @param array  $statements
+     *
      * @throws Exception
+     *
+     * @return string
      */
     protected function buildQueryPart(string $section, array $statements): string
     {
@@ -53,30 +55,30 @@ class Sqlserver extends BaseAdapter
      * @param array $statements
      *
      * @throws Exception
+     *
      * @return array
      */
     public function select(array $statements): array
     {
         $hasDistincts = false;
 
-        if (isset($statements['distincts']) === true && \count($statements['distincts']) > 0) {
+        if (true === isset($statements['distincts']) && \count($statements['distincts']) > 0) {
             $hasDistincts = true;
 
-            if (isset($statements['selects']) === true && \count($statements['selects']) > 0) {
+            if (true === isset($statements['selects']) && \count($statements['selects']) > 0) {
                 $statements['selects'] = array_merge($statements['distincts'], $statements['selects']);
             } else {
                 $statements['selects'] = $statements['distincts'];
             }
-
-        } else if (isset($statements['selects']) === false) {
+        } elseif (false === isset($statements['selects'])) {
             $statements['selects'] = ['*'];
         }
 
         // From
         $fromEnabled = false;
-        $tables = '';
+        $tables      = '';
 
-        if (isset($statements['tables']) === true) {
+        if (true === isset($statements['tables'])) {
             $tablesFound = [];
 
             foreach ((array)$statements['tables'] as $table) {
@@ -85,7 +87,7 @@ class Sqlserver extends BaseAdapter
                 } else {
                     $prefix = $statements['aliases'][$table] ?? null;
 
-                    if ($prefix !== null) {
+                    if (null !== $prefix) {
                         $t = sprintf('%s AS %s', $table, strtolower($prefix));
                     } else {
                         $t = sprintf('%s', $table);
@@ -95,7 +97,7 @@ class Sqlserver extends BaseAdapter
                 $tablesFound[] = $t;
             }
 
-            $tables = implode(',', $tablesFound);
+            $tables      = implode(',', $tablesFound);
             $fromEnabled = true;
         }
 
@@ -106,7 +108,7 @@ class Sqlserver extends BaseAdapter
         [$havingCriteria, $havingBindings] = $this->buildCriteriaWithType($statements, 'havings', 'HAVING');
 
         $sql = $this->concatenateQuery([
-            'SELECT' . ($hasDistincts === true ? ' DISTINCT' : ''),
+            'SELECT' . (true === $hasDistincts ? ' DISTINCT' : ''),
             $this->buildQueryPart(static::QUERY_PART_TOP, $statements),
             $this->arrayStr($statements['selects'], ', '),
             $fromEnabled ? 'FROM' : '',
@@ -133,11 +135,12 @@ class Sqlserver extends BaseAdapter
     /**
      * Build delete query
      *
-     * @param array $statements
+     * @param array      $statements
      * @param array|null $columns
      *
-     * @return array
      * @throws Exception
+     *
+     * @return array
      */
     public function delete(array $statements, array $columns = null): array
     {
@@ -145,8 +148,8 @@ class Sqlserver extends BaseAdapter
 
         $columnsQuery = '';
 
-        if($columns !== null) {
-            foreach($columns as $key => $column) {
+        if (null !== $columns) {
+            foreach ($columns as $key => $column) {
                 $columns[$key] = $this->wrapSanitizer($column);
             }
 
@@ -188,7 +191,7 @@ class Sqlserver extends BaseAdapter
 
         foreach ($valueArr as $key => $subValue) {
             // Don't wrap if we have *, which is not a usual field
-            $valueArr[$key] = trim($subValue) === '*' ? $subValue : '[' . $subValue . ']';
+            $valueArr[$key] = '*' === trim($subValue) ? $subValue : '[' . $subValue . ']';
         }
 
         // Join these back with "." and return

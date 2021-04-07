@@ -4,12 +4,9 @@ namespace Pecee\Pixie\QueryBuilder;
 
 /**
  * Class Raw
- *
- * @package Pecee\Pixie\QueryBuilder
  */
 class Raw
 {
-
     /**
      * @var string
      */
@@ -23,12 +20,12 @@ class Raw
     /**
      * Raw constructor.
      *
-     * @param string $value
+     * @param string       $value
      * @param array|string $bindings
      */
     public function __construct(string $value, array $bindings = [])
     {
-        $this->value = $value;
+        $this->value    = $value;
         $this->bindings = $bindings;
     }
 

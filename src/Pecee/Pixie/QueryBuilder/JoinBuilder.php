@@ -4,8 +4,6 @@ namespace Pecee\Pixie\QueryBuilder;
 
 /**
  * Class JoinBuilder
- *
- * @package Pecee\Pixie\QueryBuilder
  */
 class JoinBuilder extends QueryBuilderHandler
 {
@@ -15,7 +13,7 @@ class JoinBuilder extends QueryBuilderHandler
      * @param string|Raw|\Closure $key
      * @param string|Raw|\Closure $operator
      * @param string|Raw|\Closure $value
-     * @param string $joiner
+     * @param string              $joiner
      *
      * @return static
      */
@@ -36,6 +34,7 @@ class JoinBuilder extends QueryBuilderHandler
      * Add join with USING syntax
      *
      * @param array $columns
+     *
      * @return static
      */
     public function using(array $columns): self
@@ -61,5 +60,4 @@ class JoinBuilder extends QueryBuilderHandler
     {
         return $this->on($key, $operator, $value, 'OR');
     }
-
 }

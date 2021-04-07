@@ -7,12 +7,9 @@ use Pecee\Pixie\Exceptions\TransactionHaltException;
 
 /**
  * Class Transaction
- *
- * @package Pecee\Pixie\QueryBuilder
  */
 class Transaction extends QueryBuilderHandler
 {
-
     protected $transactionStatement;
 
     /**
@@ -41,7 +38,7 @@ class Transaction extends QueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
-    public function commit() : void
+    public function commit(): void
     {
         try {
             $this->pdo()->commit();
@@ -66,7 +63,7 @@ class Transaction extends QueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws TransactionHaltException
      */
-    public function rollBack() : void
+    public function rollBack(): void
     {
         try {
             $this->pdo()->rollBack();
@@ -83,22 +80,23 @@ class Transaction extends QueryBuilderHandler
      * @param string $sql
      * @param array  $bindings
      *
-     * @throws \Pecee\Pixie\Exception
-     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
      * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
      * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
      * @throws \Pecee\Pixie\Exceptions\NotNullException
-     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws Exception
+     *
      * @return array PDOStatement and execution time as float
      */
     public function statement(string $sql, array $bindings = []): array
     {
-        if ($this->transactionStatement === null && $this->pdo()->inTransaction() === true) {
-
-            $results = parent::statement($sql, $bindings);
+        if (null === $this->transactionStatement && true === $this->pdo()->inTransaction()) {
+            $results                    = parent::statement($sql, $bindings);
             $this->transactionStatement = $results[0];
 
             return $results;
@@ -106,5 +104,4 @@ class Transaction extends QueryBuilderHandler
 
         return parent::statement($sql, $bindings);
     }
-
 }

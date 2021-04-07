@@ -11,10 +11,10 @@ use Pecee\Pixie\Exceptions\TableNotFoundException;
 
 class CustomExceptionsTest extends TestCase
 {
-
     /**
-     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      * @throws \Pecee\Pixie\Exception
+     *
+     * @return \Pecee\Pixie\QueryBuilder\QueryBuilderHandler
      */
     public function getQueryBuilder()
     {
@@ -25,14 +25,13 @@ class CustomExceptionsTest extends TestCase
     {
         $this->assertEquals($class, \get_class($exception));
 
-        if ($codes !== null) {
+        if (null !== $codes) {
             $this->assertContains($exception->getCode(), $codes, sprintf('Failed asserting exception- expected "%s" got "%s"', implode(' or ', $codes), $exception->getCode()));
         }
     }
 
     public function testConnectionException()
     {
-
         // test error code 2002
         try {
             (new \Pecee\Pixie\Connection('mysql', [
@@ -81,7 +80,6 @@ class CustomExceptionsTest extends TestCase
             ]))->connect();
             throw new \RuntimeException('check');
         } catch (\Exception $e) {
-
             // Note: seems like some MySQL instances returns 1044 other 1045.
             $this->validateException($e, ConnectionException::class, 1044, 1045, 2002);
         }
@@ -96,12 +94,10 @@ class CustomExceptionsTest extends TestCase
         } catch (\Exception $e) {
             $this->validateException($e, ConnectionException::class, 1);
         }
-
     }
 
     public function testTableNotFoundException()
     {
-
         $mysqlBuilder = $this->getQueryBuilder();
 
         try {
@@ -119,12 +115,10 @@ class CustomExceptionsTest extends TestCase
         } catch (\Exception $e) {
             $this->validateException($e, TableNotFoundException::class, 1);
         }
-
     }
 
     public function testColumnNotFoundException()
     {
-
         $builder = $this->getQueryBuilder();
 
         try {
@@ -142,12 +136,10 @@ class CustomExceptionsTest extends TestCase
         } catch (\Exception $e) {
             $this->validateException($e, ColumnNotFoundException::class, 1);
         }
-
     }
 
     public function testDuplicateEntryException()
     {
-
         $builder = $this->getQueryBuilder();
 
         try {
@@ -169,7 +161,6 @@ class CustomExceptionsTest extends TestCase
         } catch (\Exception $e) {
             $this->validateException($e, DuplicateEntryException::class, 1);
         }
-
     }
 
     public function testQueryAggregateColumnNotFoundException()
@@ -250,5 +241,4 @@ class CustomExceptionsTest extends TestCase
             $this->validateException($e, NotNullException::class, 1);
         }
     }
-
 }

@@ -7,15 +7,12 @@ use Pecee\Pixie\Exception;
 
 /**
  * Class Sqlite
- *
- * @package Pecee\Pixie\ConnectionAdapters
  */
 class Sqlite extends BaseAdapter
 {
     /**
      * @param array $config
      *
-     * @return PDO
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @throws \Pecee\Pixie\Exceptions\ConnectionException
      * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
@@ -25,10 +22,12 @@ class Sqlite extends BaseAdapter
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
      * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
      * @throws \Pecee\Pixie\Exceptions\NotNullException
+     *
+     * @return PDO
      */
     public function doConnect(array $config): PDO
     {
-        if (\extension_loaded('pdo_sqlite') === false) {
+        if (false === \extension_loaded('pdo_sqlite')) {
             throw new Exception(sprintf('%s library not loaded', 'pdo_sqlite'));
         }
 
@@ -43,6 +42,7 @@ class Sqlite extends BaseAdapter
 
     /**
      * Get query adapter class
+     *
      * @return string
      */
     public function getQueryAdapterClass(): string
