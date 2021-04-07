@@ -12,7 +12,9 @@ use Pecee\Pixie\Exceptions\TransactionHaltException;
  */
 class Transaction extends QueryBuilderHandler
 {
-
+    /**
+     * @var \PDOStatement|null
+     */
     protected $transactionStatement;
 
     /**
