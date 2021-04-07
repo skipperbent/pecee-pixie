@@ -142,7 +142,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return int
      */
@@ -157,7 +165,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $type
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return float
      */
@@ -210,7 +226,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Returns the first row
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return \stdClass|string|null
      */
@@ -224,7 +248,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Get all rows
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array
      */
@@ -699,7 +731,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return float
      */
@@ -713,7 +753,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return float
      */
@@ -727,7 +775,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return float
      */
@@ -741,7 +797,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string $field
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return float
      */
@@ -755,7 +819,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @var array|null
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return \PDOStatement
      */
@@ -782,7 +854,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string|int|float $value
      * @param string           $fieldName
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return \stdClass|string|null
      */
@@ -839,7 +919,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string           $fieldName
      * @param string|int|float $value
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array
      */
@@ -968,7 +1056,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param array $data
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array|string
      */
@@ -983,7 +1079,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param array  $data
      * @param string $type
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array|string|null
      */
@@ -1340,7 +1444,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param string $sql
      * @param array  $bindings
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return static
      */
@@ -1394,7 +1506,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param array $data
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array|string
      */
@@ -1491,7 +1611,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param array $data
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array|\PDOStatement|string
      */
@@ -1509,7 +1637,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param array $data
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return \PDOStatement
      */
@@ -1538,7 +1674,15 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param array $data
      *
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      *
      * @return array|string
      */
