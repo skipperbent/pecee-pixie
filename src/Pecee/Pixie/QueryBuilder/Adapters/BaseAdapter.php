@@ -118,7 +118,7 @@ abstract class BaseAdapter
         $criteria = [];
         $bindings = [[]];
 
-        foreach ($statements as $i => $statement) {
+        foreach (array_values($statements) as $i => $statement) {
 
             if ($i === 0 && isset($statement['condition'])) {
                 $criteria[] = $statement['condition'];
@@ -631,7 +631,8 @@ abstract class BaseAdapter
                         $orderBys .= $this->wrapSanitizer($orderBy['field']) . ' ' . $orderBy['type'] . ', ';
                     }
 
-                    if ($orderBys = trim($orderBys, ', ')) {
+                    $orderBys = trim($orderBys, ', ');
+                    if ($orderBys !== '') {
                         $orderBys = 'ORDER BY ' . $orderBys;
                     }
                 }

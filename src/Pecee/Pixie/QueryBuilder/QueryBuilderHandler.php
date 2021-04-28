@@ -140,6 +140,43 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Removes existing statement if overwrite is set to enabled.
+     *
+     * @param string $type Statement type
+     * @param string $key Key to search for
+     * @param mixed $value Value to match
+     */
+    protected function removeExistingStatement(string $type, string $key, $value): void
+    {
+        if ($this->overwriteEnabled === false || isset($this->statements[$type]) === false) {
+            return;
+        }
+
+        foreach ($this->statements[$type] as $index => $statement) {
+            if ($statement[$key] instanceof \Closure) {
+                $nestedCriteria = new QueryBuilderHandler($this->connection);
+
+                $statement[$key]($nestedCriteria);
+
+                if (isset($nestedCriteria->getStatements()[$type])) {
+                    foreach ($nestedCriteria->getStatements()[$type] as $subStatement) {
+                        if ($subStatement[$key] === $value) {
+                            unset($this->statements[$type][$index]);
+
+                            return;
+                        }
+                    }
+                }
+
+            }
+            if ($statement[$key] === $value) {
+                unset($this->statements[$type][$index]);
+                return;
+            }
+        }
+    }
+
+    /**
      * Get count of all the rows for the current query
      *
      * @param string $field
@@ -154,6 +191,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return integer
+     * @throws Exception
      */
     public function count(string $field = '*'): int
     {
@@ -176,6 +214,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return float
+     * @throws Exception
      */
     protected function aggregate(string $type, string $field = '*'): float
     {
@@ -236,6 +275,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return \stdClass|string|null
+     * @throws Exception
      */
     public function first()
     {
@@ -257,6 +297,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array
+     * @throws Exception
      */
     public function get(): array
     {
@@ -665,8 +706,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Creates and returns new query.
      *
-     * @throws Exception
      * @return static
+     * @throws Exception
      */
     public function newQuery(): self
     {
@@ -680,8 +721,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @param QueryBuilderHandler $queryBuilder
      * @param string|null $alias
      *
-     * @throws Exception
      * @return Raw
+     * @throws Exception
      */
     public function subQuery(QueryBuilderHandler $queryBuilder, $alias = null): Raw
     {
@@ -730,6 +771,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return float
+     * @throws Exception
      */
     public function sum(string $field): float
     {
@@ -751,6 +793,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return float
+     * @throws Exception
      */
     public function average(string $field): float
     {
@@ -772,6 +815,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return float
+     * @throws Exception
      */
     public function min(string $field): float
     {
@@ -793,6 +837,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return float
+     * @throws Exception
      */
     public function max(string $field): float
     {
@@ -848,6 +893,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return \stdClass|string|null
+     * @throws Exception
      */
     public function find($value, string $fieldName = 'id')
     {
@@ -891,6 +937,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     protected function whereHandler($key, ?string $operator = null, $value = null, $joiner = 'AND'): self
     {
         $key = $this->addTablePrefix($key);
+        $this->removeExistingStatement('wheres', 'key', $key);
         $this->statements['wheres'][] = compact('key', 'operator', 'value', 'joiner');
 
         return $this;
@@ -912,6 +959,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array
+     * @throws Exception
      */
     public function findAll(string $fieldName, $value): array
     {
@@ -942,6 +990,10 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         if (($field instanceof Raw) === false) {
             $field = $this->addTablePrefix($field);
+        }
+
+        if ($this->overwriteEnabled === true) {
+            $this->statements['groupBys'] = [];
         }
 
         if (\is_array($field) === true) {
@@ -1021,6 +1073,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $table = $this->addTablePrefix($table, false);
 
+        $this->removeExistingStatement('joins', 'table', $table);
+
         // Get the criteria only query from the joinBuilder object
         $this->statements['joins'][] = [
             'type'        => $type,
@@ -1046,6 +1100,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array|string
+     * @throws Exception
      */
     public function insertIgnore(array $data)
     {
@@ -1068,6 +1123,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array|string|null
+     * @throws Exception
      */
     private function doInsert(array $data, string $type)
     {
@@ -1121,8 +1177,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param \Closure $callback
      *
-     * @throws Exception
      * @return Transaction
+     * @throws Exception
      */
     public function transaction(\Closure $callback): Transaction
     {
@@ -1176,6 +1232,8 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $joinBuilder->using($fields);
 
         $table = $this->addTablePrefix($table, false);
+
+        $this->removeExistingStatement('joins', 'table', $table);
 
         $this->statements['joins'][] = [
             'type'        => $joinType,
@@ -1257,6 +1315,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function having($key, $operator, $value, $joiner = 'AND'): self
     {
         $key = $this->addTablePrefix($key);
+        $this->removeExistingStatement('havings', 'key', $key);
         $this->statements['havings'][] = compact('key', 'operator', 'value', 'joiner');
 
         return $this;
@@ -1365,10 +1424,11 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     protected function whereNullHandler($key, string $prefix = '', string $operator = ''): self
     {
-        $key = $this->adapterInstance->wrapSanitizer($this->addTablePrefix($key));
-        $prefix = ($prefix !== '') ? $prefix . ' ' : $prefix;
+        $this->removeExistingStatement('wheres', 'key', $key);
 
-        return $this->{$operator . 'Where'}($this->raw("$key IS {$prefix}NULL"));
+        $prefix = 'IS' . (($prefix !== '') ? ' ' . $prefix : '');
+
+        return $this->{$operator . 'Where'}($key, $prefix, $this->raw('NULL'));
     }
 
     /**
@@ -1410,6 +1470,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $field = $this->addTablePrefix($field);
             }
 
+            $this->removeExistingStatement('orderBys', 'field', $field);
             $this->statements['orderBys'][] = compact('field', 'type');
         }
 
@@ -1493,6 +1554,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array|string
+     * @throws Exception
      */
     public function replace(array $data)
     {
@@ -1621,6 +1683,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return \PDOStatement
+     * @throws Exception
      */
     public function update(array $data): \PDOStatement
     {
@@ -1655,6 +1718,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @throws \Pecee\Pixie\Exceptions\NotNullException
      * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
      * @return array|string
+     * @throws Exception
      */
     public function insert(array $data)
     {
@@ -1753,6 +1817,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function for(string $statement): self
     {
         $this->addStatement('for', $statement);
+
         return $this;
     }
 
@@ -1777,6 +1842,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 }
             }
         }
+
         return $tColumns;
     }
 
