@@ -118,7 +118,7 @@ abstract class BaseAdapter
         $criteria = [];
         $bindings = [[]];
 
-        foreach ($statements as $i => $statement) {
+        foreach (array_values($statements) as $i => $statement) {
 
             if ($i === 0 && isset($statement['condition'])) {
                 $criteria[] = $statement['condition'];
