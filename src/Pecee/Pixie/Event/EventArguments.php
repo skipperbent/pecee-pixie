@@ -28,7 +28,15 @@ class EventArguments
      */
     private $arguments;
 
-    public function __construct($name, QueryObject $qo, QueryBuilderHandler $qb, array $arguments)
+    /**
+     * EventArguments constructor.
+     *
+     * @param string                                        $name
+     * @param \Pecee\Pixie\QueryBuilder\QueryObject         $qo
+     * @param \Pecee\Pixie\QueryBuilder\QueryBuilderHandler $qb
+     * @param array                                         $arguments
+     */
+    public function __construct(string $name, QueryObject $qo, QueryBuilderHandler $qb, array $arguments)
     {
         $this->name = $name;
         $this->queryObject = $qo;

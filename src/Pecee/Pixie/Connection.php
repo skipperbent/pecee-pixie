@@ -16,7 +16,7 @@ class Connection
 {
 
     /**
-     * @var Connection
+     * @var Connection|null
      */
     protected static $storedConnection;
 
@@ -33,7 +33,7 @@ class Connection
     protected $adapterConfig;
 
     /**
-     * @var \PDO
+     * @var \PDO|null
      */
     protected $pdoInstance;
 
@@ -48,7 +48,7 @@ class Connection
     protected $lastQuery;
 
     /**
-     * @param string $adapter Adapter name or class
+     * @param string|IConnectionAdapter $adapter Adapter name or class
      * @param array $adapterConfig
      */
     public function __construct($adapter, array $adapterConfig)
