@@ -4,6 +4,7 @@ composer.phar
 /devel/
 /coverage.clover
 .idea/
+tests/TestCase.php
 
 ### Composer template
 /vendor/
