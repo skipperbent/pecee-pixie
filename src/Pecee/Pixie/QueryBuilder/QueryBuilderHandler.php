@@ -38,7 +38,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public const UNION_TYPE_ALL = 'ALL';
     /**
-     * @var Connection
+     * @var Connection|null
      */
     protected $connection;
 
@@ -84,7 +84,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @throws Exception
      */
-    public function __construct(Connection $connection = null)
+    final public function __construct(Connection $connection = null)
     {
         $this->connection = $connection ?? Connection::getStoredConnection();
 
@@ -241,7 +241,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         $result = $this->limit(1)->get();
 
-        return ($result !== null && \count($result) !== 0) ? $result[0] : null;
+        return (\count($result) !== 0) ? $result[0] : null;
     }
 
     /**
@@ -260,19 +260,12 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function get(): array
     {
-        /**
-         * @var $queryObject   QueryObject
-         * @var $executionTime float
-         * @var $start         float
-         * @var $result        array
-         */
-
         $queryObject = $this->getQuery();
         $this->connection->setLastQuery($queryObject);
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_SELECT, $queryObject);
 
-        $executionTime = 0;
+        $executionTime = 0.0;
         $startTime = microtime(true);
 
         if ($this->pdoStatement === null) {
@@ -548,7 +541,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
                 $target = &$key;
             }
 
-            if ($tableFieldMix === false || ($tableFieldMix && strpos($target, '.') !== false)) {
+            if (($tableFieldMix === false) || (strpos($target, '.') !== false)) {
                 $target = $this->tablePrefix . $target;
             }
 
@@ -631,7 +624,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         $tTables = [];
 
-        foreach ((array)$tables as $key => $value) {
+        foreach ($tables as $key => $value) {
             if (\is_string($key) === true) {
                 $this->alias($value, $key);
                 $tTables[] = $key;
@@ -890,7 +883,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      *
      * @param string|Raw|\Closure $key
      * @param string|null $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|array|Raw|\Closure|null $value
      * @param string $joiner
      *
      * @return static
@@ -1017,7 +1010,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
              * in the closure should reflect here
              */
             if ($key instanceof \Closure === false) {
-                $key = static function (JoinBuilder $joinBuilder) use ($key, $operator, $value) {
+                $key = static function (JoinBuilder $joinBuilder) use ($key, $operator, $value): void {
                     $joinBuilder->on($key, $operator, $value);
                 };
             }
@@ -1086,10 +1079,9 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $this->connection->setLastQuery($queryObject);
 
             $this->fireEvents(EventHandler::EVENT_BEFORE_INSERT, $queryObject);
-            /**
-             * @var $result        \PDOStatement
-             * @var $executionTime float
-             */
+
+            /** @var float $executionTime */
+            /** @var \PDOStatement $result */
             [$result, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
             $insertId = $result->rowCount() === 1 ? $this->pdo()->lastInsertId() : null;
@@ -1107,7 +1099,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
         if ($this->pdo()->inTransaction() === false) {
 
-            $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type) {
+            $this->transaction(function (Transaction $transaction) use (&$insertIds, $data, $type): void {
                 foreach ($data as $subData) {
                     $insertIds[] = $transaction->doInsert($subData, $type);
                 }
@@ -1405,7 +1397,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
             $fields = [$fields];
         }
 
-        foreach ((array)$fields as $key => $value) {
+        foreach ($fields as $key => $value) {
             $field = $key;
             $type = $value;
 
@@ -1632,15 +1624,13 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      */
     public function update(array $data): \PDOStatement
     {
-        /**
-         * @var $response \PDOStatement
-         */
         $queryObject = $this->getQuery('update', $data);
 
         $this->connection->setLastQuery($queryObject);
 
         $this->fireEvents(EventHandler::EVENT_BEFORE_UPDATE, $queryObject);
 
+        /** @var \PDOStatement $response */
         [$response, $executionTime] = $this->statement($queryObject->getSql(), $queryObject->getBindings());
 
         $this->fireEvents(EventHandler::EVENT_AFTER_UPDATE, $queryObject, [
@@ -1757,7 +1747,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
 
     /**
      * Will add FOR statement to the end of the SELECT statement, like FOR UPDATE, FOR SHARE etc.
-     * @param $statement string
+     * @param string $statement
      * @return static
      */
     public function for(string $statement): self

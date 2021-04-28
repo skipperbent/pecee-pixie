@@ -193,7 +193,7 @@ class EventHandler
      *
      * @return void
      */
-    public function removeEvent($event, $table = null): void
+    public function removeEvent(string $event, $table = null): void
     {
         unset($this->events[$table ?? static::TABLE_ANY][$event]);
     }
