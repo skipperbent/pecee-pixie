@@ -11,8 +11,8 @@ class NestedCriteria extends QueryBuilderHandler
 {
     /**
      * @param string|Raw|\Closure $key
-     * @param string|Raw|\Closure|null $operator
-     * @param string|Raw|\Closure|null $value
+     * @param string|null $operator
+     * @param string|array|Raw|\Closure|null $value
      * @param string $joiner
      *
      * @return static

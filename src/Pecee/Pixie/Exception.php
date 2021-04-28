@@ -23,9 +23,12 @@ use Throwable;
  */
 class Exception extends \Exception
 {
+    /**
+     * @var \Pecee\Pixie\QueryBuilder\QueryObject|null
+     */
     protected $query;
 
-    public function __construct(string $message = '', int $code = 0, Throwable $previous = null, QueryObject $query = null)
+    final public function __construct(string $message = '', int $code = 0, Throwable $previous = null, QueryObject $query = null)
     {
         parent::__construct($message, $code, $previous);
         $this->query = $query;

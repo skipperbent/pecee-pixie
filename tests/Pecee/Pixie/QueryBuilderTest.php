@@ -188,4 +188,21 @@ class QueryBuilder extends TestCase
         $this->assertEquals('SELECT * FROM `cb_users` FOR UPDATE', $query->getQuery()->getRawSql());
     }
 
+    public function testRemoveQuery() {
+
+        $builder = $this->builder->newQuery()->table('test')->setOverwriteEnabled(true);
+
+        $query = $builder
+            ->where('parent_id', '=', 10)
+            ->where('parent_id', '=', 5)
+            ->limit(5);
+
+        $this->assertEquals('SELECT * FROM `cb_test` WHERE `parent_id` = 5 LIMIT 5', $query->getQuery()->getRawSql());
+
+        $query = $builder->whereNull('parent_id');
+
+        $this->assertEquals('SELECT * FROM `cb_test` WHERE `parent_id` IS NULL LIMIT 5', $query->getQuery()->getRawSql());
+
+    }
+
 }

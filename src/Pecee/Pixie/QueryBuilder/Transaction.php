@@ -12,7 +12,9 @@ use Pecee\Pixie\Exceptions\TransactionHaltException;
  */
 class Transaction extends QueryBuilderHandler
 {
-
+    /**
+     * @var \PDOStatement|null
+     */
     protected $transactionStatement;
 
     /**
@@ -81,19 +83,18 @@ class Transaction extends QueryBuilderHandler
      * Execute statement
      *
      * @param string $sql
-     * @param array $bindings
+     * @param array  $bindings
      *
-     * @return array PDOStatement and execution time as float
-     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
-     * @throws \Pecee\Pixie\Exceptions\ConnectionException
-     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
      * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
      * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
      * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
      * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
      * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
      * @throws \Pecee\Pixie\Exceptions\NotNullException
-     * @throws Exception
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @return array PDOStatement and execution time as float
      */
     public function statement(string $sql, array $bindings = []): array
     {
