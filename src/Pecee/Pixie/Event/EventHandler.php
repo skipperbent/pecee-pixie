@@ -140,7 +140,7 @@ class EventHandler
      *
      * @return callable|null
      */
-    public function getEvent(string $event, ?string $table = null): ?callable
+    public function getEvent(string $event, $table = null): ?callable
     {
         $table = $table ?? static::TABLE_ANY;
 
