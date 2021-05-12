@@ -912,7 +912,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function where($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
-        if (\func_num_args() === 2) {
+        if ($value === null || \func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
@@ -1333,7 +1333,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function orWhere($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
-        if (\func_num_args() === 2) {
+        if ($value === null || \func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
@@ -1380,7 +1380,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function orWhereNot($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
-        if (\func_num_args() === 2) {
+        if ($value === null || \func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
@@ -1764,7 +1764,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function whereNot($key, $operator = null, $value = null): self
     {
         // If two params are given then assume operator is =
-        if (\func_num_args() === 2) {
+        if ($value === null || \func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
