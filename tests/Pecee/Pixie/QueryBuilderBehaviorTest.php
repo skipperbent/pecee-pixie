@@ -78,7 +78,7 @@ class QueryBuilderTest extends TestCase
             'value' => 'Sana',
         ];
 
-        $this->assertEquals("INSERT IGNORE INTO `cb_my_table` (`key`,`value`) VALUES ('Name','Sana')"
+        $this->assertEquals("INSERT IGNORE INTO `cb_my_table` (`key`, `value`) VALUES ('Name', 'Sana')"
             , $builder->getQuery('insertignore', $data)->getRawSql());
     }
 
@@ -94,7 +94,7 @@ class QueryBuilderTest extends TestCase
             'counter' => 2,
         ];
         $builder->from('my_table')->onDuplicateKeyUpdate($dataUpdate);
-        $this->assertEquals("INSERT INTO `cb_my_table` (`name`,`counter`) VALUES ('Sana',1) ON DUPLICATE KEY UPDATE `name`='Sana',`counter`=2"
+        $this->assertEquals("INSERT INTO `cb_my_table` (`name`, `counter`) VALUES ('Sana', 1) ON DUPLICATE KEY UPDATE `name` = 'Sana', `counter` = 2"
             , $builder->getQuery('insert', $data)->getRawSql());
     }
 
@@ -106,7 +106,7 @@ class QueryBuilderTest extends TestCase
             'value' => 'Sana',
         ];
 
-        $this->assertEquals("INSERT INTO `cb_my_table` (`key`,`value`) VALUES ('Name','Sana')"
+        $this->assertEquals("INSERT INTO `cb_my_table` (`key`, `value`) VALUES ('Name', 'Sana')"
             , $builder->getQuery('insert', $data)->getRawSql());
     }
 
@@ -163,6 +163,19 @@ class QueryBuilderTest extends TestCase
         );
     }
 
+    public function testRawStatementWithinStatement() {
+        $query = $this->builder->from('my_table')
+            ->where('simple', '=', 'criteria')
+            ->update([
+                'alias' => $this->builder->raw('?', ['2'])
+            ]);
+
+        $this->assertEquals(
+            "UPDATE `cb_my_table` SET `alias` = '2' WHERE `simple` = 'criteria'",
+            $this->builder->getLastQuery()->getRawSql()
+        );
+    }
+
     public function testReplaceQuery()
     {
         $builder = $this->builder->from('my_table');
@@ -171,7 +184,7 @@ class QueryBuilderTest extends TestCase
             'value' => 'Sana',
         ];
 
-        $this->assertEquals("REPLACE INTO `cb_my_table` (`key`,`value`) VALUES ('Name','Sana')"
+        $this->assertEquals("REPLACE INTO `cb_my_table` (`key`, `value`) VALUES ('Name', 'Sana')"
             , $builder->getQuery('replace', $data)->getRawSql());
     }
 
@@ -322,7 +335,7 @@ class QueryBuilderTest extends TestCase
             'value' => 'Amrin',
         ];
 
-        $this->assertEquals("UPDATE `cb_my_table` SET `key`='Sana',`value`='Amrin' WHERE `value` = 'Sana'"
+        $this->assertEquals("UPDATE `cb_my_table` SET `key` = 'Sana', `value` = 'Amrin' WHERE `value` = 'Sana'"
             , $builder->getQuery('update', $data)->getRawSql());
     }
 
@@ -370,7 +383,7 @@ class QueryBuilderTest extends TestCase
             ->update(['foo.status' => 1]);
 
         $this->assertEquals(
-            'UPDATE `cb_foo` LEFT JOIN `cb_bar` ON `cb_foo`.`id` = `cb_bar`.`id` SET `foo`.`status`=1 WHERE `cb_bar`.`id` = 1 GROUP BY `cb_foo`.`id` ORDER BY `cb_foo`.`id` ASC LIMIT 1 OFFSET 1',
+            'UPDATE `cb_foo` LEFT JOIN `cb_bar` ON `cb_foo`.`id` = `cb_bar`.`id` SET `foo`.`status` = 1 WHERE `cb_bar`.`id` = 1 GROUP BY `cb_foo`.`id` ORDER BY `cb_foo`.`id` ASC LIMIT 1 OFFSET 1',
             $this->builder->getConnection()->getLastQuery()->getRawSql());
     }
 
@@ -408,7 +421,7 @@ class QueryBuilderTest extends TestCase
 
         $query = $this->builder->table('user')->joinUsing('user_data', ['user_id', 'image_id'])->where('user_id', '=', 1);
 
-        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
+        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`, `image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
 
     }
 
@@ -419,7 +432,7 @@ class QueryBuilderTest extends TestCase
             $jb->using(['user_id', 'image_id']);
         })->where('user_id', '=', 1);
 
-        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`,`image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
+        $this->assertEquals('SELECT * FROM `cb_user` JOIN `cb_user_data` USING (`user_id`, `image_id`) WHERE `user_id` = 1', $query->getQuery()->getRawSql());
 
     }
 
