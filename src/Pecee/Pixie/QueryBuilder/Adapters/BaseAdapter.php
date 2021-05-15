@@ -86,7 +86,7 @@ abstract class BaseAdapter
      *
      * @return string
      */
-    protected function arrayStr(array $pieces, string $glue = ',', bool $wrapSanitizer = true): string
+    protected function arrayStr(array $pieces, string $glue = ', ', bool $wrapSanitizer = true): string
     {
         $str = '';
         foreach ($pieces as $key => $piece) {
@@ -379,11 +379,7 @@ abstract class BaseAdapter
         $columnsQuery = '';
 
         if($columns !== null) {
-            foreach($columns as $key => $column) {
-                $columns[$key] = $this->wrapSanitizer($column);
-            }
-
-            $columnsQuery = implode(', ', $columns);
+            $columnsQuery = $this->arrayStr($columns);
         }
 
         // WHERE
@@ -426,6 +422,7 @@ abstract class BaseAdapter
             $keys[] = $key;
             if ($value instanceof Raw) {
                 $values[] = (string)$value;
+                $bindings += $value->getBindings();
             } else {
                 $values[] = '?';
                 $bindings[] = $value;
@@ -437,7 +434,7 @@ abstract class BaseAdapter
             $this->wrapSanitizer($table),
             '(' . $this->arrayStr($keys) . ')',
             'VALUES',
-            '(' . $this->arrayStr($values, ',', false) . ')',
+            '(' . $this->arrayStr($values, ', ', false) . ')',
         ];
 
         if (isset($statements['onduplicate']) === true) {
@@ -467,21 +464,22 @@ abstract class BaseAdapter
     private function getUpdateStatement(array $data): array
     {
         $bindings = [];
-        $statement = '';
+        $statements = [];
 
         foreach ($data as $key => $value) {
 
-            $statement .= $this->wrapSanitizer($key) . '=';
+            $statement = $this->wrapSanitizer($key) . ' = ';
 
             if ($value instanceof Raw) {
-                $statement .= $value . ',';
+                $statements[] = $statement . $value;
+                $bindings += $value->getBindings();
             } else {
-                $statement .= '?,';
-                $bindings[] = $value;
+                $statements[] = $statement . '?';
+                $bindings[] =  $value;
             }
         }
 
-        $statement = trim($statement, ',');
+        $statement = trim($this->arrayStr($statements, ', ', false));
 
         return [$statement, $bindings];
     }

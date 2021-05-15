@@ -146,11 +146,7 @@ class Sqlserver extends BaseAdapter
         $columnsQuery = '';
 
         if($columns !== null) {
-            foreach($columns as $key => $column) {
-                $columns[$key] = $this->wrapSanitizer($column);
-            }
-
-            $columnsQuery = implode(', ', $columns);
+            $columnsQuery = $this->arrayStr($columns);
         }
 
         // WHERE
