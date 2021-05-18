@@ -12,7 +12,7 @@ use Pecee\Pixie\QueryBuilder\Transaction;
 class TransactionTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->builder = $this->getLiveConnection();
     }

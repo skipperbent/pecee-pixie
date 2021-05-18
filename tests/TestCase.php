@@ -42,13 +42,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return count($args) == 1 ? $args[0] : $args;
     }
 
-    public function setUp()
+    public function setUp(): void
     {
 
         $this->mockPdoStatement = $this->getMockBuilder(\PDOStatement::class)->getMock();
-
         $mockPdoStatement = &$this->mockPdoStatement;
-
         $mockPdoStatement->bindings = [];
 
         $this->mockPdoStatement
@@ -118,7 +116,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'host'      => '127.0.0.1',
             'database'  => 'test',
             'username'  => 'root',
-            'password'  => '',
+            'password'  => 'root',
             'charset'   => 'utf8mb4', // Optional
             'collation' => 'utf8mb4_unicode_ci', // Optional
             'prefix'    => '', // Table prefix, optional
@@ -149,7 +147,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         m::close();
     }

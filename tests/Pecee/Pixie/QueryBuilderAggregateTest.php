@@ -10,17 +10,17 @@ namespace Pecee\Pixie;
 class QueryBuilderAggregateTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
-        return parent::setUp();
+        parent::setUp();
 
-        $this->builder->query('TRUNCATE `animal`');
+        /*$this->builder->query('TRUNCATE `animal`');
 
         $qb->from('animal')->insert([
             ['name' => 'mouse', 'number_of_legs' => 28],
             ['name' => 'horse', 'number_of_legs' => 4],
             ['name' => 'cat', 'number_of_legs' => 8],
-        ]);
+        ]);*/
 
     }
 
