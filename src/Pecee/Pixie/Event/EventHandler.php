@@ -177,12 +177,12 @@ class EventHandler
 
     /**
      * @param string $event
-     * @param string|null $table
      * @param \Closure $action
+     * @param string $table
      *
      * @return void
      */
-    public function registerEvent(string $event, ?string $table = null, \Closure $action): void
+    public function registerEvent(string $event, \Closure $action, string $table = EventHandler::TABLE_ANY): void
     {
         $this->events[$table ?? static::TABLE_ANY][$event] = $action;
     }

@@ -1105,16 +1105,16 @@ The event needs a custom callback function with a `EventArguments` object as par
 **Examples:**
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, 'users', function(EventArguments $arguments)
+$queryBuilder->registerEvent(EventHandler::EVENT_BEFORE_SELECT, function(EventArguments $arguments)
 {
     $arguments
         ->getQueryBuilder()
         ->where('status', '!=', 'banned');
-});
+}, 'users');
 ```
 Now every time a select query occurs on `users` table, it will add this where criteria, so banned users don't get access.
 
-The syntax is `registerEvent('event type', 'table name', action in a closure)`.
+The syntax is `registerEvent('event type', action in a closure, 'table name')`.
 
 If you want the event to be performed when **any table is being queried**, provide `':any'` as table name.
 
@@ -1123,7 +1123,7 @@ If you want the event to be performed when **any table is being queried**, provi
 After inserting data into `my_table`, details will be inserted into another table
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', function(EventArguments $arguments)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, function(EventArguments $arguments)
 {
     $arguments
         ->getQueryBuilder()
@@ -1132,13 +1132,13 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'my_table', funct
         'details' => 'Meh',
         'age' => 5
     ));
-});
+}, 'my_table');
 ```
 
 Whenever data is inserted into `person_details` table, set the timestamp field `created_at`, so we don't have to specify it everywhere:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details', function(EventArguments $arguments)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, function(EventArguments $arguments)
 {
     $arguments
         ->getQueryBuilder()
@@ -1147,13 +1147,13 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_INSERT, 'person_details',
         ->update([
             'created_at' => date('Y-m-d H:i:s')
         ]);
-});
+}, 'person_details');
 ```
 
 After deleting from `my_table` delete the relations:
 
 ```php
-$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', function(EventArguments $arguments)
+$queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, function(EventArguments $arguments)
 {
     $bindings = $arguments->getQuery()->getBindings();
 
@@ -1162,7 +1162,7 @@ $queryBuilder->registerEvent(EventHandler::EVENT_AFTER_DELETE, 'my_table', funct
         ->table('person_details')
         ->where('person_id', $binding[0])
         ->delete();
-});
+}, 'my_table');
 ```
 
 Pixie passes the current instance of query builder as first parameter of your closure so you can build queries with this object, you can do anything like usual query builder (`QB`).

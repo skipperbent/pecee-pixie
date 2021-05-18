@@ -42,13 +42,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return count($args) == 1 ? $args[0] : $args;
     }
 
-    public function setUp()
+    public function setUp(): void
     {
 
         $this->mockPdoStatement = $this->getMockBuilder(\PDOStatement::class)->getMock();
-
         $mockPdoStatement = &$this->mockPdoStatement;
-
         $mockPdoStatement->bindings = [];
 
         $this->mockPdoStatement
@@ -149,7 +147,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         m::close();
     }

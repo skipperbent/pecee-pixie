@@ -57,20 +57,8 @@ class Sqlserver extends BaseAdapter
      */
     public function select(array $statements): array
     {
-        $hasDistincts = false;
-
-        if (isset($statements['distincts']) === true && \count($statements['distincts']) > 0) {
-            $hasDistincts = true;
-
-            if (isset($statements['selects']) === true && \count($statements['selects']) > 0) {
-                $statements['selects'] = array_merge($statements['distincts'], $statements['selects']);
-            } else {
-                $statements['selects'] = $statements['distincts'];
-            }
-
-        } else if (isset($statements['selects']) === false) {
-            $statements['selects'] = ['*'];
-        }
+        $bindings = [];
+        $hasDistincts = $this->setSelectStatement($statements, $bindings);
 
         // From
         $fromEnabled = false;
@@ -123,6 +111,7 @@ class Sqlserver extends BaseAdapter
         $sql = $this->buildUnion($statements, $sql);
 
         $bindings = array_merge(
+            $bindings,
             $whereBindings,
             $havingBindings
         );

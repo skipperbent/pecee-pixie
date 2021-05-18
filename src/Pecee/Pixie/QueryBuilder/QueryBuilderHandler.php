@@ -1516,14 +1516,14 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * Register new event
      *
      * @param string $name
-     * @param string|null $table
      * @param \Closure $action
+     * @param string $table
      *
      * @return void
      */
-    public function registerEvent(string $name, ?string $table = null, \Closure $action): void
+    public function registerEvent(string $name, \Closure $action, string $table = EventHandler::TABLE_ANY): void
     {
-        $this->connection->getEventHandler()->registerEvent($name, $table, $action);
+        $this->connection->getEventHandler()->registerEvent($name, $action, $table);
     }
 
     /**

@@ -61,6 +61,23 @@ abstract class BaseAdapter
     protected $connection;
 
     /**
+     * Join different part of queries with a space.
+     *
+     * @param array $pieces
+     *
+     * @return string
+     */
+    protected function concatenateQuery(array $pieces): string
+    {
+        $str = '';
+        foreach ($pieces as $piece) {
+            $str = trim($str) . ' ' . trim($piece);
+        }
+
+        return trim($str);
+    }
+
+    /**
      * Alias prefix
      * @var string|null
      */
@@ -307,23 +324,6 @@ abstract class BaseAdapter
     }
 
     /**
-     * Join different part of queries with a space.
-     *
-     * @param array $pieces
-     *
-     * @return string
-     */
-    protected function concatenateQuery(array $pieces): string
-    {
-        $str = '';
-        foreach ($pieces as $piece) {
-            $str = trim($str) . ' ' . trim($piece);
-        }
-
-        return trim($str);
-    }
-
-    /**
      * Return table name with alias
      * eg. foo as f
      *
@@ -527,14 +527,13 @@ abstract class BaseAdapter
     }
 
     /**
-     * Build select query string and bindings
+     * Sets select statements and returns status of distinct tables.
      *
      * @param array $statements
-     *
-     * @throws Exception
-     * @return array
+     * @param array $bindings
+     * @return bool Returns true if distinct tables are found.
      */
-    public function select(array $statements): array
+    protected function setSelectStatement(array &$statements, array &$bindings): bool
     {
         $hasDistincts = false;
 
@@ -551,13 +550,36 @@ abstract class BaseAdapter
             $statements['selects'] = ['*'];
         }
 
+
+        foreach ((array)$statements['selects'] as $select) {
+            if ($select instanceof Raw) {
+                $bindings += $select->getBindings();
+            }
+        }
+
+        return $hasDistincts;
+    }
+
+    /**
+     * Build select query string and bindings
+     *
+     * @param array $statements
+     *
+     * @throws Exception
+     * @return array
+     */
+    public function select(array $statements): array
+    {
+        $bindings = [];
+
+        $hasDistincts = $this->setSelectStatement($statements, $bindings);
+
         // From
         $fromEnabled = false;
         $tables = '';
 
         if (isset($statements['tables']) === true) {
             $tablesFound = [];
-
             foreach ((array)$statements['tables'] as $table) {
                 if ($table instanceof Raw) {
                     $t = $table;
@@ -596,6 +618,7 @@ abstract class BaseAdapter
         $sql = $this->buildUnion($statements, $sql);
 
         $bindings = array_merge(
+            $bindings,
             $whereBindings,
             $havingBindings
         );
