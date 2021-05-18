@@ -201,14 +201,14 @@ class Connection
      * Register new event
      *
      * @param string $name
-     * @param string|null $table
      * @param \Closure $action
+     * @param string $table
      *
      * @return void
      */
-    public function registerEvent($name, $table = null, \Closure $action): void
+    public function registerEvent(string $name, \Closure $action, string $table = EventHandler::TABLE_ANY): void
     {
-        $this->getEventHandler()->registerEvent($name, $table, $action);
+        $this->getEventHandler()->registerEvent($name, $action, $table);
     }
 
     /**

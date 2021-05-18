@@ -57,9 +57,9 @@ class QueryBuilderTest extends TestCase
         $triggeredEvents = [];
 
         foreach ($events as $event) {
-            $builder->registerEvent($event, ':any', function ($qb) use (&$triggeredEvents, $event) {
+            $builder->registerEvent($event, function ($qb) use (&$triggeredEvents, $event) {
                 $triggeredEvents[] = $event;
-            });
+            }, ':any');
         }
 
         $builder->table('foo')->insert(['bar' => 'baz']);
@@ -172,6 +172,18 @@ class QueryBuilderTest extends TestCase
 
         $this->assertEquals(
             "UPDATE `cb_my_table` SET `alias` = '2' WHERE `simple` = 'criteria'",
+            $this->builder->getLastQuery()->getRawSql()
+        );
+    }
+
+    public function testRawStatementWithinSelect() {
+        $query = $this->builder->from('my_table')
+            ->select($this->builder->raw('CONCAT(`simple`, ?)', ['criteria']))
+            ->where('simple', '=', 'criteria')
+            ->first();
+
+        $this->assertEquals(
+            "SELECT CONCAT(`simple`, 'criteria') FROM `cb_my_table` WHERE `simple` = 'criteria' LIMIT 1",
             $this->builder->getLastQuery()->getRawSql()
         );
     }
@@ -309,9 +321,9 @@ class QueryBuilderTest extends TestCase
     {
         $builder = $this->builder;
 
-        $builder->registerEvent('before-select', ':any', function (EventArguments $data) {
+        $builder->registerEvent('before-select', function (EventArguments $data) {
             $data->getQueryBuilder()->whereIn('status', [1, 2]);
-        });
+        }, ':any');
 
         $query = $builder->table('some_table')->where('name', 'Some');
         $query->get();
