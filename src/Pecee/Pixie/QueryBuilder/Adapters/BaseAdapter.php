@@ -154,11 +154,13 @@ abstract class BaseAdapter
 
             $key = $statement['key'];
 
-            $key = $this->wrapSanitizer($key);
+            if($key instanceof Raw === false) {
+                $key = $this->wrapSanitizer($key);
 
-            // Add alias non-existing
-            if(is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
-                $key = $this->aliasPrefix . '.' . $key;
+                // Add alias non-existing
+                if(is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
+                    $key = $this->aliasPrefix . '.' . $key;
+                }
             }
 
             if ($statement['key'] instanceof Raw) {

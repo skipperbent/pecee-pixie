@@ -177,7 +177,7 @@ class QueryBuilderTest extends TestCase
     }
 
     public function testRawStatementWithinSelect() {
-        $query = $this->builder->from('my_table')
+        $this->builder->from('my_table')
             ->select($this->builder->raw('CONCAT(`simple`, ?)', ['criteria']))
             ->where('simple', '=', 'criteria')
             ->first();
@@ -186,6 +186,17 @@ class QueryBuilderTest extends TestCase
             "SELECT CONCAT(`simple`, 'criteria') FROM `cb_my_table` WHERE `simple` = 'criteria' LIMIT 1",
             $this->builder->getLastQuery()->getRawSql()
         );
+    }
+
+    public function testRawExpression() {
+        $query = $this->builder
+            ->table('my_table')
+            ->alias('test')
+            ->select($this->builder->raw('count(cb_my_table.id) as tot'))
+            ->where('value', '=', 'Ifrah')
+            ->where($this->builder->raw('DATE(?)', 'now'));
+
+        $this->assertEquals("SELECT count(cb_my_table.id) as tot FROM `cb_my_table` AS `test` WHERE test.`value` = 'Ifrah' AND DATE('now')", $query->getQuery()->getRawSql());
     }
 
     public function testReplaceQuery()
