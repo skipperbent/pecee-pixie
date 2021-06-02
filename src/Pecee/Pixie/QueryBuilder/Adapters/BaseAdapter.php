@@ -127,8 +127,8 @@ abstract class BaseAdapter
      * @param array $statements
      * @param bool $bindValues
      *
-     * @throws Exception
      * @return array
+     * @throws Exception
      */
     protected function buildCriteria(array $statements, bool $bindValues = true): array
     {
@@ -154,17 +154,13 @@ abstract class BaseAdapter
 
             $key = $statement['key'];
 
-            if($key instanceof Raw === false) {
+            if ($key instanceof Raw === false) {
                 $key = $this->wrapSanitizer($key);
 
                 // Add alias non-existing
-                if(is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
+                if (is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
                     $key = $this->aliasPrefix . '.' . $key;
                 }
-            }
-
-            if ($statement['key'] instanceof Raw) {
-                $bindings[] = $statement['key']->getBindings();
             }
 
             $value = $statement['value'];
@@ -222,10 +218,15 @@ abstract class BaseAdapter
                 // Usual where like criteria specially for joins - we are not binding values, lets sanitize then
                 $value = ($bindValues === false) ? $this->wrapSanitizer($value) : $value;
                 $criteria[] = "{$key} {$statement['operator']} $value";
+
+                if ($value instanceof Raw) {
+                    $bindings[] = $value->getBindings();
+                }
+
                 continue;
             }
 
-            if ($statement['key'] instanceof Raw) {
+            if ($key instanceof Raw) {
 
                 if ($statement['operator'] !== null) {
                     $criteria[] = "{$key} {$statement['operator']} ?";
@@ -234,12 +235,13 @@ abstract class BaseAdapter
                 }
 
                 $criteria[] = $key;
+                $bindings[] = $key->getBindings();
                 continue;
 
             }
 
             // Check for objects that implement the __toString() magic method
-            if(\is_object($value) === true && \method_exists($value, '__toString') === true) {
+            if (\is_object($value) === true && \method_exists($value, '__toString') === true) {
                 $value = $value->__toString();
             }
 
@@ -330,7 +332,7 @@ abstract class BaseAdapter
      * eg. foo as f
      *
      * @param string $table
-     * @param array  $statements
+     * @param array $statements
      *
      * @return string
      */
@@ -380,7 +382,7 @@ abstract class BaseAdapter
 
         $columnsQuery = '';
 
-        if($columns !== null) {
+        if ($columns !== null) {
             $columnsQuery = $this->arrayStr($columns);
         }
 
@@ -397,7 +399,7 @@ abstract class BaseAdapter
             $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
             $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements)
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
         ]);
         $bindings = $whereBindings;
 
@@ -477,7 +479,7 @@ abstract class BaseAdapter
                 $bindings += $value->getBindings();
             } else {
                 $statements[] = $statement . '?';
-                $bindings[] =  $value;
+                $bindings[] = $value;
             }
         }
 
@@ -548,10 +550,11 @@ abstract class BaseAdapter
                 $statements['selects'] = $statements['distincts'];
             }
 
-        } else if (isset($statements['selects']) === false) {
-            $statements['selects'] = ['*'];
+        } else {
+            if (isset($statements['selects']) === false) {
+                $statements['selects'] = ['*'];
+            }
         }
-
 
         foreach ((array)$statements['selects'] as $select) {
             if ($select instanceof Raw) {
@@ -567,8 +570,8 @@ abstract class BaseAdapter
      *
      * @param array $statements
      *
-     * @throws Exception
      * @return array
+     * @throws Exception
      */
     public function select(array $statements): array
     {
@@ -729,7 +732,7 @@ abstract class BaseAdapter
 
         $sqlArray = [
             'UPDATE',
-            $this->buildAliasedTableName($table,$statements),
+            $this->buildAliasedTableName($table, $statements),
             $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
             'SET ' . $updateStatement,
             $whereCriteria,
