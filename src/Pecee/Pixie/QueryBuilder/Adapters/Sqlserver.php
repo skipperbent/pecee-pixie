@@ -30,10 +30,11 @@ class Sqlserver extends BaseAdapter
      * Overridden method for SQL SERVER correct usage of: OFFSET x ROWS FETCH NEXT y ROWS ONLY
      * @param string $section
      * @param array $statements
+     * @param array $bindings
      * @return string
      * @throws Exception
      */
-    protected function buildQueryPart(string $section, array $statements): string
+    protected function buildQueryPart(string $section, array $statements, array &$bindings): string
     {
         switch ($section) {
             case static::QUERY_PART_TOP:
@@ -43,7 +44,7 @@ class Sqlserver extends BaseAdapter
             case static::QUERY_PART_FETCH_NEXT:
                 return isset($statements['fetch_next']) ? 'FETCH NEXT '.$statements['fetch_next'].' ROWS ONLY' : '';
             default:
-                return parent::buildQueryPart($section, $statements);
+                return parent::buildQueryPart($section, $statements, $bindings);
         }
     }
 
@@ -95,17 +96,17 @@ class Sqlserver extends BaseAdapter
 
         $sql = $this->concatenateQuery([
             'SELECT' . ($hasDistincts === true ? ' DISTINCT' : ''),
-            $this->buildQueryPart(static::QUERY_PART_TOP, $statements),
+            $this->buildQueryPart(static::QUERY_PART_TOP, $statements, $bindings),
             $this->arrayStr($statements['selects'], ', '),
             $fromEnabled ? 'FROM' : '',
             $tables,
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements, $bindings),
             $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements, $bindings),
             $havingCriteria,
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
-            $this->buildQueryPart(static::QUERY_PART_FETCH_NEXT, $statements),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_FETCH_NEXT, $statements, $bindings),
         ]);
 
         $sql = $this->buildUnion($statements, $sql);
@@ -139,20 +140,19 @@ class Sqlserver extends BaseAdapter
         }
 
         // WHERE
-        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+        [$whereCriteria, $bindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         $sql = $this->concatenateQuery([
             'DELETE ',
             $columnsQuery,
             ' FROM',
             $this->wrapSanitizer($table),
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements, $bindings),
             $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements, $bindings),
         ]);
-        $bindings = $whereBindings;
 
         return compact('sql', 'bindings');
     }

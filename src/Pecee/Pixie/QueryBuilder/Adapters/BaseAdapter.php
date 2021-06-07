@@ -165,6 +165,10 @@ abstract class BaseAdapter
 
             $value = $statement['value'];
 
+            if ($value instanceof Raw) {
+                $bindings[] = $value->getBindings();
+            }
+
             if ($value === null && $key instanceof \Closure) {
 
                 /**
@@ -290,11 +294,12 @@ abstract class BaseAdapter
      * Build join string
      *
      * @param array $statements
+     * @param array $bindings
      *
      * @return string
      * @throws Exception
      */
-    protected function buildJoin(array $statements): string
+    protected function buildJoin(array $statements, array &$bindings): string
     {
         $sql = '';
 
@@ -313,12 +318,20 @@ abstract class BaseAdapter
             /* @var $joinBuilder QueryBuilderHandler */
             $joinBuilder = $joinArr['joinBuilder'];
 
+            $valueSql = '';
+
+            if ($joinBuilder instanceof QueryBuilderHandler) {
+                $valueQuery = $joinBuilder->getQuery('criteriaOnly', false);
+                $valueSql = $valueQuery->getSql();
+                $bindings += $valueQuery->getBindings();
+            }
+
             $sqlArr = [
                 $sql,
                 strtoupper($joinArr['type']),
                 'JOIN',
                 $table,
-                $joinBuilder instanceof QueryBuilderHandler ? $joinBuilder->getQuery('criteriaOnly', false)->getSql() : '',
+                $valueSql,
             ];
 
             $sql = $this->concatenateQuery($sqlArr);
@@ -387,21 +400,20 @@ abstract class BaseAdapter
         }
 
         // WHERE
-        [$whereCriteria, $whereBindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
+        [$whereCriteria, $bindings] = $this->buildCriteriaWithType($statements, 'wheres', 'WHERE');
 
         $sql = $this->concatenateQuery([
             'DELETE ',
             $columnsQuery,
             ' FROM',
             $this->wrapSanitizer($table),
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements, $bindings),
             $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements, $bindings),
         ]);
-        $bindings = $whereBindings;
 
         return compact('sql', 'bindings');
     }
@@ -610,14 +622,14 @@ abstract class BaseAdapter
             $this->arrayStr($statements['selects'], ', '),
             $fromEnabled ? 'FROM' : '',
             $tables,
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements, $bindings),
             $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements, $bindings),
             $havingCriteria,
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
-            $this->buildQueryPart(static::QUERY_PART_FOR, $statements),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_FOR, $statements, $bindings),
         ]);
 
         $sql = $this->buildUnion($statements, $sql);
@@ -636,14 +648,15 @@ abstract class BaseAdapter
      *
      * @param string $section
      * @param array $statements
+     * @param array $bindings
      * @return string
      * @throws Exception
      */
-    protected function buildQueryPart(string $section, array $statements): string
+    protected function buildQueryPart(string $section, array $statements, array &$bindings): string
     {
         switch ($section) {
             case static::QUERY_PART_JOIN:
-                return $this->buildJoin($statements);
+                return $this->buildJoin($statements, $bindings);
             case static::QUERY_PART_TOP:
                 return isset($statements['limit']) ? 'TOP ' . $statements['limit'] : '';
             case static::QUERY_PART_LIMIT:
@@ -733,13 +746,13 @@ abstract class BaseAdapter
         $sqlArray = [
             'UPDATE',
             $this->buildAliasedTableName($table, $statements),
-            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements),
+            $this->buildQueryPart(static::QUERY_PART_JOIN, $statements, $bindings),
             'SET ' . $updateStatement,
             $whereCriteria,
-            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements),
-            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements),
-            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements),
+            $this->buildQueryPart(static::QUERY_PART_GROUPBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_ORDERBY, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_LIMIT, $statements, $bindings),
+            $this->buildQueryPart(static::QUERY_PART_OFFSET, $statements, $bindings),
         ];
 
         $sql = $this->concatenateQuery($sqlArray);
