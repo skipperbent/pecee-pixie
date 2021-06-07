@@ -188,6 +188,18 @@ class QueryBuilderTest extends TestCase
         );
     }
 
+    public function testRawStatementWithinJoin() {
+        $this->builder->from('my_table')
+            ->join('people', 'id', '=', $this->builder->raw("CONCAT('hej', ?)", ['shemales']))
+            ->where('simple', '=', 'criteria')
+            ->first();
+
+        $this->assertEquals(
+            "SELECT * FROM `cb_my_table` JOIN `cb_people` ON `id` = CONCAT('hej', 'shemales') WHERE `simple` = 'criteria' LIMIT 1",
+            $this->builder->getLastQuery()->getRawSql()
+        );
+    }
+
     public function testRawExpression() {
         $query = $this->builder
             ->table('my_table')
