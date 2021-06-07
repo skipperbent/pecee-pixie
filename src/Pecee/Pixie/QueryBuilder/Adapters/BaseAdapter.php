@@ -163,10 +163,6 @@ abstract class BaseAdapter
                 }
             }
 
-            if ($statement['key'] instanceof Raw) {
-                $bindings[] = $statement['key']->getBindings();
-            }
-
             $value = $statement['value'];
 
             if ($value instanceof Raw) {
@@ -226,10 +222,15 @@ abstract class BaseAdapter
                 // Usual where like criteria specially for joins - we are not binding values, lets sanitize then
                 $value = ($bindValues === false) ? $this->wrapSanitizer($value) : $value;
                 $criteria[] = "{$key} {$statement['operator']} $value";
+
+                if ($value instanceof Raw) {
+                    $bindings[] = $value->getBindings();
+                }
+
                 continue;
             }
 
-            if ($statement['key'] instanceof Raw) {
+            if ($key instanceof Raw) {
 
                 if ($statement['operator'] !== null) {
                     $criteria[] = "{$key} {$statement['operator']} ?";
@@ -238,6 +239,7 @@ abstract class BaseAdapter
                 }
 
                 $criteria[] = $key;
+                $bindings[] = $key->getBindings();
                 continue;
 
             }
