@@ -161,6 +161,8 @@ abstract class BaseAdapter
                 if (is_string($key) && $this->aliasPrefix !== null && strpos($key, '.') === false) {
                     $key = $this->aliasPrefix . '.' . $key;
                 }
+            } else {
+                $bindings[] = $key->getBindings();
             }
 
             $value = $statement['value'];
@@ -239,7 +241,6 @@ abstract class BaseAdapter
                 }
 
                 $criteria[] = $key;
-                $bindings[] = $key->getBindings();
                 continue;
 
             }
@@ -303,6 +304,8 @@ abstract class BaseAdapter
     {
         $sql = '';
 
+        $newBindings = [];
+
         if (isset($statements['joins']) === false) {
             return $sql;
         }
@@ -323,7 +326,7 @@ abstract class BaseAdapter
             if ($joinBuilder instanceof QueryBuilderHandler) {
                 $valueQuery = $joinBuilder->getQuery('criteriaOnly', false);
                 $valueSql = $valueQuery->getSql();
-                $bindings += $valueQuery->getBindings();
+                $newBindings[] = $valueQuery->getBindings();
             }
 
             $sqlArr = [
@@ -336,6 +339,8 @@ abstract class BaseAdapter
 
             $sql = $this->concatenateQuery($sqlArr);
         }
+
+        $bindings = array_merge($bindings, ...$newBindings);
 
         return $sql;
     }
