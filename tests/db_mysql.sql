@@ -1,15 +1,13 @@
--- Note: only for mysql 5.7 option IF EXISTS is available, for older mysql
--- solution: https://stackoverflow.com/questions/598190/mysql-check-if-the-user-exists-and-drop-it
-GRANT USAGE ON *.* TO 'nopermuser'@'localhost' identified by 'password';
 DROP USER 'nopermuser'@'localhost';
-CREATE USER 'nopermuser'@'localhost'
-  identified by 'password';
+CREATE USER 'nopermuser'@'localhost' IDENTIFIED BY 'password';
+GRANT USAGE ON *.* TO 'nopermuser'@'localhost' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
 DROP TABLE IF EXISTS `people`;
 DROP TABLE IF EXISTS `animal`;
 DROP TABLE IF EXISTS `tbl_users`;
 DROP TABLE IF EXISTS `tbl_eyes`;
+DROP TABLE IF EXISTS `empty_table`;
 
 CREATE TABLE `people` (
   `id`       INT          NOT NULL AUTO_INCREMENT,
@@ -53,3 +51,10 @@ CREATE TABLE `tbl_users` (
   COLLATE = 'utf8_general_ci'
   ENGINE = InnoDB;
 
+CREATE TABLE `empty_table` (
+  `id`    INT          NOT NULL AUTO_INCREMENT,
+  `description` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
+)
+  COLLATE = 'utf8_general_ci'
+  ENGINE = InnoDB;
