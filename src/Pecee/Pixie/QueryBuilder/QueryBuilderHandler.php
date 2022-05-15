@@ -1185,7 +1185,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
      * @return array|string|null
      * @throws Exception
      */
-    private function doInsert(array $data, string $type)
+    protected function doInsert(array $data, string $type)
     {
         // Insert single item
 
