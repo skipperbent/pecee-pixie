@@ -1027,6 +1027,36 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     }
 
     /**
+     * Find all by field name and value
+     *
+     * @param string           $fieldName
+     * @param string|int|float $value
+     *
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\RecordNotFoundException
+     * @return array
+     * @throws Exception
+     */
+    public function findAllOrFail(string $fieldName, $value): array
+    {
+        $result = $this->findAll($fieldName, $value);
+
+        if (empty($result)){
+            throw new RecordNotFoundException();
+        }
+
+        return $result;
+    }
+
+    /**
      * Get event by event name
      *
      * @param string $name
