@@ -9,6 +9,7 @@ use Pecee\Pixie\Exception;
 use Pecee\Pixie\Exceptions\ColumnNotFoundException;
 use Pecee\Pixie\Exceptions\ConnectionException;
 use Pecee\Pixie\Exceptions\TransactionHaltException;
+use Pecee\Pixie\Exceptions\RecordNotFoundException;
 
 /**
  * Class QueryBuilderHandler
@@ -282,6 +283,34 @@ class QueryBuilderHandler implements IQueryBuilderHandler
         $result = $this->limit(1)->get();
 
         return (\count($result) !== 0) ? $result[0] : null;
+    }
+
+    /**
+     * Returns the first row. Throws a RecordNotFoundException if 
+     * the record is not found.  
+     *
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\RecordNotFoundException
+     * @return \stdClass|string|null
+     * @throws Exception
+     */
+    public function firstOrFail()
+    {
+        $result = $this->first();
+
+        if ($result === null){
+            throw new RecordNotFoundException();
+        }
+
+        return $result;
     }
 
     /**
@@ -898,6 +927,37 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     public function find($value, string $fieldName = 'id')
     {
         return $this->where($fieldName, '=', $value)->first();
+    }
+
+    /**
+     * Find by value and field name. Throws a RecordNotFoundException
+     * if the record is not found
+     *
+     * @param string|int|float $value
+     * @param string           $fieldName
+     *
+     * @throws \Pecee\Pixie\Exception
+     * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\ConnectionException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateColumnException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateEntryException
+     * @throws \Pecee\Pixie\Exceptions\DuplicateKeyException
+     * @throws \Pecee\Pixie\Exceptions\ForeignKeyException
+     * @throws \Pecee\Pixie\Exceptions\NotNullException
+     * @throws \Pecee\Pixie\Exceptions\TableNotFoundException
+     * @throws \Pecee\Pixie\Exceptions\RecordNotFoundException
+     * @return \stdClass|string|null
+     * @throws Exception
+     */
+    public function findOrFail($value, string $fieldName = 'id')
+    {
+        $result = $this->find($value, $fieldName);
+
+        if ($result === null){
+            throw new RecordNotFoundException();
+        }
+
+        return $result;
     }
 
     /**
