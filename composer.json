@@ -31,20 +31,25 @@
       "name": "Pavel Puchkin",
       "email": "i@neoascetic.me",
       "role": "Developer"
+    },
+    {
+      "name": "RFC",
+      "email": "therfc.dev@gmail.com",
+      "role": "Developer"
     }
   ],
   "require": {
-    "php": ">=7.1",
+    "php": "^7.3|^8.0",
     "ext-pdo": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^8.0",
+    "phpunit/phpunit": "^9.5",
     "mockery/mockery": "^1",
     "ext-pdo_sqlite": "*",
-    "phpstan/phpstan": "^0",
-    "phpstan/phpstan-phpunit": "^0",
-    "phpstan/phpstan-deprecation-rules": "^0",
-    "phpstan/phpstan-strict-rules": "^0"
+    "phpstan/phpstan": "^1.6",
+    "phpstan/phpstan-deprecation-rules": "^1.0",
+    "phpstan/phpstan-phpunit": "^1.1",
+    "phpstan/phpstan-strict-rules": "^1.2"
   },
   "suggest": {
     "ext-pdo_sqlite": "Add extension for SQLite support"

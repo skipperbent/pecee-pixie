@@ -184,7 +184,7 @@ class EventHandler
      */
     public function registerEvent(string $event, \Closure $action, string $table = EventHandler::TABLE_ANY): void
     {
-        $this->events[$table ?? static::TABLE_ANY][$event] = $action;
+        $this->events[$table][$event] = $action;
     }
 
     /**

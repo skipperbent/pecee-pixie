@@ -8,7 +8,7 @@ The syntax is similar to Laravel's query builder "Eloquent", but with less overh
 This library is stable, maintained and are used by sites around the world (check the [credits](#credits)).
 
 **Requirements:**
-- PHP version 7.1 or higher is required for pecee-pixie version 4.x and above (versions prior to 4.x are available [here](https://github.com/skipperbent/pixie)).
+- PHP version 7.3 or higher is required for pecee-pixie version 4.x and above (versions prior to 4.x are available [here](https://github.com/skipperbent/pixie)).
 - PDO extension enabled.
 
 **Features:**
@@ -317,6 +317,30 @@ $result = $queryBuilder
             ->findAll('name', 'Sana');
 ```
 
+#### Required result
+
+You can use `findOrFail()` and `findAllOrFail` instead to thrown a `RecordNotFoundException` when no record is found.
+
+```php
+try {
+    return $queryBuilder
+        ->table('users')
+        ->findOrFail(3);
+} catch(\Pecee\Pixie\Exceptions\RecordNotFoundException $ex) {
+    // record not found
+}
+```
+
+```php
+try {
+    return $queryBuilder
+        ->table('users')
+        ->findAllOrFail('name', 'Sana');
+} catch(\Pecee\Pixie\Exceptions\RecordNotFoundException $ex) {
+    // record not found
+}
+```
+
 #### Multiple selects
 
 ```php
@@ -393,6 +417,19 @@ $row = $queryBuilder
             ->first();
 ```
 Returns the first row, or null if there is no record. Using this method you can also make sure if a record exists. Access these like `echo $row->name`.
+
+You can also use `firstOrFail()` to thrown an exception when no record is found.
+
+```php
+try {
+    return $queryBuilder
+        ->table('my_table')
+        ->where('name', '=', 'Sana')
+        ->firstOrFail();
+} catch(\Pecee\Pixie\Exceptions\RecordNotFoundException $ex) {
+    // record not found
+}
+```
 
 #### Aggregate methods
 
@@ -1213,10 +1250,13 @@ Here are some cases where Query Events can be extremely helpful:
  | `ConnectionException`      |
  | `DuplicateColumnException` |
  | `DuplicateEntryException`  |
+ | `DuplicateKeyException`    |
  | `ForeignKeyException`      |
  | `NotNullException`         |
+ | `RecordNotFoundException`  |
  | `TableNotFoundException`   |
- | `Exception`                |
+ | `TransactionException`     |
+ | `TransactionHaltException` |
 
 #### Getting sql-query from exceptions
 

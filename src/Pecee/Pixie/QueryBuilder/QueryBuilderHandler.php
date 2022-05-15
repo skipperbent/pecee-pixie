@@ -876,7 +876,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     /**
      * Forms delete on the current query.
      *
-     * @var array|null $columns
+     * @param array|null $columns
      *
      * @throws \Pecee\Pixie\Exception
      * @throws \Pecee\Pixie\Exceptions\ColumnNotFoundException
@@ -1049,7 +1049,7 @@ class QueryBuilderHandler implements IQueryBuilderHandler
     {
         $result = $this->findAll($fieldName, $value);
 
-        if (empty($result)){
+        if (count($result) === 0){
             throw new RecordNotFoundException();
         }
 

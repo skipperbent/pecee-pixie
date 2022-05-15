@@ -7,7 +7,7 @@ namespace Pecee\Pixie;
  *
  * @package Pecee\Pixie
  */
-class QueryBuilder extends TestCase
+class QueryBuilderTest extends TestCase
 {
 
     public function testFalseBoolWhere()
@@ -26,7 +26,7 @@ class QueryBuilder extends TestCase
         $this->mockPdo
             ->expects($this->once())
             ->method('lastInsertId')
-            ->will($this->returnValue(11));
+            ->will($this->returnValue('11'));
 
         $id = $this->builder->table('test')->insert([
             'id'   => 5,
@@ -46,7 +46,7 @@ class QueryBuilder extends TestCase
         $this->mockPdo
             ->expects($this->once())
             ->method('lastInsertId')
-            ->will($this->returnValue(11));
+            ->will($this->returnValue('11'));
 
         $id = $this->builder->table('test')->insertIgnore([
             'id'   => 5,

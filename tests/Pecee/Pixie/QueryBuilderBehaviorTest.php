@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Pecee\Pixie\Event\EventArguments;
+use Pecee\Pixie\Exceptions\RecordNotFoundException;
 use Pecee\Pixie\QueryBuilder\JoinBuilder;
 
 /**
@@ -10,7 +11,7 @@ use Pecee\Pixie\QueryBuilder\JoinBuilder;
  *
  * @package Pecee\Pixie
  */
-class QueryBuilderTest extends TestCase
+class QueryBuilderBehaviorTest extends TestCase
 {
     /**
      * Test alias
@@ -246,6 +247,52 @@ class QueryBuilderTest extends TestCase
             'address',
         ])->from('my_table');
         $this->assertEquals("SELECT DISTINCT `surname`, `name`, `birthday`, `address` FROM `cb_my_table`", $query->getQuery()->getRawSql());
+    }
+
+    public function testFindOrFail()
+    {
+        $result = $this->getLiveConnection()->table("people")->findOrFail(1);
+        $this->assertEquals("Simon", $result->name);
+
+        try {
+            $result = $this->getLiveConnection()->table("empty_table")->findOrFail(9);
+            $this->assertEquals(1, 2); // this should never happen
+            
+        }
+        catch(\Exception $ex){
+            $this->assertEquals(RecordNotFoundException::class, \get_class($ex));
+        }
+    }
+
+    public function testFirstOrFail()
+    {
+        $result = $this->getLiveConnection()->table("animal")->firstOrFail();
+        $this->assertEquals("mouse", $result->name);
+
+        try {
+            $result = $this->getLiveConnection()->table("empty_table")->firstOrFail();
+            $this->assertEquals(1, 2); // this should never happen
+            
+        }
+        catch(\Exception $ex){
+            $this->assertEquals(RecordNotFoundException::class, \get_class($ex));
+        }
+    }
+
+    public function testFindAllOrFail()
+    {
+        $result = $this->getLiveConnection()->table("animal")->findAllOrFail('name', 'mouse');
+
+        $this->assertEquals(1, count($result));
+
+        try {
+            $result = $this->getLiveConnection()->table("empty_table")->findAllOrFail('description', 'test');
+            $this->assertEquals(1, 2); // this should never happen
+            
+        }
+        catch(\Exception $ex){
+            $this->assertEquals(RecordNotFoundException::class, \get_class($ex));
+        }
     }
 
     public function testSelectDistinctWithSingleColumn()

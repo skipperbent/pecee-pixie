@@ -3,6 +3,7 @@
 namespace Pecee\Pixie;
 
 use Mockery as m;
+use PDO;
 use Pecee\Pixie\ConnectionAdapters\Mysql;
 use Pecee\Pixie\Event\EventHandler;
 use Pecee\Pixie\QueryBuilder\QueryBuilderHandler;
@@ -54,6 +55,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             ->method('bindValue')
             ->will($this->returnCallback(function ($parameter, $value, $dataType) use ($mockPdoStatement) {
                 $mockPdoStatement->bindings[] = [$value, $dataType];
+                return true;
             }));
 
         $this->mockPdoStatement
@@ -63,6 +65,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
                 if ($bindings) {
                     $mockPdoStatement->bindings = $bindings;
                 }
+                return true;
             }));
 
         $this->mockPdoStatement
@@ -119,7 +122,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
             'password'  => '',
             'charset'   => 'utf8mb4', // Optional
             'collation' => 'utf8mb4_unicode_ci', // Optional
-            'prefix'    => '', // Table prefix, optional
+            'prefix'    => '', // Table prefix, optional,
+            'options'   => [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ],
         ]);
 
         $qb = $connection->getQueryBuilder();
