@@ -785,6 +785,11 @@ abstract class BaseAdapter
             return $value;
         }
 
+        // If first character contains " - skip sanitation
+        if ($value[0] === '"') {
+            return $value;
+        }
+
         // Separate our table and fields which are joined with a ".", like my_table.id
         $valueArr = explode('.', $value, 2);
 
