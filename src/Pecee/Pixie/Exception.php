@@ -55,7 +55,9 @@ class Exception extends \Exception
              * @var integer|null $errorCode
              * @var string|null $errorMsg
              */
-            [$errorSqlState, $errorCode, $errorMsg] = $e->errorInfo;
+            $errorSqlState = $e->errorInfo[0] ?? null;
+            $errorCode = $e->errorInfo[1] ?? 0;
+            $errorMsg = $e->errorInfo[2] ?? null;
 
             $errorMsg = $errorMsg ?? $e->getMessage();
             $errorCode = (int)($errorCode ?? $e->getCode());
