@@ -579,6 +579,10 @@ abstract class BaseAdapter
             }
         }
 
+        if (isset($statements['selects'])) {
+            $statements['selects'] = array_unique($statements['selects']);
+        }
+
         return $hasDistincts;
     }
 
