@@ -83,9 +83,11 @@ class QueryObject
         $keys = [];
         $values = $params;
 
+        $query = str_replace('?', ':?', $query);
+
         // build a regular expression for each parameter
         foreach ($params as $key => $value) {
-            $keys[] = '/' . (\is_string($key) ? ':' . $key : '[?]') . '/';
+            $keys[] = '/' . (\is_string($key) ? ':' . $key : '\:\?') . '/';
 
             if($value instanceof Raw) {
                 continue;
