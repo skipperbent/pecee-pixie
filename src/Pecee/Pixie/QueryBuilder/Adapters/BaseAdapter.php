@@ -458,7 +458,7 @@ abstract class BaseAdapter
             '(' . $this->arrayStr($values, ', ', false) . ')',
         ];
 
-        $bindings = array_merge(...$bindings);
+        $bindings = array_merge(...(array)$bindings);
 
         if (isset($statements['onduplicate']) === true) {
 
@@ -502,7 +502,7 @@ abstract class BaseAdapter
             }
         }
 
-        $bindings = array_merge(...$bindings);
+        $bindings = array_merge(...(array)$bindings);
 
         $statement = trim($this->arrayStr($statements, ', ', false));
 
@@ -587,7 +587,7 @@ abstract class BaseAdapter
             $statements['selects'] = array_unique($statements['selects']);
         }
 
-        $bindings = array_merge(...$bindings);
+        $bindings = array_merge(...(array)$bindings);
 
         return $hasDistincts;
     }
