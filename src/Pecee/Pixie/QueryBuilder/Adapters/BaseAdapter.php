@@ -443,7 +443,7 @@ abstract class BaseAdapter
             $keys[] = $key;
             if ($value instanceof Raw) {
                 $values[] = (string)$value;
-                $bindings += $value->getBindings();
+                $bindings[] = $value->getBindings();
             } else {
                 $values[] = '?';
                 $bindings[] = $value;
@@ -457,6 +457,8 @@ abstract class BaseAdapter
             'VALUES',
             '(' . $this->arrayStr($values, ', ', false) . ')',
         ];
+
+        $bindings = array_merge(...$bindings);
 
         if (isset($statements['onduplicate']) === true) {
 
@@ -493,12 +495,14 @@ abstract class BaseAdapter
 
             if ($value instanceof Raw) {
                 $statements[] = $statement . $value;
-                $bindings += $value->getBindings();
+                $bindings[] = $value->getBindings();
             } else {
                 $statements[] = $statement . '?';
                 $bindings[] = $value;
             }
         }
+
+        $bindings = array_merge(...$bindings);
 
         $statement = trim($this->arrayStr($statements, ', ', false));
 
@@ -575,13 +579,15 @@ abstract class BaseAdapter
 
         foreach ((array)$statements['selects'] as $select) {
             if ($select instanceof Raw) {
-                $bindings += $select->getBindings();
+                $bindings[] = $select->getBindings();
             }
         }
 
         if (isset($statements['selects'])) {
             $statements['selects'] = array_unique($statements['selects']);
         }
+
+        $bindings = array_merge(...$bindings);
 
         return $hasDistincts;
     }
